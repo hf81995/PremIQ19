@@ -121,7 +121,7 @@ create table if not exists h2h_predictions (
 create table if not exists blackjack_picks (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references players(id) on delete cascade,
-  card_index integer not null check (card_index between 1 and 4),
+  card_index integer not null check (card_index between 1 and 5),
   player_name text not null,
   predicted_goals integer not null,
   created_at timestamptz default now(),

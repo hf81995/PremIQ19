@@ -172,6 +172,18 @@
   .bj-total-num.bust{ color:#F2A6A6; }
   .bj-total-num.perfect{ color:var(--gold); }
   .bj-total-label{ font-family:'Space Mono',monospace; font-size:0.66rem; color:#B9C4BB; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.2rem; }
+  .bj-player-count{ display:flex; align-items:center; justify-content:center; gap:0.9rem; margin-bottom:1rem; }
+  .bj-count-btn{
+    width:32px; height:32px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.1);
+    color:#fff; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .bj-count-btn:disabled{ opacity:0.3; cursor:not-allowed; }
+  #bjCountLabel{ font-family:'Space Mono',monospace; font-size:0.78rem; color:#D8E0DA; min-width:90px; text-align:center; }
+
+  .room-complete-banner{
+    max-width:640px; margin:0.9rem auto 0; text-align:center; background:#E4F1E8; border:1.5px solid #2E8B57;
+    color:#1F6740; font-weight:700; font-size:0.85rem; padding:0.7rem 1rem; border-radius:12px;
+  }
 
   .tab-bar{ display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1.5px solid var(--line); flex-wrap:wrap; }
   .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:var(--ink-soft); padding:0.5rem 0.2rem; cursor:pointer; margin-right:1rem; }
@@ -237,10 +249,10 @@
         </div>
         <div class="hub-room blackjack">
           <button class="hub-room-btn" id="roomBlackjackBtn">
-            <span>PREM IQ19: Blackjack<span class="room-sub">4 players, 19 goals</span></span>
+            <span>PREM IQ19: Blackjack<span class="room-sub">3–5 players, 21 goals</span></span>
             <span class="room-check" id="checkBlackjack">0/4</span>
           </button>
-          <div class="hub-how-to">Name 4 players from your Slot 1st club and predict how many goals each scores in the first 19 fixtures — get as close to 19 combined without going over.</div>
+          <div class="hub-how-to">Choose 3 to 5 players from your Slot 1st club and predict how many goals each scores in the first 19 fixtures — get as close to 21 combined without going over.</div>
         </div>
         <div class="hub-room quiz">
           <button class="hub-room-btn" id="roomQuizBtn">
@@ -291,6 +303,7 @@
           <div id="zones"></div>
         </div>
       </div>
+      <div class="room-complete-banner" id="slotsCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
         <button class="btn btn-ghost" id="slotsBackBtn">← Back to hub</button>
         <button class="btn btn-ghost" id="resetBtn">Reset all</button>
@@ -302,12 +315,18 @@
       <div class="felt">
         <h2>PremIQ19: Blackjack</h2>
         <p class="bj-team-line" id="bjTeamLine"></p>
+        <div class="bj-player-count">
+          <button class="bj-count-btn" id="bjMinusBtn">–</button>
+          <span id="bjCountLabel">4 players</span>
+          <button class="bj-count-btn" id="bjPlusBtn">+</button>
+        </div>
         <div class="card-grid" id="cardGrid"></div>
         <div class="bj-total-box">
           <div class="bj-total-num" id="bjTotalNum">0</div>
-          <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 19</div>
+          <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 21</div>
         </div>
       </div>
+      <div class="room-complete-banner" id="bjCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
         <button class="btn btn-ghost" id="bjBackBtn">← Back to hub</button>
       </div>
@@ -319,6 +338,7 @@
         <div class="room-header"><h2>PREM IQ19 Quiz</h2></div>
         <div id="questionsList"></div>
       </div>
+      <div class="room-complete-banner" id="quizCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
         <button class="btn btn-primary" id="nextBtn" disabled>Move onto Q2 →</button>
         <button class="btn btn-ghost" id="prevBtn">← Back</button>
@@ -333,6 +353,7 @@
         <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
         <div id="h2hList"></div>
       </div>
+      <div class="room-complete-banner" id="h2hCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
         <button class="btn btn-ghost" id="h2hBackBtn">← Back to hub</button>
       </div>
@@ -377,7 +398,9 @@
   QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
   let h2hFixtures = [];
   let h2hAnswers = {};
-  let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
+  const BLACKJACK_TARGET = 21;
+  let numCards = 4; // 3–5 players, adjustable
+  let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
   let slotSnapshotQ1 = null, slotSnapshotQ2 = null, slotSnapshotBJ = null;
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
@@ -455,7 +478,7 @@
   // Hub completion tracking
   // ============================================================
   function slotsCompleteCount(){ return Object.values(assignments).filter(Boolean).length; }
-  function blackjackCompleteCount(){ return blackjackCards.filter(c=>c.player.trim()!=='' && c.goals!=='').length; }
+  function blackjackCompleteCount(){ return blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='' && c.goals!=='').length; }
   function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
   function h2hSetFixtures(){ return h2hFixtures.filter(f=>f.team_a && f.team_b); }
   function h2hCompleteCount(){
@@ -473,12 +496,12 @@
     const hCount = h2hCompleteCount();
 
     setCheck('checkSlots', sCount, 7);
-    setCheck('checkBlackjack', bCount, 4);
+    setCheck('checkBlackjack', bCount, numCards);
     setCheck('checkQuiz', qCount, 19);
     document.getElementById('checkH2H').textContent = hSet===0 ? 'No fixtures yet' : `${hCount}/${hSet}`;
     document.getElementById('checkH2H').classList.toggle('done', hSet>0 && hCount===hSet);
 
-    const allDone = sCount===7 && bCount===4 && qCount===19 && (hSet===0 || hCount===hSet);
+    const allDone = sCount===7 && bCount===numCards && qCount===19 && (hSet===0 || hCount===hSet);
     document.getElementById('submitAllBtn').disabled = !allDone;
   }
   function setCheck(id, count, total){
@@ -562,6 +585,7 @@
     document.getElementById('poolCount').textContent = `${unplaced.length}/${TEAMS.length}`;
     const filledCount = placedIds.length;
     document.getElementById('zoneCount').textContent = `${filledCount}/7`;
+    document.getElementById('slotsCompleteBanner').style.display = (filledCount===7) ? 'block' : 'none';
 
     if(unplaced.length===0){
       const div=document.createElement('div'); div.className='pool-empty'; div.textContent='All 20 clubs placed.';
@@ -606,7 +630,7 @@
   }
 
   // ============================================================
-  // Blackjack
+  // Blackjack — target 21, choose 3 to 5 players
   // ============================================================
   function enterBlackjack(){
     slotSnapshotBJ = assignments['1st'];
@@ -616,19 +640,32 @@
       teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
       document.getElementById('cardGrid').innerHTML = '';
       document.getElementById('bjTotalNum').textContent = '—';
+      document.querySelector('.bj-player-count').style.display = 'none';
       showStep('blackjackStep');
       document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='← Back to hub'; });
       return;
     }
+    document.querySelector('.bj-player-count').style.display = 'flex';
     const team = teamByTag(slotTeamId);
-    teamLine.innerHTML = `Choose 4 players from <strong>${team.name}</strong> and predict their goals across the first 19 fixtures.`;
+    teamLine.innerHTML = `Choose 3 to 5 players from <strong>${team.name}</strong> and predict their goals across the first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going over.`;
     renderCards();
     showStep('blackjackStep');
   }
 
+  document.getElementById('bjMinusBtn').addEventListener('click', ()=>{
+    if(numCards > 3){ numCards--; renderCards(); updateHubChecks(); }
+  });
+  document.getElementById('bjPlusBtn').addEventListener('click', ()=>{
+    if(numCards < 5){ numCards++; renderCards(); updateHubChecks(); }
+  });
+
   function renderCards(){
+    document.getElementById('bjCountLabel').textContent = `${numCards} player${numCards===1?'':'s'}`;
+    document.getElementById('bjMinusBtn').disabled = numCards <= 3;
+    document.getElementById('bjPlusBtn').disabled = numCards >= 5;
+
     const grid = document.getElementById('cardGrid');
-    grid.innerHTML = blackjackCards.map((c,i) => `
+    grid.innerHTML = blackjackCards.slice(0, numCards).map((c,i) => `
       <div class="playing-card">
         <span class="card-pip" id="pip-top-${i}">${c.goals||''}</span>
         <input type="text" class="card-player-input" data-idx="${i}" placeholder="Player name" value="${c.player}">
@@ -641,6 +678,7 @@
       inp.addEventListener('input', e=>{
         blackjackCards[e.target.dataset.idx].player = e.target.value;
         updateHubChecks();
+        updateBjCompleteBanner();
       });
     });
     grid.querySelectorAll('.card-goals-input').forEach(inp=>{
@@ -653,20 +691,27 @@
         document.getElementById('pip-bottom-'+idx).textContent = digitsOnly;
         updateBjTotal();
         updateHubChecks();
+        updateBjCompleteBanner();
       });
     });
     updateBjTotal();
+    updateBjCompleteBanner();
   }
 
   function updateBjTotal(){
-    const total = blackjackCards.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
+    const total = blackjackCards.slice(0,numCards).reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
     const numEl = document.getElementById('bjTotalNum');
     const labelEl = document.getElementById('bjTotalLabel');
     numEl.textContent = total;
     numEl.className = 'bj-total-num';
-    if(total > 19){ numEl.classList.add('bust'); labelEl.textContent = 'BUST! Over 19 — try lowering a prediction.'; }
-    else if(total === 19){ numEl.classList.add('perfect'); labelEl.textContent = 'Perfect 19!'; }
-    else { labelEl.textContent = `Goals predicted — ${19-total} more to reach 19`; }
+    if(total > BLACKJACK_TARGET){ numEl.classList.add('bust'); labelEl.textContent = `BUST! Over ${BLACKJACK_TARGET} — try lowering a prediction.`; }
+    else if(total === BLACKJACK_TARGET){ numEl.classList.add('perfect'); labelEl.textContent = `Perfect ${BLACKJACK_TARGET}!`; }
+    else { labelEl.textContent = `Goals predicted — ${BLACKJACK_TARGET-total} more to reach ${BLACKJACK_TARGET}`; }
+  }
+
+  function updateBjCompleteBanner(){
+    const banner = document.getElementById('bjCompleteBanner');
+    banner.style.display = (blackjackCompleteCount() === numCards) ? 'block' : 'none';
   }
 
   // ============================================================
@@ -831,6 +876,7 @@
     nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Finish quiz →';
     nextBtn.disabled = !isAnswered(q);
     updateHubChecks();
+    document.getElementById('quizCompleteBanner').style.display = (quizCompleteCount()===19) ? 'block' : 'none';
   }
 
   document.getElementById('nextBtn').addEventListener('click', ()=>{
@@ -855,8 +901,10 @@
 
   function renderH2H(){
     const list = document.getElementById('h2hList');
+    const banner = document.getElementById('h2hCompleteBanner');
     if(h2hFixtures.length===0){
       list.innerHTML = `<p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">No Super Sunday fixtures set yet — check back once the organiser adds one.</p>`;
+      banner.style.display = 'none';
       return;
     }
     list.innerHTML = h2hFixtures.map(f => {
@@ -887,6 +935,7 @@
           </div>
         </div>`;
     }).join('');
+    banner.style.display = (h2hSetFixtures().length>0 && h2hCompleteCount()===h2hSetFixtures().length) ? 'block' : 'none';
     list.querySelectorAll('[data-result]').forEach(btn=>{
       btn.addEventListener('click', ()=>{ h2hAnswers[btn.dataset.month].result = btn.dataset.result; renderH2H(); updateHubChecks(); });
     });
@@ -896,6 +945,7 @@
         e.target.value = digitsOnly;
         h2hAnswers[e.target.dataset.month][e.target.dataset.side==='A'?'scoreA':'scoreB'] = digitsOnly;
         updateHubChecks();
+        document.getElementById('h2hCompleteBanner').style.display = (h2hSetFixtures().length>0 && h2hCompleteCount()===h2hSetFixtures().length) ? 'block' : 'none';
       });
     });
   }
@@ -942,7 +992,7 @@
       }
 
       await sb.from('blackjack_picks').delete().eq('player_id', player.id);
-      const bjRows = blackjackCards.map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
+      const bjRows = blackjackCards.slice(0,numCards).map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
       const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
       if(bjErr) throw bjErr;
 
@@ -989,9 +1039,10 @@
 
   function renderBlackjackSummary(){
     const panel = document.getElementById('summaryBlackjackPanel');
-    const total = blackjackCards.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
-    const rows = blackjackCards.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'} — ${c.goals||0} goals</span></div>`).join('');
-    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Total</strong></span><span class="s-value">${total}${total>19?' (BUST)':total===19?' (Perfect!)':''}</span></div>`;
+    const used = blackjackCards.slice(0,numCards);
+    const total = used.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
+    const rows = used.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'} — ${c.goals||0} goals</span></div>`).join('');
+    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Total</strong></span><span class="s-value">${total}${total>BLACKJACK_TARGET?' (BUST)':total===BLACKJACK_TARGET?' (Perfect!)':''}</span></div>`;
   }
 
   function fmtAnswer(q){
