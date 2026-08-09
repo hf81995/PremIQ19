@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PremIQ19 — Fixture Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-dark:#0B2E22;
+    --pitch:#0F3D2C;
+    --chalk:#F6F5EF;
+    --chalk-dim:#EAE7DB;
+    --ink:#122019;
+    --ink-soft:#5C6B62;
+    --line:#DCD8C9;
+    --gold:#CBA633;
+    --home:#E4F1E8;
+    --home-border:#2E8B57;
+    --away:#EFEEE6;
+    --away-border:#9A9382;
+    --changed:#FCE9B8;
+    --changed-border:#C9A227;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(255,255,255,0.05), transparent 60%),
+      var(--pitch-dark);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .header{
+    background:
+      repeating-linear-gradient(100deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 60px, transparent 60px, transparent 120px),
+      linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%);
+    padding:1.6rem 1.2rem 1.2rem;
+    text-align:center;
+    border-bottom:3px solid rgba(203,166,51,0.5);
+  }
+  .header .eyebrow{
+    font-family:'Space Mono',monospace;
+    letter-spacing:0.3em;
+    font-size:0.62rem;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin:0 0 0.5rem;
+  }
+  .header h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.8rem,6vw,3rem);
+    letter-spacing:0.03em;
+    color:var(--chalk);
+    margin:0;
+  }
+  .header h1 span{color:var(--gold);}
+  .header p{
+    color:#B9C4BB;
+    font-size:0.8rem;
+    max-width:600px;
+    margin:0.6rem auto 0;
+    line-height:1.5;
+  }
+  .legend{
+    display:flex;
+    gap:1.2rem;
+    justify-content:center;
+    margin-top:0.9rem;
+    flex-wrap:wrap;
+  }
+  .legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    font-family:'Space Mono',monospace;
+    font-size:0.65rem;
+    color:#D8E0DA;
+  }
+  .swatch{
+    width:12px;height:12px;border-radius:3px;
+    display:inline-block;
+  }
+  .swatch.home{background:var(--home); border:1.5px solid var(--home-border);}
+  .swatch.away{background:var(--away); border:1.5px solid var(--away-border);}
+  .swatch.changed{background:var(--changed); border:1.5px solid var(--changed-border);}
+
+  .status-bar{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.7rem;
+    flex-wrap:wrap;
+    margin-top:1rem;
+    padding-top:0.9rem;
+    border-top:1px solid rgba(255,255,255,0.12);
+  }
+  .status-text{
+    font-family:'Space Mono',monospace;
+    font-size:0.66rem;
+    color:#9CB0A4;
+  }
+  .status-text strong{color:var(--gold); font-weight:700;}
+  .refresh-note{
+    max-width:520px;
+    margin:0.6rem auto 0;
+    font-size:0.68rem;
+    color:#8FA398;
+    line-height:1.5;
+    text-align:center;
+  }
+
+  .grid-wrap{
+    max-width:100%;
+    overflow-x:auto;
+    padding:1.2rem 0.8rem 3rem;
+    -webkit-overflow-scrolling:touch;
+  }
+  table{
+    border-collapse:separate;
+    border-spacing:0;
+    background:var(--chalk);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 20px 40px -20px rgba(0,0,0,0.5);
+    min-width:1400px;
+  }
+  th, td{
+    font-size:0.68rem;
+    text-align:center;
+    white-space:nowrap;
+    padding:0.4rem 0.5rem;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+  thead th{
+    background:var(--pitch);
+    color:var(--chalk);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:0.85rem;
+    letter-spacing:0.03em;
+    padding:0.55rem 0.6rem;
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+  thead th:first-child{
+    z-index:4;
+    left:0;
+  }
+  tbody th{
+    background:var(--chalk-dim);
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    color:var(--ink);
+    position:sticky;
+    left:0;
+    z-index:1;
+    border-right:2px solid var(--gold);
+  }
+  tbody tr:nth-child(even) td{background:rgba(0,0,0,0.02);}
+  td.home{background:var(--home); border-left:3px solid var(--home-border);}
+  td.away{background:var(--away); border-left:3px solid var(--away-border);}
+  td.changed{
+    background:var(--changed) !important;
+    border-left:3px solid var(--changed-border) !important;
+    position:relative;
+    animation:pulse 1.8s ease-in-out 2;
+  }
+  td.changed::after{
+    content:"●";
+    position:absolute;
+    top:1px; right:2px;
+    font-size:0.4rem;
+    color:var(--changed-border);
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:inset 0 0 0 0 rgba(201,162,39,0);}
+    50%{ box-shadow:inset 0 0 0 2px rgba(201,162,39,0.6);}
+  }
+  td .tag{font-weight:700;}
+  td .ha{
+    font-family:'Space Mono',monospace;
+    font-size:0.6rem;
+    opacity:0.75;
+    margin-left:2px;
+  }
+  .hint{
+    text-align:center;
+    color:#8FA398;
+    font-size:0.7rem;
+    margin:-0.5rem 0 1rem;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <p class="eyebrow">PremIQ19</p>
+    <h1>FIXTURE <span>GRID</span></h1>
+    <p>Every club's opponent for Matchweeks 1–20 of the 2026/27 season. Scroll sideways to see all 20 teams.</p>
+    <div class="legend">
+      <span><span class="swatch home"></span> Home fixture</span>
+      <span><span class="swatch away"></span> Away fixture</span>
+      <span><span class="swatch changed"></span> Changed since last check</span>
+    </div>
+    <div class="status-bar">
+      <span class="status-text">Fixtures last verified: <strong id="verifiedDate">—</strong></span>
+      <span class="status-text" id="changeCount"></span>
+    </div>
+    <p class="refresh-note">This is a static page, so it can't auto-check premierleague.com itself. Just ask Claude "please refresh the PremIQ19 fixture grid" any time — it'll re-check the official fixtures, regenerate this page, and highlight exactly which cells moved.</p>
+  </div>
+
+  <p class="hint">↔ Scroll to see every club</p>
+
+  <div class="grid-wrap">
+    <table id="gridTable"></table>
+  </div>
+
+<script>
+  const TEAMS = [
+    {tag:'ARS', name:'Arsenal'},
+    {tag:'MCI', name:'Man City'},
+    {tag:'MUN', name:'Man Utd'},
+    {tag:'AVL', name:'Aston Villa'},
+    {tag:'LIV', name:'Liverpool'},
+    {tag:'BOU', name:'Bournemouth'},
+    {tag:'SUN', name:'Sunderland'},
+    {tag:'BHA', name:'Brighton'},
+    {tag:'BRE', name:'Brentford'},
+    {tag:'CHE', name:'Chelsea'},
+    {tag:'FUL', name:'Fulham'},
+    {tag:'NEW', name:'Newcastle'},
+    {tag:'EVE', name:'Everton'},
+    {tag:'LEE', name:'Leeds'},
+    {tag:'CRY', name:'C. Palace'},
+    {tag:'NFO', name:'Nottm Forest'},
+    {tag:'TOT', name:'Spurs'},
+    {tag:'COV', name:'Coventry'},
+    {tag:'IPS', name:'Ipswich'},
+    {tag:'HUL', name:'Hull'},
+  ];
+
+  // Each team's Matchweek 1-20 fixtures: [opponentTag, 'H' or 'A']
+  const FIXTURES = {
+    ARS: [['COV','H'],['AVL','A'],['CHE','H'],['SUN','A'],['BHA','A'],['LEE','H'],['NFO','A'],['EVE','H'],['LIV','A'],['HUL','H'],['NEW','A'],['MCI','H'],['BRE','A'],['TOT','A'],['BOU','H'],['MUN','H'],['CRY','A'],['FUL','A'],['IPS','H'],['BRE','H']],
+    MCI: [['BOU','H'],['CRY','A'],['COV','H'],['MUN','A'],['SUN','H'],['LIV','A'],['IPS','H'],['AVL','A'],['BHA','H'],['NFO','A'],['FUL','H'],['ARS','A'],['LEE','H'],['BRE','A'],['CHE','H'],['HUL','H'],['NEW','A'],['EVE','A'],['TOT','H'],['LEE','A']],
+    MUN: [['HUL','A'],['IPS','H'],['EVE','A'],['MCI','H'],['FUL','A'],['TOT','H'],['LEE','A'],['BOU','A'],['CHE','H'],['AVL','H'],['LIV','A'],['BRE','H'],['NEW','A'],['COV','H'],['CRY','A'],['ARS','A'],['NFO','H'],['SUN','H'],['BHA','A'],['NEW','H']],
+    AVL: [['BHA','A'],['ARS','H'],['HUL','A'],['NFO','H'],['TOT','A'],['BRE','H'],['NEW','A'],['MCI','A'],['FUL','H'],['MUN','A'],['SUN','H'],['IPS','A'],['EVE','H'],['CRY','H'],['COV','A'],['CHE','H'],['LEE','H'],['LIV','H'],['BOU','A'],['EVE','A']],
+    LIV: [['NEW','A'],['NFO','H'],['IPS','A'],['FUL','H'],['BOU','A'],['MCI','H'],['BRE','A'],['BHA','H'],['ARS','H'],['CRY','A'],['MUN','H'],['EVE','A'],['SUN','H'],['CHE','A'],['LEE','H'],['TOT','A'],['HUL','A'],['AVL','A'],['COV','H'],['SUN','A']],
+    BOU: [['MCI','A'],['EVE','H'],['NEW','A'],['BRE','H'],['LIV','H'],['CHE','A'],['SUN','H'],['MUN','A'],['LEE','H'],['IPS','A'],['NFO','H'],['FUL','A'],['BHA','H'],['HUL','H'],['ARS','A'],['COV','H'],['TOT','A'],['CRY','A'],['AVL','H'],['BHA','A']],
+    SUN: [['IPS','A'],['FUL','H'],['BRE','A'],['ARS','H'],['MCI','A'],['BHA','H'],['BOU','A'],['LEE','H'],['COV','A'],['CHE','H'],['AVL','A'],['TOT','H'],['LIV','A'],['NEW','A'],['NFO','H'],['CRY','H'],['EVE','A'],['MUN','A'],['HUL','H'],['LIV','H']],
+    BHA: [['AVL','H'],['CHE','A'],['LEE','H'],['COV','A'],['ARS','H'],['SUN','A'],['CRY','H'],['LIV','A'],['MCI','A'],['BRE','H'],['HUL','A'],['NEW','H'],['BOU','A'],['NFO','A'],['EVE','H'],['IPS','H'],['FUL','A'],['TOT','A'],['MUN','H'],['BOU','H']],
+    BRE: [['TOT','H'],['LEE','A'],['SUN','H'],['BOU','A'],['CHE','H'],['AVL','A'],['LIV','H'],['HUL','A'],['NFO','H'],['BHA','A'],['EVE','H'],['MUN','A'],['ARS','H'],['MCI','H'],['FUL','A'],['NEW','H'],['IPS','A'],['COV','A'],['CRY','H'],['ARS','A']],
+    CHE: [['FUL','A'],['BHA','H'],['ARS','A'],['HUL','H'],['BRE','A'],['BOU','H'],['EVE','A'],['TOT','H'],['MUN','H'],['SUN','A'],['LEE','H'],['NFO','A'],['CRY','H'],['LIV','H'],['MCI','A'],['AVL','H'],['COV','A'],['IPS','A'],['NEW','H'],['CRY','A']],
+    FUL: [['CHE','H'],['SUN','A'],['CRY','H'],['LIV','A'],['MUN','H'],['IPS','A'],['HUL','H'],['COV','A'],['AVL','A'],['NEW','H'],['MCI','A'],['BOU','H'],['TOT','A'],['EVE','A'],['BRE','H'],['LEE','A'],['BHA','H'],['ARS','H'],['NFO','A'],['TOT','H']],
+    NEW: [['LIV','H'],['TOT','A'],['BOU','H'],['LEE','A'],['HUL','H'],['COV','A'],['AVL','H'],['CRY','A'],['EVE','H'],['FUL','A'],['ARS','H'],['BHA','A'],['MUN','H'],['SUN','H'],['IPS','A'],['BRE','A'],['MCI','H'],['NFO','H'],['CHE','A'],['MUN','A']],
+    EVE: [['CRY','H'],['BOU','A'],['MUN','H'],['TOT','A'],['IPS','H'],['HUL','A'],['CHE','H'],['ARS','A'],['NEW','A'],['COV','H'],['BRE','A'],['LIV','H'],['AVL','A'],['FUL','H'],['BHA','A'],['NFO','A'],['SUN','H'],['MCI','H'],['LEE','A'],['AVL','H']],
+    LEE: [['NFO','A'],['BRE','H'],['BHA','A'],['NEW','H'],['CRY','H'],['ARS','A'],['MUN','H'],['SUN','A'],['BOU','A'],['TOT','H'],['CHE','A'],['COV','H'],['MCI','A'],['IPS','H'],['LIV','A'],['FUL','H'],['AVL','A'],['HUL','A'],['EVE','H'],['MCI','H']],
+    CRY: [['EVE','A'],['MCI','H'],['FUL','A'],['IPS','H'],['LEE','A'],['NFO','H'],['BHA','A'],['NEW','H'],['TOT','A'],['LIV','H'],['COV','A'],['HUL','H'],['CHE','A'],['AVL','A'],['MUN','H'],['SUN','A'],['ARS','H'],['BOU','H'],['BRE','A'],['CHE','H']],
+    NFO: [['LEE','H'],['LIV','A'],['TOT','H'],['AVL','A'],['COV','H'],['CRY','A'],['ARS','H'],['IPS','A'],['BRE','A'],['MCI','H'],['BOU','A'],['CHE','H'],['HUL','A'],['BHA','H'],['SUN','A'],['EVE','H'],['MUN','A'],['NEW','A'],['FUL','H'],['HUL','H']],
+    TOT: [['BRE','A'],['NEW','H'],['NFO','A'],['EVE','H'],['AVL','H'],['MUN','A'],['COV','H'],['CHE','A'],['CRY','H'],['LEE','A'],['IPS','H'],['SUN','A'],['FUL','H'],['ARS','H'],['HUL','A'],['LIV','A'],['BOU','H'],['BHA','H'],['MCI','A'],['FUL','A']],
+    COV: [['ARS','A'],['HUL','H'],['MCI','A'],['BHA','H'],['NFO','A'],['NEW','H'],['TOT','A'],['FUL','H'],['SUN','H'],['EVE','A'],['CRY','H'],['LEE','A'],['IPS','H'],['MUN','A'],['AVL','H'],['BOU','A'],['CHE','H'],['BRE','H'],['LIV','A'],['IPS','A']],
+    IPS: [['SUN','H'],['MUN','A'],['LIV','H'],['CRY','A'],['EVE','A'],['FUL','H'],['MCI','A'],['NFO','H'],['HUL','A'],['BOU','H'],['TOT','A'],['AVL','H'],['COV','A'],['LEE','A'],['NEW','H'],['BHA','A'],['BRE','H'],['CHE','H'],['ARS','A'],['COV','H']],
+    HUL: [['MUN','H'],['COV','A'],['AVL','H'],['CHE','A'],['NEW','A'],['EVE','H'],['FUL','A'],['BRE','H'],['IPS','H'],['ARS','A'],['BHA','H'],['CRY','A'],['NFO','H'],['BOU','A'],['TOT','H'],['MCI','A'],['LIV','H'],['LEE','H'],['SUN','A'],['NFO','A']],
+  };
+
+  const VERIFIED_DATE = '7 August 2026';
+
+  // Snapshot from the previous check. On first release this is identical to
+  // FIXTURES, so nothing shows as changed. Next time Claude refreshes this
+  // file after re-checking the official fixtures, this gets set to whatever
+  // FIXTURES was *before* the update, so the diff below highlights any moves.
+  const PREVIOUS_FIXTURES = {
+    ARS: [['COV','H'],['AVL','A'],['CHE','H'],['SUN','A'],['BHA','A'],['LEE','H'],['NFO','A'],['EVE','H'],['LIV','A'],['HUL','H'],['NEW','A'],['MCI','H'],['BRE','A'],['TOT','A'],['BOU','H'],['MUN','H'],['CRY','A'],['FUL','A'],['IPS','H'],['BRE','H']],
+    MCI: [['BOU','H'],['CRY','A'],['COV','H'],['MUN','A'],['SUN','H'],['LIV','A'],['IPS','H'],['AVL','A'],['BHA','H'],['NFO','A'],['FUL','H'],['ARS','A'],['LEE','H'],['BRE','A'],['CHE','H'],['HUL','H'],['NEW','A'],['EVE','A'],['TOT','H'],['LEE','A']],
+    MUN: [['HUL','A'],['IPS','H'],['EVE','A'],['MCI','H'],['FUL','A'],['TOT','H'],['LEE','A'],['BOU','A'],['CHE','H'],['AVL','H'],['LIV','A'],['BRE','H'],['NEW','A'],['COV','H'],['CRY','A'],['ARS','A'],['NFO','H'],['SUN','H'],['BHA','A'],['NEW','H']],
+    AVL: [['BHA','A'],['ARS','H'],['HUL','A'],['NFO','H'],['TOT','A'],['BRE','H'],['NEW','A'],['MCI','A'],['FUL','H'],['MUN','A'],['SUN','H'],['IPS','A'],['EVE','H'],['CRY','H'],['COV','A'],['CHE','H'],['LEE','H'],['LIV','H'],['BOU','A'],['EVE','A']],
+    LIV: [['NEW','A'],['NFO','H'],['IPS','A'],['FUL','H'],['BOU','A'],['MCI','H'],['BRE','A'],['BHA','H'],['ARS','H'],['CRY','A'],['MUN','H'],['EVE','A'],['SUN','H'],['CHE','A'],['LEE','H'],['TOT','A'],['HUL','A'],['AVL','A'],['COV','H'],['SUN','A']],
+    BOU: [['MCI','A'],['EVE','H'],['NEW','A'],['BRE','H'],['LIV','H'],['CHE','A'],['SUN','H'],['MUN','A'],['LEE','H'],['IPS','A'],['NFO','H'],['FUL','A'],['BHA','H'],['HUL','H'],['ARS','A'],['COV','H'],['TOT','A'],['CRY','A'],['AVL','H'],['BHA','A']],
+    SUN: [['IPS','A'],['FUL','H'],['BRE','A'],['ARS','H'],['MCI','A'],['BHA','H'],['BOU','A'],['LEE','H'],['COV','A'],['CHE','H'],['AVL','A'],['TOT','H'],['LIV','A'],['NEW','A'],['NFO','H'],['CRY','H'],['EVE','A'],['MUN','A'],['HUL','H'],['LIV','H']],
+    BHA: [['AVL','H'],['CHE','A'],['LEE','H'],['COV','A'],['ARS','H'],['SUN','A'],['CRY','H'],['LIV','A'],['MCI','A'],['BRE','H'],['HUL','A'],['NEW','H'],['BOU','A'],['NFO','A'],['EVE','H'],['IPS','H'],['FUL','A'],['TOT','A'],['MUN','H'],['BOU','H']],
+    BRE: [['TOT','H'],['LEE','A'],['SUN','H'],['BOU','A'],['CHE','H'],['AVL','A'],['LIV','H'],['HUL','A'],['NFO','H'],['BHA','A'],['EVE','H'],['MUN','A'],['ARS','H'],['MCI','H'],['FUL','A'],['NEW','H'],['IPS','A'],['COV','A'],['CRY','H'],['ARS','A']],
+    CHE: [['FUL','A'],['BHA','H'],['ARS','A'],['HUL','H'],['BRE','A'],['BOU','H'],['EVE','A'],['TOT','H'],['MUN','H'],['SUN','A'],['LEE','H'],['NFO','A'],['CRY','H'],['LIV','H'],['MCI','A'],['AVL','H'],['COV','A'],['IPS','A'],['NEW','H'],['CRY','A']],
+    FUL: [['CHE','H'],['SUN','A'],['CRY','H'],['LIV','A'],['MUN','H'],['IPS','A'],['HUL','H'],['COV','A'],['AVL','A'],['NEW','H'],['MCI','A'],['BOU','H'],['TOT','A'],['EVE','A'],['BRE','H'],['LEE','A'],['BHA','H'],['ARS','H'],['NFO','A'],['TOT','H']],
+    NEW: [['LIV','H'],['TOT','A'],['BOU','H'],['LEE','A'],['HUL','H'],['COV','A'],['AVL','H'],['CRY','A'],['EVE','H'],['FUL','A'],['ARS','H'],['BHA','A'],['MUN','H'],['SUN','H'],['IPS','A'],['BRE','A'],['MCI','H'],['NFO','H'],['CHE','A'],['MUN','A']],
+    EVE: [['CRY','H'],['BOU','A'],['MUN','H'],['TOT','A'],['IPS','H'],['HUL','A'],['CHE','H'],['ARS','A'],['NEW','A'],['COV','H'],['BRE','A'],['LIV','H'],['AVL','A'],['FUL','H'],['BHA','A'],['NFO','A'],['SUN','H'],['MCI','H'],['LEE','A'],['AVL','H']],
+    LEE: [['NFO','A'],['BRE','H'],['BHA','A'],['NEW','H'],['CRY','H'],['ARS','A'],['MUN','H'],['SUN','A'],['BOU','A'],['TOT','H'],['CHE','A'],['COV','H'],['MCI','A'],['IPS','H'],['LIV','A'],['FUL','H'],['AVL','A'],['HUL','A'],['EVE','H'],['MCI','H']],
+    CRY: [['EVE','A'],['MCI','H'],['FUL','A'],['IPS','H'],['LEE','A'],['NFO','H'],['BHA','A'],['NEW','H'],['TOT','A'],['LIV','H'],['COV','A'],['HUL','H'],['CHE','A'],['AVL','A'],['MUN','H'],['SUN','A'],['ARS','H'],['BOU','H'],['BRE','A'],['CHE','H']],
+    NFO: [['LEE','H'],['LIV','A'],['TOT','H'],['AVL','A'],['COV','H'],['CRY','A'],['ARS','H'],['IPS','A'],['BRE','A'],['MCI','H'],['BOU','A'],['CHE','H'],['HUL','A'],['BHA','H'],['SUN','A'],['EVE','H'],['MUN','A'],['NEW','A'],['FUL','H'],['HUL','H']],
+    TOT: [['BRE','A'],['NEW','H'],['NFO','A'],['EVE','H'],['AVL','H'],['MUN','A'],['COV','H'],['CHE','A'],['CRY','H'],['LEE','A'],['IPS','H'],['SUN','A'],['FUL','H'],['ARS','H'],['HUL','A'],['LIV','A'],['BOU','H'],['BHA','H'],['MCI','A'],['FUL','A']],
+    COV: [['ARS','A'],['HUL','H'],['MCI','A'],['BHA','H'],['NFO','A'],['NEW','H'],['TOT','A'],['FUL','H'],['SUN','H'],['EVE','A'],['CRY','H'],['LEE','A'],['IPS','H'],['MUN','A'],['AVL','H'],['BOU','A'],['CHE','H'],['BRE','H'],['LIV','A'],['IPS','A']],
+    IPS: [['SUN','H'],['MUN','A'],['LIV','H'],['CRY','A'],['EVE','A'],['FUL','H'],['MCI','A'],['NFO','H'],['HUL','A'],['BOU','H'],['TOT','A'],['AVL','H'],['COV','A'],['LEE','A'],['NEW','H'],['BHA','A'],['BRE','H'],['CHE','H'],['ARS','A'],['COV','H']],
+    HUL: [['MUN','H'],['COV','A'],['AVL','H'],['CHE','A'],['NEW','A'],['EVE','H'],['FUL','A'],['BRE','H'],['IPS','H'],['ARS','A'],['BHA','H'],['CRY','A'],['NFO','H'],['BOU','A'],['TOT','H'],['MCI','A'],['LIV','H'],['LEE','H'],['SUN','A'],['NFO','A']],
+  };
+
+  function teamByTag(tag){ return TEAMS.find(t => t.tag === tag); }
+
+  function buildTable(){
+    document.getElementById('verifiedDate').textContent = VERIFIED_DATE;
+
+    let changedCount = 0;
+    const table = document.getElementById('gridTable');
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    const cornerTh = document.createElement('th');
+    cornerTh.textContent = 'MW';
+    headRow.appendChild(cornerTh);
+    TEAMS.forEach(t => {
+      const th = document.createElement('th');
+      th.textContent = t.tag;
+      th.title = t.name;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    for(let mw = 1; mw <= 20; mw++){
+      const row = document.createElement('tr');
+      const rowTh = document.createElement('th');
+      rowTh.textContent = 'MW' + mw;
+      row.appendChild(rowTh);
+      TEAMS.forEach(t => {
+        const [oppTag, ha] = FIXTURES[t.tag][mw - 1];
+        const prev = PREVIOUS_FIXTURES[t.tag] ? PREVIOUS_FIXTURES[t.tag][mw - 1] : null;
+        const isChanged = prev && (prev[0] !== oppTag || prev[1] !== ha);
+        if(isChanged) changedCount++;
+
+        const td = document.createElement('td');
+        td.className = (ha === 'H' ? 'home' : 'away') + (isChanged ? ' changed' : '');
+        td.innerHTML = `<span class="tag">${oppTag}</span><span class="ha">(${ha})</span>`;
+        td.title = isChanged
+          ? `Changed! Was ${prev[0]} (${prev[1]}) — now ${teamByTag(t.tag).name} vs ${teamByTag(oppTag).name}`
+          : `${teamByTag(t.tag).name} vs ${teamByTag(oppTag).name}`;
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+
+    const changeEl = document.getElementById('changeCount');
+    changeEl.textContent = changedCount > 0
+      ? `⚠ ${changedCount} cell${changedCount > 1 ? 's' : ''} changed since last check`
+      : '✓ No changes since last check';
+  }
+
+  buildTable();
+</script>
+
+</body>
+</html>

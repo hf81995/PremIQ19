@@ -137,6 +137,7 @@
     <h1>PREM<span>IQ19</span></h1>
     <p class="subtitle" id="subtitleText">Slots: Select 7 clubs to finish in the slots</p>
     <div class="status-pill" id="statusPill">Loading…</div>
+    <p style="margin-top:0.5rem;"><a href="admin.html" style="color:#6E7C74; font-family:'Space Mono',monospace; font-size:0.62rem; text-decoration:underline;">Admin</a></p>
   </div>
 
   <div class="wrap">
@@ -145,7 +146,8 @@
       <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
     </div>
     <div class="playing-as" id="playingAs" style="display:none;"></div>
-    <p style="text-align:center;"><a class="leaderboard-link" href="leaderboard.html">View live leaderboard →</a></p>
+    <p style="text-align:center;"><a class="leaderboard-link" href="premiq19-fixture-grid.html" target="_blank">View fixture grid ↗</a></p>
+    <p id="leaderboardLinkWrap" style="text-align:center;"><a class="leaderboard-link" href="leaderboard.html">View live leaderboard →</a></p>
 
     <div id="slotsStep">
       <div class="arena">
@@ -354,6 +356,7 @@
     playingAs.innerHTML = `Playing as <span>${name}</span>`;
     document.getElementById('slotsStep').style.display = 'none';
     document.getElementById('questionsStep').style.display = 'block';
+    document.getElementById('leaderboardLinkWrap').style.display = 'none';
     document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
     currentQ = 1;
     renderQuestion();
@@ -521,6 +524,7 @@
       document.getElementById('slotsStep').style.display='block';
       document.getElementById('nameBox').style.display='flex';
       document.getElementById('playingAs').style.display='none';
+      document.getElementById('leaderboardLinkWrap').style.display='block';
       document.getElementById('subtitleText').textContent = 'Slots: Select 7 clubs to finish in the slots';
     }
     window.scrollTo({ top:0, behavior:'smooth' });
@@ -534,8 +538,8 @@
 
   async function loadH2HFixtures(){
     if(!sb) return [];
-    const { data } = await sb.from('h2h_fixtures').select('*').order('month');
-    return data || [];
+    const { data } = await sb.from('h2h_fixtures').select('*');
+    return sortByMonth(data || []);
   }
 
   async function goToH2H(){
@@ -656,6 +660,7 @@
   function showSummary(){
     document.getElementById('h2hStep').style.display='none';
     document.getElementById('summaryStep').style.display='block';
+    document.getElementById('leaderboardLinkWrap').style.display='block';
     document.getElementById('subtitleText').textContent = 'Submission complete — here\u2019s what you picked';
     switchSummaryTab('slots');
     window.scrollTo({ top:0, behavior:'smooth' });
@@ -694,7 +699,7 @@
 
   function renderQuestionsSummary(){
     const panel = document.getElementById('summaryQuestionsPanel');
-    panel.innerHTML = QUESTIONS.map(q => `<div class="summary-row"><span class="s-label">Q${q.id}</span><span class="s-value">${fmtAnswer(q)}</span></div>`).join('');
+    panel.innerHTML = QUESTIONS.map(q => `<div class="summary-row"><span class="s-label">Q${q.id}: ${q.short}</span><span class="s-value">${fmtAnswer(q)}</span></div>`).join('');
   }
 
   function renderH2HSummary(){

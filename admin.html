@@ -346,7 +346,8 @@
 
   // --- Monthly Super Sunday panel ---
   async function loadH2HPanel(){
-    const { data } = await supabaseAdmin.from('h2h_fixtures').select('*').order('month');
+    const { data: raw } = await supabaseAdmin.from('h2h_fixtures').select('*');
+    const data = sortByMonth(raw || []);
     const wrap = document.getElementById('h2hWrap');
     const teamOptions = TEAMS.map(t => `<option value="${t.tag}">${t.name}</option>`).join('');
     wrap.innerHTML = (data||[]).map(f => `

@@ -53,6 +53,7 @@
     <h1>PREM<span>IQ19</span></h1>
     <p>Live Leaderboard</p>
     <p><a class="back-link" href="index.html">← Back to picks</a></p>
+    <p><a href="admin.html" style="color:#6E7C74; font-family:'Space Mono',monospace; font-size:0.62rem; text-decoration:underline;">Admin</a></p>
   </div>
 
   <div class="wrap">
@@ -96,10 +97,10 @@
       sb.from('answers').select('*'),
       sb.from('questions').select('*'),
       sb.from('team_stats').select('*'),
-      sb.from('h2h_fixtures').select('*').order('month'),
+      sb.from('h2h_fixtures').select('*'),
       sb.from('h2h_predictions').select('*'),
     ]);
-    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:h2hFixtures||[], h2hPredictions:h2hPredictions||[] };
+    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:sortByMonth(h2hFixtures||[]), h2hPredictions:h2hPredictions||[] };
   }
 
   function statsFor(teamStats, tag){ return teamStats.find(s=>s.team_tag===tag); }
@@ -218,11 +219,12 @@
   async function renderH2HTab(){
     const panel = document.getElementById('h2hPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
-    const [{data:h2hFixtures},{data:h2hPredictions},{data:players}] = await Promise.all([
-      sb.from('h2h_fixtures').select('*').order('month'),
+    const [{data:h2hFixturesRaw},{data:h2hPredictions},{data:players}] = await Promise.all([
+      sb.from('h2h_fixtures').select('*'),
       sb.from('h2h_predictions').select('*'),
       sb.from('players').select('*'),
     ]);
+    const h2hFixtures = sortByMonth(h2hFixturesRaw || []);
     const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'—'; };
 
     const monthBlocks = (h2hFixtures||[]).map(f=>{
