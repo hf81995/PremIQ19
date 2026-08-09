@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PremIQ19 — Leaderboard</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PremIQ19">
+<meta name="theme-color" content="#0F3D2C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="questions-data.js"></script>
+<style>
+  :root{ --pitch-dark:#0B2E22; --pitch:#0F3D2C; --chalk:#F6F5EF; --chalk-dim:#EAE7DB; --ink:#122019; --ink-soft:#5C6B62; --line:#DCD8C9; --gold:#CBA633; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:radial-gradient(1200px 600px at 15% -10%, rgba(255,255,255,0.05), transparent 60%), var(--pitch-dark); font-family:'Inter',sans-serif; color:var(--ink); min-height:100vh; }
+  .header{ background:linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%); padding:1.6rem 1rem 1.2rem; text-align:center; border-bottom:3px solid rgba(203,166,51,0.5); }
+  .header h1{ font-family:'Bebas Neue',sans-serif; font-size:clamp(1.8rem,7vw,3rem); color:var(--chalk); margin:0; }
+  .header h1 span{ color:var(--gold); }
+  .header p{ color:#B9C4BB; font-size:0.78rem; margin:0.5rem 0 0; }
+  a.back-link{ color:var(--gold); font-family:'Space Mono',monospace; font-size:0.7rem; text-decoration:underline; }
+  .wrap{ max-width:820px; margin:0 auto; padding:1.2rem 0.8rem 3rem; }
+
+  .tab-bar{ display:flex; gap:1.2rem; margin-bottom:1rem; border-bottom:1.5px solid rgba(255,255,255,0.18); padding:0 0.2rem; flex-wrap:wrap; }
+  .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:#B9C4BB; padding:0.5rem 0.1rem; cursor:pointer; }
+  .tab-btn.active{ color:var(--chalk); border-bottom-color:var(--gold); }
+
+  .board{ background:var(--chalk); border-radius:16px; overflow:hidden; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
+  .empty{ text-align:center; padding:2rem; color:var(--ink-soft); font-size:0.85rem; }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.8rem; }
+  th, td{ text-align:left; padding:0.55rem 0.5rem; border-bottom:1px solid var(--line); }
+  th{ font-family:'Space Mono',monospace; font-size:0.62rem; text-transform:uppercase; color:var(--ink-soft); }
+  th.num, td.num{ text-align:right; }
+
+  .rank{ font-family:'Bebas Neue',sans-serif; font-size:1.15rem; color:var(--ink-soft); width:1.6rem; }
+  tr:nth-child(1) .rank{ color:#CBA633; } tr:nth-child(2) .rank{ color:#8C9199; } tr:nth-child(3) .rank{ color:#B08050; }
+  .pname{ font-weight:700; }
+  .ptotal{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); }
+  .psub{ font-family:'Space Mono',monospace; color:var(--ink-soft); }
+
+  .legend-row{ display:flex; gap:1rem; padding:0.7rem 1rem; font-size:0.68rem; color:var(--ink-soft); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .legend-row span b{ color:var(--ink); }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>PREM<span>IQ19</span></h1>
+    <p>Live Leaderboard</p>
+    <p><a class="back-link" href="index.html">← Back to picks</a></p>
+  </div>
+
+  <div class="wrap">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabLeaderboard">Leaderboard</button>
+      <button class="tab-btn" id="tabPLTable">PL Table</button>
+      <button class="tab-btn" id="tabH2H">Monthly Super Sunday</button>
+    </div>
+
+    <div id="leaderboardPanel"><div class="board"><div class="empty">Loading…</div></div></div>
+    <div id="plTablePanel" style="display:none;"></div>
+    <div id="h2hPanel" style="display:none;"></div>
+  </div>
+
+<script>
+  let sb = null;
+  try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(err){ console.warn('Supabase not configured yet — running in preview mode.', err); }
+
+  document.getElementById('tabLeaderboard').addEventListener('click', ()=>switchTab('leaderboard'));
+  document.getElementById('tabPLTable').addEventListener('click', ()=>switchTab('pltable'));
+  document.getElementById('tabH2H').addEventListener('click', ()=>switchTab('h2h'));
+
+  function switchTab(tab){
+    document.getElementById('tabLeaderboard').classList.toggle('active', tab==='leaderboard');
+    document.getElementById('tabPLTable').classList.toggle('active', tab==='pltable');
+    document.getElementById('tabH2H').classList.toggle('active', tab==='h2h');
+    document.getElementById('leaderboardPanel').style.display = tab==='leaderboard' ? 'block' : 'none';
+    document.getElementById('plTablePanel').style.display = tab==='pltable' ? 'block' : 'none';
+    document.getElementById('h2hPanel').style.display = tab==='h2h' ? 'block' : 'none';
+    if(tab==='leaderboard') renderLeaderboard();
+    else if(tab==='pltable') renderPLTable();
+    else renderH2HTab();
+  }
+
+  async function loadAll(){
+    if(!sb) return null;
+    const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2hFixtures},{data:h2hPredictions}] = await Promise.all([
+      sb.from('players').select('*'),
+      sb.from('picks').select('*'),
+      sb.from('answers').select('*'),
+      sb.from('questions').select('*'),
+      sb.from('team_stats').select('*'),
+      sb.from('h2h_fixtures').select('*').order('month'),
+      sb.from('h2h_predictions').select('*'),
+    ]);
+    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:h2hFixtures||[], h2hPredictions:h2hPredictions||[] };
+  }
+
+  function statsFor(teamStats, tag){ return teamStats.find(s=>s.team_tag===tag); }
+  function slotOrder(slotId){ return SLOTS.findIndex(s=>s.id===slotId); }
+
+  function computeSlotsPoints(playerId, picks, teamStats){
+    const myPicks = picks.filter(p=>p.player_id===playerId);
+    let total = 0;
+    myPicks.forEach(p=>{
+      const stats = statsFor(teamStats, p.team_tag);
+      total += pickScore(p, stats).points;
+    });
+    return total;
+  }
+
+  function computeQuestionsPoints(playerId, answers, questions){
+    let total = 0;
+    QUESTIONS.forEach(q=>{
+      const dbQ = questions.find(x=>x.id===q.id);
+      const correctAnswer = dbQ ? dbQ.correct_answer : null;
+      const row = answers.find(a=>a.player_id===playerId && a.question_id===q.id);
+      if(!row) return;
+      let playerAnswer, allAnswers = null;
+      if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+        playerAnswer = { playerId, value: (row.answer!=null && row.answer!=='') ? Number(row.answer) : null };
+        allAnswers = answers.filter(a=>a.question_id===q.id).map(a=>({ playerId:a.player_id, value:(a.answer!=null && a.answer!=='') ? Number(a.answer) : null }));
+      } else {
+        playerAnswer = row.answer;
+      }
+      total += scoreAnswer(q, playerAnswer, correctAnswer, allAnswers).points;
+    });
+    return total;
+  }
+
+  function computeH2HPoints(playerId, h2hPredictions, h2hFixtures){
+    let total = 0;
+    h2hPredictions.filter(p=>p.player_id===playerId).forEach(pred=>{
+      const fixture = h2hFixtures.find(f=>f.month===pred.month);
+      total += scoreH2H(pred, fixture).points;
+    });
+    return total;
+  }
+
+  async function renderLeaderboard(){
+    const panel = document.getElementById('leaderboardPanel');
+    const data = await loadAll();
+    if(!data){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see live standings.</div></div>'; return; }
+    const { players, picks, answers, questions, teamStats, h2hFixtures, h2hPredictions } = data;
+    if(players.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No entries yet — be the first to submit picks!</div></div>'; return; }
+
+    const scored = players.map(p => {
+      const slotsPts = computeSlotsPoints(p.id, picks, teamStats);
+      const questionsPts = computeQuestionsPoints(p.id, answers, questions);
+      const h2hPts = computeH2HPoints(p.id, h2hPredictions, h2hFixtures);
+      return { name:p.name, slotsPts, questionsPts, h2hPts, total: slotsPts+questionsPts+h2hPts };
+    });
+    scored.sort((a,b)=>b.total-a.total);
+
+    const rows = scored.map((p,i)=>`
+      <tr>
+        <td class="rank">${i+1}</td>
+        <td class="pname">${p.name}</td>
+        <td class="num psub">${Math.round(p.slotsPts*100)/100}</td>
+        <td class="num psub">${p.questionsPts}</td>
+        <td class="num psub">${p.h2hPts}</td>
+        <td class="num ptotal">${Math.round(p.total*100)/100}</td>
+      </tr>`).join('');
+
+    panel.innerHTML = `
+      <div class="board">
+        <div class="legend-row"><span><b>Slots</b> = 7 slot picks</span><span><b>Questions</b> = 19 answers</span><span><b>Super Sunday</b> = monthly head-to-head</span></div>
+        <table>
+          <tr><th>#</th><th>Player</th><th class="num">Slots</th><th class="num">Questions</th><th class="num">Super Sunday</th><th class="num">Total</th></tr>
+          ${rows}
+        </table>
+      </div>`;
+  }
+
+  async function renderPLTable(){
+    const panel = document.getElementById('plTablePanel');
+    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see the table.</div></div>'; return; }
+    const { data } = await sb.from('team_stats').select('*');
+    if(!data || data.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No results entered yet.</div></div>'; return; }
+
+    const list = data.map(t => ({ ...t, gd: t.goals_for-t.goals_against, pts: t.wins*3+t.draws }));
+    list.sort((a,b)=>{
+      if(b.pts!==a.pts) return b.pts-a.pts;
+      if(b.gd!==a.gd) return b.gd-a.gd;
+      if(b.goals_for!==a.goals_for) return b.goals_for-a.goals_for;
+      return a.team_name.localeCompare(b.team_name);
+    });
+    const rows = list.map((t,i)=>`
+      <tr>
+        <td class="rank">${i+1}</td>
+        <td class="pname">${t.team_name}</td>
+        <td class="num psub">${t.matches_played}</td>
+        <td class="num psub">${t.wins}</td>
+        <td class="num psub">${t.draws}</td>
+        <td class="num psub">${t.losses}</td>
+        <td class="num psub">${t.goals_for}</td>
+        <td class="num psub">${t.goals_against}</td>
+        <td class="num psub">${t.gd}</td>
+        <td class="num ptotal">${t.pts}</td>
+      </tr>`).join('');
+    panel.innerHTML = `
+      <div class="board">
+        <div class="legend-row"><span>Based on results entered by the organiser each matchweek. Sorted the same way the real Premier League breaks ties: Points → Goal Difference → Goals For.</span></div>
+        <div class="legend-row"><span>Remember, this table is purely based on teams playing opponents for the first time, hence eventually this may differ to the official PL table if a rescheduling takes place.</span></div>
+        <table>
+          <tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">GF</th><th class="num">GA</th><th class="num">GD</th><th class="num">Pts</th></tr>
+          ${rows}
+        </table>
+      </div>`;
+  }
+
+  async function renderH2HTab(){
+    const panel = document.getElementById('h2hPanel');
+    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
+    const [{data:h2hFixtures},{data:h2hPredictions},{data:players}] = await Promise.all([
+      sb.from('h2h_fixtures').select('*').order('month'),
+      sb.from('h2h_predictions').select('*'),
+      sb.from('players').select('*'),
+    ]);
+    const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'—'; };
+
+    const monthBlocks = (h2hFixtures||[]).map(f=>{
+      if(!f.team_a || !f.team_b){
+        return `<div class="board" style="margin-bottom:1rem;"><div class="legend-row"><span>${f.month}: fixture not added yet — organiser sets this closer to the time.</span></div></div>`;
+      }
+      const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
+      const resolved = f.result != null;
+      const preds = (h2hPredictions||[]).filter(p=>p.month===f.month);
+      const rows = preds.map(pred=>{
+        const pts = scoreH2H(pred, f).points;
+        const resultLabel = pred.result==='A' ? `${teamA.name} win` : pred.result==='D' ? 'Draw' : `${teamB.name} win`;
+        return `<tr><td class="pname">${playerName(pred.player_id)}</td><td class="psub">${resultLabel}</td><td class="psub">${pred.score_a}-${pred.score_b}</td><td class="num ptotal">${resolved?pts:'—'}</td></tr>`;
+      }).join('');
+      return `
+        <div class="board" style="margin-bottom:1rem;">
+          <div class="legend-row">
+            <span><b>${f.month}: ${teamA.name} v ${teamB.name}</b></span>
+            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet — points will show once entered'}</span>
+          </div>
+          <table>
+            <tr><th>Player</th><th>Result picked</th><th>Scoreline picked</th><th class="num">Points</th></tr>
+            ${rows || '<tr><td colspan="4" class="psub" style="text-align:center; padding:1rem;">No predictions yet</td></tr>'}
+          </table>
+        </div>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="legend-row" style="margin-bottom:1rem; background:var(--chalk); border-radius:12px; border-bottom:none;">
+        <span>Result correct = 25 points. Exact scoreline correct = 50 points. Up to 75 points available each month.</span>
+      </div>
+      ${monthBlocks || '<div class="board"><div class="empty">No Super Sunday fixtures yet.</div></div>'}`;
+  }
+
+  renderLeaderboard();
+  setInterval(()=>{ document.getElementById('tabLeaderboard').classList.contains('active') && renderLeaderboard(); }, 30000);
+</script>
+</body>
+</html>

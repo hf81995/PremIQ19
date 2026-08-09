@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PremIQ19</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PremIQ19">
+<meta name="theme-color" content="#0F3D2C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="questions-data.js"></script>
+<style>
+  :root{
+    --pitch-dark:#0B2E22; --pitch:#0F3D2C; --chalk:#F6F5EF; --chalk-dim:#EAE7DB;
+    --ink:#122019; --ink-soft:#5C6B62; --line:#DCD8C9; --gold:#CBA633;
+    --z1-a:#CBA633; --z1-b:#8C6E15; --z2-a:#4A7FA0; --z2-b:#2E5470;
+    --z3-a:#2E8B57; --z3-b:#1F6740; --z4-a:#2E9B8F; --z4-b:#1F6E65;
+    --z5-a:#D98A2B; --z5-b:#A8641A; --z6-a:#C8562C; --z6-b:#96401F;
+    --z7-a:#A32638; --z7-b:#6E1725;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(1200px 600px at 15% -10%, rgba(255,255,255,0.05), transparent 60%), var(--pitch-dark);
+    font-family:'Inter',sans-serif; color:var(--ink); min-height:100vh;
+  }
+  .header{
+    background: repeating-linear-gradient(100deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 60px, transparent 60px, transparent 120px), linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%);
+    padding:1.6rem 1rem 1.4rem; text-align:center; border-bottom:3px solid rgba(203,166,51,0.5);
+  }
+  .header h1{ font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,8vw,3.2rem); color:var(--chalk); margin:0; }
+  .header h1 span{ color:var(--gold); }
+  .status-pill{
+    display:inline-block; margin-top:0.6rem; font-family:'Space Mono',monospace; font-size:0.65rem;
+    color:#EADFB4; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16);
+    padding:0.3rem 0.7rem; border-radius:999px;
+  }
+  .subtitle{ font-family:'Space Mono',monospace; letter-spacing:0.04em; font-size:0.72rem; color:var(--gold); text-transform:uppercase; margin:0.5rem 0 0; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:1rem 0.7rem 4rem; }
+  .name-box{
+    display:flex; align-items:center; justify-content:center; gap:0.6rem; max-width:420px; margin:0 auto 1rem;
+    background:var(--chalk); border-radius:14px; padding:0.7rem 1rem; box-shadow:0 14px 28px -18px rgba(0,0,0,0.5);
+  }
+  .name-box label{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:var(--ink); }
+  .name-box input{ flex:1; min-width:0; border:1.5px solid var(--line); border-radius:9px; padding:0.45rem 0.6rem; font-size:0.85rem; }
+  .name-box input:focus{ outline:none; border-color:var(--ink); box-shadow:0 0 0 3px rgba(18,32,25,0.12); }
+  .playing-as{
+    text-align:center; max-width:420px; margin:0 auto 1rem; background:var(--chalk); border-radius:14px;
+    padding:0.6rem 1rem; box-shadow:0 14px 28px -18px rgba(0,0,0,0.5);
+    font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; color:var(--ink);
+  }
+  .playing-as span{ color:var(--pitch); }
+
+  .arena{ display:flex; gap:0.6rem; align-items:flex-start; }
+  .col{ flex:1 1 0; min-width:0; background:var(--chalk); border-radius:16px; padding:0.7rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
+  .col-pool{ flex:0.92 1 0; } .col-zones{ flex:1.08 1 0; }
+  .col-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:0.55rem; gap:0.4rem; }
+  .col-title h2{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; margin:0; }
+  .col-title .count{ font-family:'Space Mono',monospace; font-size:0.6rem; color:var(--ink-soft); background:var(--chalk-dim); padding:0.22rem 0.45rem; border-radius:999px; }
+  .arrow-hint{ display:flex; align-items:center; justify-content:center; color:#8FA398; font-size:0.85rem; width:14px; padding-top:2.2rem; flex:0 0 auto; }
+
+  #pool{ display:flex; flex-direction:column; gap:0.4rem; max-height:72vh; overflow-y:auto; }
+  .chip{ display:flex; align-items:center; gap:0.5rem; background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:0.42rem 0.5rem; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:grab; min-width:0; }
+  .chip.ghosted{ opacity:0.35; }
+  .chip .badge{ width:24px; height:24px; border-radius:7px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.6rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .chip .name{ font-size:0.72rem; font-weight:700; min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pool-empty{ text-align:center; padding:1.4rem 0.6rem; color:var(--ink-soft); font-size:0.76rem; border:2px dashed var(--line); border-radius:11px; }
+
+  #zones{ display:flex; flex-direction:column; gap:0.4rem; }
+  .zone{ border-radius:12px; padding:0.5rem 0.55rem; color:#fff; position:relative; overflow:hidden; }
+  .zone.droptarget{ transform:scale(1.03); box-shadow:0 0 0 3px rgba(255,255,255,0.7); }
+  .zone-inner{ display:flex; align-items:center; gap:0.45rem; position:relative; z-index:1; }
+  .zone-label{ width:52px; flex-shrink:0; }
+  .zone-label .pos{ font-family:'Bebas Neue',sans-serif; font-size:0.98rem; line-height:1; }
+  .mult-chip{ font-family:'Space Mono',monospace; font-weight:700; font-size:0.66rem; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding:0.2rem 0.4rem; border-radius:999px; flex-shrink:0; }
+  .zone-slot{ flex:1; min-width:0; min-height:38px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.14); border:1.5px dashed rgba(255,255,255,0.45); border-radius:8px; padding:0.2rem 0.4rem; gap:0.25rem; }
+  .zone-slot.filled{ background:rgba(255,255,255,0.95); border:1.5px solid rgba(255,255,255,0.9); color:var(--ink); }
+  .zone-slot .placeholder{ opacity:0.8; font-size:0.64rem; }
+  .zone-slot .placed-team{ display:flex; align-items:center; gap:0.35rem; font-weight:800; font-size:0.72rem; min-width:0; cursor:grab; touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .zone-slot .placed-name{ white-space:normal; line-height:1.15; word-break:break-word; min-width:0; flex:1 1 auto; }
+  .zone-slot .placed-badge{ width:20px; height:20px; border-radius:6px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.55rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .remove-btn{ background:none; border:none; color:var(--ink-soft); font-size:0.85rem; cursor:pointer; padding:0.1rem 0.25rem; border-radius:6px; flex-shrink:0; }
+  .z1{background:linear-gradient(120deg,var(--z1-a),var(--z1-b));} .z2{background:linear-gradient(120deg,var(--z2-a),var(--z2-b));}
+  .z3{background:linear-gradient(120deg,var(--z3-a),var(--z3-b));} .z4{background:linear-gradient(120deg,var(--z4-a),var(--z4-b));}
+  .z5{background:linear-gradient(120deg,var(--z5-a),var(--z5-b));} .z6{background:linear-gradient(120deg,var(--z6-a),var(--z6-b));}
+  .z7{background:linear-gradient(120deg,var(--z7-a),var(--z7-b)); box-shadow:0 0 0 2px rgba(203,166,51,0.7) inset;}
+
+  .questions-panel{ background:var(--chalk); border-radius:16px; padding:1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
+  .questions-panel h2{ font-family:'Bebas Neue',sans-serif; font-size:1.3rem; margin:0 0 0.8rem; color:var(--ink-soft); letter-spacing:0.02em; }
+  .question-block{ margin-bottom:1rem; }
+  .question-text{ font-size:0.85rem; font-weight:500; color:var(--ink-soft); line-height:1.5; margin-bottom:0.7rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .question-points{ font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--pitch); background:var(--chalk-dim); padding:0.25rem 0.6rem; border-radius:999px; white-space:nowrap; width:fit-content; font-weight:700; }
+  .option-row{ display:flex; flex-wrap:wrap; gap:0.5rem; }
+  .option-btn{ font-family:'Inter',sans-serif; font-size:0.78rem; font-weight:600; padding:0.5rem 0.9rem; border-radius:9px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; transition:all .12s ease; }
+  .option-btn:hover:not([disabled]){ border-color:var(--gold); }
+  .option-btn.selected{ background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:800; box-shadow:0 0 0 3px rgba(203,166,51,0.25); }
+
+  .tab-bar{ display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1.5px solid var(--line); }
+  .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:var(--ink-soft); padding:0.5rem 0.2rem; cursor:pointer; margin-right:1rem; }
+  .tab-btn.active{ color:var(--ink); border-bottom-color:var(--gold); }
+  .summary-row{ display:flex; justify-content:space-between; gap:0.7rem; padding:0.55rem 0; border-bottom:1px solid var(--line); font-size:0.82rem; }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row .s-label{ color:var(--ink-soft); flex-shrink:0; }
+  .summary-row .s-value{ font-weight:700; text-align:right; }
+
+  .footer-actions{ display:flex; gap:0.7rem; margin-top:1.2rem; flex-wrap:wrap; align-items:center; }
+  .btn{ font-family:'Inter',sans-serif; font-weight:700; font-size:0.85rem; padding:0.65rem 1.1rem; border-radius:10px; border:none; cursor:pointer; }
+  .btn-primary{ background:var(--ink); color:var(--chalk); }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:#B9C4BB; border:1.5px solid rgba(255,255,255,0.2); }
+  .feedback{ font-size:0.8rem; color:#D8E0DA; }
+  .feedback.error{ color:#F2A6A6; }
+  a.leaderboard-link{ color:var(--gold); font-family:'Space Mono',monospace; font-size:0.72rem; text-decoration:underline; }
+
+  #ghost{ position:fixed; top:0; left:0; z-index:999; pointer-events:none; display:none; align-items:center; gap:0.5rem; background:#fff; border:2px solid var(--ink); border-radius:12px; padding:0.5rem 0.65rem; box-shadow:0 18px 30px -10px rgba(0,0,0,0.5); transform:translate(-50%,-50%) scale(1.08) rotate(-2deg); }
+  #ghost .badge{ width:28px; height:28px; border-radius:8px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.68rem; display:flex; align-items:center; justify-content:center; }
+  #ghost .name{ font-size:0.75rem; font-weight:800; white-space:nowrap; }
+
+  @media (min-width:640px){
+    .wrap{ padding:2rem 1.5rem 4rem; } .arena{ gap:1.6rem; } .col{ padding:1.3rem; }
+    .col-title h2{ font-size:1.4rem; } #pool{ max-height:640px; }
+    .chip{ padding:0.55rem 0.7rem; gap:0.6rem; } .chip .badge{ width:34px; height:34px; font-size:0.85rem; } .chip .name{ font-size:0.85rem; }
+    .zone{ padding:0.85rem 0.95rem; } .zone-label{ width:100px; } .zone-label .pos{ font-size:1.3rem; }
+    .zone-slot{ min-height:46px; font-size:0.8rem; } .zone-slot .placed-team{ font-size:0.88rem; } .mult-chip{ font-size:0.82rem; padding:0.3rem 0.55rem; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>PREM<span>IQ19</span></h1>
+    <p class="subtitle" id="subtitleText">Slots: Select 7 clubs to finish in the slots</p>
+    <div class="status-pill" id="statusPill">Loading…</div>
+  </div>
+
+  <div class="wrap">
+    <div class="name-box" id="nameBox">
+      <label for="playerName">Name:</label>
+      <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
+    </div>
+    <div class="playing-as" id="playingAs" style="display:none;"></div>
+    <p style="text-align:center;"><a class="leaderboard-link" href="leaderboard.html">View live leaderboard →</a></p>
+
+    <div id="slotsStep">
+      <div class="arena">
+        <div class="col col-pool">
+          <div class="col-title"><h2>Teams</h2><span class="count" id="poolCount">20/20</span></div>
+          <div id="pool"></div>
+        </div>
+        <div class="arrow-hint">➜</div>
+        <div class="col col-zones">
+          <div class="col-title"><h2>Your Slots</h2><span class="count" id="zoneCount">0/7</span></div>
+          <div id="zones"></div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="continueBtn" disabled>Continue to questions →</button>
+        <button class="btn btn-ghost" id="resetBtn">Reset all</button>
+      </div>
+    </div>
+
+    <div id="questionsStep" style="display:none;">
+      <div class="questions-panel">
+        <h2>PREM IQ19 Questions</h2>
+        <div id="questionsList"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="nextBtn" disabled>Move onto Q2 →</button>
+        <button class="btn btn-ghost" id="prevBtn">← Back to slots</button>
+      </div>
+    </div>
+
+    <div id="h2hStep" style="display:none;">
+      <div class="questions-panel">
+        <h2>Monthly Super Sunday</h2>
+        <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One head-to-head fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
+        <div id="h2hList"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="h2hContinueBtn">Continue to summary →</button>
+        <button class="btn btn-ghost" id="h2hBackBtn">← Back</button>
+      </div>
+    </div>
+
+    <div id="summaryStep" style="display:none;">
+      <div class="questions-panel">
+        <h2>You're all set!</h2>
+        <p style="text-align:center; color:var(--ink-soft); font-size:0.82rem; margin-top:-0.4rem;">Here's a summary of everything you submitted.</p>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tabSlotsBtn">My Slots</button>
+          <button class="tab-btn" id="tabQuestionsBtn">My Questions</button>
+          <button class="tab-btn" id="tabH2HBtn">My Super Sunday Picks</button>
+        </div>
+        <div id="summarySlotsPanel"></div>
+        <div id="summaryQuestionsPanel" style="display:none;"></div>
+        <div id="summaryH2HPanel" style="display:none;"></div>
+      </div>
+      <div class="footer-actions">
+        <a class="btn btn-primary" href="leaderboard.html" style="text-decoration:none; display:inline-block;">View leaderboard →</a>
+        <span class="feedback" id="feedback"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="ghost"><span class="badge" id="ghostBadge"></span><span class="name" id="ghostName"></span></div>
+
+<script>
+  let sb = null;
+  try{
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(err){
+    console.warn('Supabase not configured yet — running in preview mode.', err);
+  }
+
+  let assignments = {}; SLOTS.forEach(s => assignments[s.id] = null);
+  let dragTeamId=null, dragFromZone=null, dragActive=false, dragStartX=0, dragStartY=0;
+  const DRAG_THRESHOLD = 6;
+  const ghostEl = document.getElementById('ghost'), ghostBadge = document.getElementById('ghostBadge'), ghostName = document.getElementById('ghostName');
+
+  function assignedTeamIds(){ return Object.values(assignments).filter(Boolean); }
+  function startGhost(t,x,y){ ghostBadge.textContent=t.tag; ghostName.textContent=t.name; ghostEl.style.display='flex'; moveGhost(x,y); }
+  function moveGhost(x,y){ ghostEl.style.left=x+'px'; ghostEl.style.top=y+'px'; }
+  function endGhost(){ ghostEl.style.display='none'; }
+  function clearZoneHighlights(){ document.querySelectorAll('.zone').forEach(z=>z.classList.remove('droptarget')); }
+  function zoneElAtPoint(x,y){ const el=document.elementFromPoint(x,y); return el ? el.closest('.zone') : null; }
+
+  function commitDrop(teamId, fromZone, targetZoneId){
+    if(!targetZoneId){ if(fromZone) assignments[fromZone]=null; render(); return; }
+    if(fromZone) assignments[fromZone]=null;
+    const bumped = assignments[targetZoneId];
+    assignments[targetZoneId]=teamId;
+    if(bumped && bumped!==teamId && fromZone) assignments[fromZone]=bumped;
+    render();
+  }
+
+  function attachDrag(el, teamId, fromZone){
+    el.addEventListener('pointerdown',(e)=>{
+      e.preventDefault();
+      dragTeamId=teamId; dragFromZone=fromZone; dragActive=false; dragStartX=e.clientX; dragStartY=e.clientY;
+      el.setPointerCapture(e.pointerId);
+      const onMove=(ev)=>{
+        const dx=ev.clientX-dragStartX, dy=ev.clientY-dragStartY;
+        if(!dragActive && Math.hypot(dx,dy)>DRAG_THRESHOLD){
+          dragActive=true; const t=teamByTag(dragTeamId);
+          startGhost(t, ev.clientX, ev.clientY);
+          document.querySelectorAll('.chip,.placed-team').forEach(c=>{ if(c.dataset.teamid===dragTeamId) c.classList.add('ghosted'); });
+        }
+        if(dragActive){
+          moveGhost(ev.clientX, ev.clientY); clearZoneHighlights();
+          const z=zoneElAtPoint(ev.clientX, ev.clientY); if(z) z.classList.add('droptarget');
+        }
+      };
+      const onUp=(ev)=>{
+        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+        endGhost(); clearZoneHighlights();
+        document.querySelectorAll('.ghosted').forEach(c=>c.classList.remove('ghosted'));
+        if(dragActive){
+          const zoneEl=zoneElAtPoint(ev.clientX, ev.clientY);
+          const zoneId = zoneEl ? zoneEl.getAttribute('data-zoneid') : null;
+          commitDrop(dragTeamId, dragFromZone, zoneId);
+        } else {
+          handleTap(dragTeamId, dragFromZone);
+        }
+        dragActive=false; dragTeamId=null; dragFromZone=null;
+      };
+      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+    });
+  }
+
+  let selectedTeamId=null, selectedFromZone=null;
+  function handleTap(teamId, fromZone){
+    if(selectedTeamId===teamId){ selectedTeamId=null; selectedFromZone=null; render(); return; }
+    if(selectedTeamId && fromZone){ placeInZone(fromZone); return; }
+    selectedTeamId=teamId; selectedFromZone=fromZone; render();
+  }
+  function placeInZone(zoneId){ if(!selectedTeamId) return; commitDrop(selectedTeamId, selectedFromZone, zoneId); selectedTeamId=null; selectedFromZone=null; }
+  function removeFromZone(zoneId, evt){ if(evt) evt.stopPropagation(); assignments[zoneId]=null; render(); }
+  function resetAll(){ SLOTS.forEach(s=>assignments[s.id]=null); selectedTeamId=null; selectedFromZone=null; render(); }
+
+  function render(){
+    const placedIds = assignedTeamIds();
+    const pool = document.getElementById('pool'); pool.innerHTML='';
+    const unplaced = TEAMS.filter(t=>!placedIds.includes(t.tag));
+    document.getElementById('poolCount').textContent = `${unplaced.length}/${TEAMS.length}`;
+    const filledCount = placedIds.length;
+    document.getElementById('zoneCount').textContent = `${filledCount}/7`;
+    const nameFilled = document.getElementById('playerName').value.trim().length > 0;
+    document.getElementById('continueBtn').disabled = !(filledCount === 7 && nameFilled);
+
+    if(unplaced.length===0){
+      const div=document.createElement('div'); div.className='pool-empty'; div.textContent='All 20 clubs placed.';
+      pool.appendChild(div);
+    }
+    unplaced.forEach(t=>{
+      const chip=document.createElement('div');
+      chip.className='chip'+(selectedTeamId===t.tag?' selected':'');
+      chip.dataset.teamid=t.tag; chip.title=t.name;
+      chip.innerHTML=`<span class="badge">${t.tag}</span><span class="name">${t.name}</span>`;
+      attachDrag(chip, t.tag, null);
+      pool.appendChild(chip);
+    });
+
+    const zonesEl=document.getElementById('zones'); zonesEl.innerHTML='';
+    SLOTS.forEach((z,i)=>{
+      const tag = assignments[z.id];
+      const t = tag ? teamByTag(tag) : null;
+      const zoneDiv=document.createElement('div');
+      zoneDiv.className=`zone z${i+1}`; zoneDiv.setAttribute('data-zoneid', z.id);
+      zoneDiv.innerHTML = `
+        <div class="zone-inner">
+          <div class="zone-label"><span class="pos">${z.label}</span></div>
+          <div class="zone-slot ${t?'filled':''}">
+            ${t ? `<span class="placed-team" data-teamid="${t.tag}"><span class="placed-badge">${t.tag}</span><span class="placed-name">${t.name}</span></span><button class="remove-btn">×</button>`
+                : `<span class="placeholder">Drop here</span>`}
+          </div>
+          <div class="mult-chip">x${z.mult}</div>
+        </div>`;
+      zoneDiv.addEventListener('click',(e)=>{
+        if(e.target.closest('.remove-btn')) return;
+        if(e.target.closest('.placed-team')) return;
+        if(selectedTeamId) placeInZone(z.id);
+      });
+      if(t){
+        const placedEl = zoneDiv.querySelector('.placed-team');
+        attachDrag(placedEl, t.tag, z.id);
+        zoneDiv.querySelector('.remove-btn').addEventListener('click',(e)=>removeFromZone(z.id, e));
+      }
+      zonesEl.appendChild(zoneDiv);
+    });
+  }
+  document.getElementById('playerName').addEventListener('input', render);
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+  document.getElementById('continueBtn').addEventListener('click', goToQuestions);
+
+  // ============================================================
+  // Questions flow (19 questions, one at a time)
+  // ============================================================
+  const TOTAL_QUESTIONS = 19;
+  let currentQ = 1;
+  let answersState = {}; // questionId -> raw answer (shape depends on type)
+  QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
+
+  function goToQuestions(){
+    document.getElementById('nameBox').style.display = 'none';
+    const name = document.getElementById('playerName').value.trim();
+    const playingAs = document.getElementById('playingAs');
+    playingAs.style.display = 'block';
+    playingAs.innerHTML = `Playing as <span>${name}</span>`;
+    document.getElementById('slotsStep').style.display = 'none';
+    document.getElementById('questionsStep').style.display = 'block';
+    document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
+    currentQ = 1;
+    renderQuestion();
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  function isAnswered(q){
+    const a = answersState[q.id];
+    if(q.type==='multi3') return a.length===3;
+    if(q.type==='single1') return a.length===1;
+    return a !== '' && a != null;
+  }
+
+  function hintBoxHtml(text){
+    return `<div style="background:var(--chalk-dim); border-left:3px solid var(--gold); border-radius:8px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.76rem; color:var(--ink-soft); font-style:italic;">${text}</div>`;
+  }
+
+  function renderQuestion(){
+    const q = questionById(currentQ);
+    const list = document.getElementById('questionsList');
+    const label = typeof q.label === 'function' ? null : q.label;
+
+    if(q.type==='multi3' || q.type==='single1'){
+      const slotTeamId = assignments[q.slotLink];
+      if(!slotTeamId){
+        list.innerHTML = `<p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">Go back and pick a club for Slot ${q.slotLink} first — this question is built around whoever you chose.</p>`;
+        updateQNav();
+        return;
+      }
+      const team = teamByTag(slotTeamId);
+      const opponents = FIXTURES[team.tag] || [];
+      const maxPick = q.type==='multi3' ? 3 : 1;
+      const current = answersState[q.id];
+      const optionsHtml = opponents.map(([oppTag, ha]) => {
+        const opp = TEAMS.find(t => t.tag === oppTag);
+        const checked = current.includes(oppTag);
+        const disable = !checked && current.length >= maxPick;
+        return `<button class="option-btn ${checked?'selected':''}" ${disable?'disabled style="opacity:0.4;cursor:not-allowed;"':''} data-opp="${oppTag}">${opp?opp.name:oppTag} (${ha})</button>`;
+      }).join('');
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text">
+            <span>${q.label(team.name)} <a href="premiq19-fixture-grid.html" target="_blank" class="note-link" style="color:var(--gold);">You can view fixtures here.</a></span>
+            <span class="question-points">${q.pointsText}</span>
+          </div>
+          <div class="option-row">${optionsHtml}</div>
+          <p style="font-size:0.72rem; color:var(--ink-soft); margin-top:0.5rem;">${current.length}/${maxPick} selected</p>
+        </div>`;
+      list.querySelectorAll('.option-btn:not([disabled])').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const tag = btn.dataset.opp;
+          const arr = answersState[q.id];
+          if(arr.includes(tag)) answersState[q.id] = arr.filter(t=>t!==tag);
+          else if(arr.length < maxPick) answersState[q.id] = [...arr, tag];
+          renderQuestion();
+        });
+      });
+      updateQNav();
+      return;
+    }
+
+    if(q.type==='yesno'){
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
+          ${q.hint ? hintBoxHtml(q.hint) : ''}
+          <div class="option-row">
+            <button class="option-btn ${answersState[q.id]==='yes'?'selected':''}" data-yn="yes">Yes</button>
+            <button class="option-btn ${answersState[q.id]==='no'?'selected':''}" data-yn="no">No</button>
+          </div>
+        </div>`;
+      list.querySelectorAll('[data-yn]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ answersState[q.id]=btn.dataset.yn; renderQuestion(); });
+      });
+      updateQNav();
+      return;
+    }
+
+    if(q.type==='twochoice'){
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
+          ${q.hint ? hintBoxHtml(q.hint) : ''}
+          <div class="option-row">
+            <button class="option-btn ${answersState[q.id]===q.optionA?'selected':''}" data-choice="${q.optionA}">${q.optionA}</button>
+            <button class="option-btn ${answersState[q.id]===q.optionB?'selected':''}" data-choice="${q.optionB}">${q.optionB}</button>
+          </div>
+        </div>`;
+      list.querySelectorAll('[data-choice]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ answersState[q.id]=btn.dataset.choice; renderQuestion(); });
+      });
+      updateQNav();
+      return;
+    }
+
+    if(q.type==='text'){
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
+          ${q.hint ? hintBoxHtml(q.hint) : ''}
+          <input type="text" id="qTextInput" value="${answersState[q.id]}" placeholder="Player name"
+            style="width:220px; max-width:100%; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;">
+        </div>`;
+      document.getElementById('qTextInput').addEventListener('input', e=>{ answersState[q.id]=e.target.value; updateQNav(); });
+      updateQNav();
+      return;
+    }
+
+    if(q.type==='teamselect'){
+      const optionsHtml = TEAMS.map(t=>{
+        const checked = answersState[q.id]===t.tag;
+        return `<button class="option-btn ${checked?'selected':''}" data-team="${t.tag}">${t.name}</button>`;
+      }).join('');
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
+          ${q.hint ? hintBoxHtml(q.hint) : ''}
+          <div class="option-row">${optionsHtml}</div>
+        </div>`;
+      list.querySelectorAll('[data-team]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ answersState[q.id]=btn.dataset.team; renderQuestion(); });
+      });
+      updateQNav();
+      return;
+    }
+
+    if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+      list.innerHTML = `
+        <div class="question-block">
+          <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
+          ${q.hint ? hintBoxHtml(q.hint) : ''}
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="qNumInput" value="${answersState[q.id]}" placeholder="0"
+              style="width:100px; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem; font-family:'Space Mono',monospace; text-align:right;">
+            ${q.unit ? `<span style="font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--ink-soft);">${q.unit}</span>` : ''}
+          </div>
+        </div>`;
+      document.getElementById('qNumInput').addEventListener('input', e=>{
+        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
+        e.target.value = digitsOnly;
+        answersState[q.id] = digitsOnly;
+        updateQNav();
+      });
+      updateQNav();
+      return;
+    }
+  }
+
+  function updateQNav(){
+    const q = questionById(currentQ);
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Submit my picks';
+    nextBtn.disabled = !isAnswered(q);
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    if(currentQ < TOTAL_QUESTIONS){ currentQ++; renderQuestion(); }
+    else { goToH2H(); }
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+  document.getElementById('prevBtn').addEventListener('click', ()=>{
+    if(currentQ > 1){ currentQ--; renderQuestion(); }
+    else {
+      document.getElementById('questionsStep').style.display='none';
+      document.getElementById('slotsStep').style.display='block';
+      document.getElementById('nameBox').style.display='flex';
+      document.getElementById('playingAs').style.display='none';
+      document.getElementById('subtitleText').textContent = 'Slots: Select 7 clubs to finish in the slots';
+    }
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  // ============================================================
+  // Monthly Super Sunday
+  // ============================================================
+  let h2hFixtures = []; // loaded from Supabase
+  let h2hAnswers = {};
+
+  async function loadH2HFixtures(){
+    if(!sb) return [];
+    const { data } = await sb.from('h2h_fixtures').select('*').order('month');
+    return data || [];
+  }
+
+  async function goToH2H(){
+    document.getElementById('questionsStep').style.display='none';
+    document.getElementById('h2hStep').style.display='block';
+    document.getElementById('subtitleText').textContent = 'One monthly head-to-head — 75 points up for grabs';
+    h2hFixtures = await loadH2HFixtures();
+    h2hFixtures.forEach(f => h2hAnswers[f.month] = { result:'', scoreA:'', scoreB:'' });
+    renderH2H();
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  function renderH2H(){
+    const list = document.getElementById('h2hList');
+    if(h2hFixtures.length===0){
+      list.innerHTML = `<p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">No Super Sunday fixtures set yet — check back once the organiser adds one.</p>`;
+      return;
+    }
+    list.innerHTML = h2hFixtures.map(f => {
+      if(!f.team_a || !f.team_b){
+        return `<div class="question-block"><div class="question-text"><span>${f.month}</span><span class="question-points">Fixture not added yet</span></div></div>`;
+      }
+      const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
+      const ans = h2hAnswers[f.month];
+      return `
+        <div class="question-block">
+          <div class="question-text">
+            <span>${f.month}: ${teamA.name} v ${teamB.name}</span>
+            <span class="question-points">Result = 25pts, Scoreline = 50pts</span>
+          </div>
+          <div class="option-row" style="margin-bottom:0.6rem;">
+            <button class="option-btn ${ans.result==='A'?'selected':''}" data-month="${f.month}" data-result="A">${teamA.name} win</button>
+            <button class="option-btn ${ans.result==='D'?'selected':''}" data-month="${f.month}" data-result="D">Draw</button>
+            <button class="option-btn ${ans.result==='B'?'selected':''}" data-month="${f.month}" data-result="B">${teamB.name} win</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="font-size:0.78rem; color:var(--ink-soft);">${teamA.tag}</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="h2h-score" data-month="${f.month}" data-side="A" value="${ans.scoreA}" placeholder="0"
+              style="width:50px; padding:0.4rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
+            <span>–</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="h2h-score" data-month="${f.month}" data-side="B" value="${ans.scoreB}" placeholder="0"
+              style="width:50px; padding:0.4rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
+            <span style="font-size:0.78rem; color:var(--ink-soft);">${teamB.tag}</span>
+          </div>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('[data-result]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ h2hAnswers[btn.dataset.month].result = btn.dataset.result; renderH2H(); });
+    });
+    list.querySelectorAll('.h2h-score').forEach(input=>{
+      input.addEventListener('input', e=>{
+        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
+        e.target.value = digitsOnly;
+        h2hAnswers[e.target.dataset.month][e.target.dataset.side==='A'?'scoreA':'scoreB'] = digitsOnly;
+      });
+    });
+  }
+
+  document.getElementById('h2hContinueBtn').addEventListener('click', submitAll);
+  document.getElementById('h2hBackBtn').addEventListener('click', ()=>{
+    document.getElementById('h2hStep').style.display='none';
+    document.getElementById('questionsStep').style.display='block';
+    document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
+    currentQ = TOTAL_QUESTIONS;
+    renderQuestion();
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  // ============================================================
+  // Final submit
+  // ============================================================
+  async function submitAll(){
+    const feedback = document.getElementById('feedback');
+    const name = document.getElementById('playerName').value.trim();
+
+    if(!sb){
+      showSummary();
+      feedback.textContent = 'Preview mode — connect Supabase in config.js before this can actually submit.';
+      feedback.className = 'feedback error';
+      return;
+    }
+
+    feedback.textContent = 'Submitting…'; feedback.className = 'feedback';
+    try{
+      const { data: player, error: playerErr } = await sb
+        .from('players')
+        .upsert({ name, updated_at: new Date().toISOString() }, { onConflict: 'name' })
+        .select().single();
+      if(playerErr) throw playerErr;
+
+      await sb.from('picks').delete().eq('player_id', player.id);
+      const pickRows = SLOTS.map(s => ({ player_id: player.id, slot: s.id, team_tag: assignments[s.id] }));
+      const { error: picksErr } = await sb.from('picks').insert(pickRows);
+      if(picksErr) throw picksErr;
+
+      await sb.from('answers').delete().eq('player_id', player.id);
+      const answerRows = QUESTIONS.map(q => ({ player_id: player.id, question_id: q.id, answer: answersState[q.id] }));
+      const { error: ansErr } = await sb.from('answers').insert(answerRows);
+      if(ansErr) throw ansErr;
+
+      await sb.from('h2h_predictions').delete().eq('player_id', player.id);
+      const h2hRows = h2hFixtures
+        .filter(f => f.team_a && f.team_b && h2hAnswers[f.month].result && h2hAnswers[f.month].scoreA!=='' && h2hAnswers[f.month].scoreB!=='')
+        .map(f => ({ player_id: player.id, month: f.month, result: h2hAnswers[f.month].result, score_a: parseInt(h2hAnswers[f.month].scoreA), score_b: parseInt(h2hAnswers[f.month].scoreB) }));
+      if(h2hRows.length){
+        const { error: h2hErr } = await sb.from('h2h_predictions').insert(h2hRows);
+        if(h2hErr) throw h2hErr;
+      }
+
+      showSummary();
+      feedback.textContent = `Submitted! Good luck, ${name}.`; feedback.className = 'feedback';
+    } catch(err){
+      feedback.textContent = 'Something went wrong — try again. (' + (err.message||err) + ')';
+      feedback.className = 'feedback error';
+    }
+  }
+
+  function showSummary(){
+    document.getElementById('h2hStep').style.display='none';
+    document.getElementById('summaryStep').style.display='block';
+    document.getElementById('subtitleText').textContent = 'Submission complete — here\u2019s what you picked';
+    switchSummaryTab('slots');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  function switchSummaryTab(tab){
+    document.getElementById('tabSlotsBtn').classList.toggle('active', tab==='slots');
+    document.getElementById('tabQuestionsBtn').classList.toggle('active', tab==='questions');
+    document.getElementById('tabH2HBtn').classList.toggle('active', tab==='h2h');
+    document.getElementById('summarySlotsPanel').style.display = tab==='slots' ? 'block' : 'none';
+    document.getElementById('summaryQuestionsPanel').style.display = tab==='questions' ? 'block' : 'none';
+    document.getElementById('summaryH2HPanel').style.display = tab==='h2h' ? 'block' : 'none';
+    if(tab==='slots') renderSlotsSummary();
+    else if(tab==='questions') renderQuestionsSummary();
+    else renderH2HSummary();
+  }
+  document.getElementById('tabSlotsBtn').addEventListener('click', ()=>switchSummaryTab('slots'));
+  document.getElementById('tabQuestionsBtn').addEventListener('click', ()=>switchSummaryTab('questions'));
+  document.getElementById('tabH2HBtn').addEventListener('click', ()=>switchSummaryTab('h2h'));
+
+  function renderSlotsSummary(){
+    const panel = document.getElementById('summarySlotsPanel');
+    panel.innerHTML = SLOTS.map(s => {
+      const team = assignments[s.id] ? teamByTag(assignments[s.id]) : null;
+      return `<div class="summary-row"><span class="s-label">${s.label} (x${s.mult})</span><span class="s-value">${team?team.name:'—'}</span></div>`;
+    }).join('');
+  }
+
+  function fmtAnswer(q){
+    const a = answersState[q.id];
+    if(q.type==='multi3' || q.type==='single1') return a.map(t => { const tm=teamByTag(t); return tm?tm.name:t; }).join(', ') || '—';
+    if(q.type==='numeric-tiered' || q.type==='numeric-single') return a!=='' ? `${a} ${q.unit||''}`.trim() : '—';
+    if(q.type==='yesno') return a==='yes' ? 'Yes' : a==='no' ? 'No' : '—';
+    return a || '—';
+  }
+
+  function renderQuestionsSummary(){
+    const panel = document.getElementById('summaryQuestionsPanel');
+    panel.innerHTML = QUESTIONS.map(q => `<div class="summary-row"><span class="s-label">Q${q.id}</span><span class="s-value">${fmtAnswer(q)}</span></div>`).join('');
+  }
+
+  function renderH2HSummary(){
+    const panel = document.getElementById('summaryH2HPanel');
+    if(h2hFixtures.length===0){ panel.innerHTML = `<div class="summary-row"><span class="s-label">No fixtures yet</span><span class="s-value">—</span></div>`; return; }
+    panel.innerHTML = h2hFixtures.map(f => {
+      if(!f.team_a || !f.team_b) return `<div class="summary-row"><span class="s-label">${f.month}</span><span class="s-value">—</span></div>`;
+      const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
+      const ans = h2hAnswers[f.month] || {};
+      const resultLabel = ans.result==='A' ? `${teamA.name} win` : ans.result==='D' ? 'Draw' : ans.result==='B' ? `${teamB.name} win` : '—';
+      const scoreLabel = (ans.scoreA!=='' && ans.scoreB!=='' && ans.scoreA!=null) ? `${ans.scoreA}-${ans.scoreB}` : '—';
+      return `<div class="summary-row"><span class="s-label">${f.month}: ${teamA.name} v ${teamB.name}</span><span class="s-value">${resultLabel} (${scoreLabel})</span></div>`;
+    }).join('');
+  }
+
+  async function loadStatus(){
+    if(!sb){ document.getElementById('statusPill').textContent = 'Preview mode — connect Supabase in config.js to go live'; return; }
+    const { data } = await sb.from('settings').select('*').eq('key','last_results_refresh').single();
+    const pill = document.getElementById('statusPill');
+    pill.textContent = data && data.value ? `Results last refreshed: ${new Date(data.value).toLocaleString()}` : 'Waiting for first results refresh';
+  }
+
+  loadStatus();
+  render();
+</script>
+
+</body>
+</html>

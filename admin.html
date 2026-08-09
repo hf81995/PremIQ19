@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PremIQ19 — Admin</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PremIQ19 Admin">
+<meta name="theme-color" content="#0F3D2C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="questions-data.js"></script>
+<style>
+  :root{ --pitch-dark:#0B2E22; --pitch:#0F3D2C; --chalk:#F6F5EF; --chalk-dim:#EAE7DB; --ink:#122019; --ink-soft:#5C6B62; --line:#DCD8C9; --gold:#CBA633; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--pitch-dark); font-family:'Inter',sans-serif; color:var(--chalk); min-height:100vh; }
+  .header{ background:linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%); padding:1.5rem 1rem; text-align:center; border-bottom:3px solid rgba(203,166,51,0.5); }
+  .header h1{ font-family:'Bebas Neue',sans-serif; font-size:2rem; margin:0; }
+  .header h1 span{ color:var(--gold); }
+  .header p{ color:#B9C4BB; font-size:0.78rem; margin:0.4rem 0 0; }
+  .wrap{ max-width:960px; margin:0 auto; padding:1.2rem 1rem 4rem; }
+  .panel{ background:var(--chalk); color:var(--ink); border-radius:14px; padding:1.2rem; margin-bottom:1.2rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
+  .panel h2{ font-family:'Bebas Neue',sans-serif; font-size:1.2rem; margin:0 0 0.8rem; }
+  label{ display:block; font-size:0.75rem; font-weight:700; margin-bottom:0.3rem; }
+  input[type=password], input[type=text], select{ width:100%; padding:0.5rem 0.6rem; border:1.5px solid var(--line); border-radius:8px; font-size:0.85rem; margin-bottom:0.7rem; }
+  .btn{ font-family:'Inter',sans-serif; font-weight:700; font-size:0.82rem; padding:0.55rem 1rem; border-radius:9px; border:none; cursor:pointer; background:var(--ink); color:var(--chalk); }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-secondary{ background:var(--chalk-dim); color:var(--ink); border:1.5px solid var(--line); }
+  .note{ font-size:0.72rem; color:var(--ink-soft); line-height:1.5; margin-top:0.4rem; }
+  .warn{ background:#FCE9B8; border:1px solid #C9A227; padding:0.6rem 0.8rem; border-radius:8px; font-size:0.75rem; margin-bottom:1rem; }
+  .alert-box{ background:#FBD9D9; border:1px solid #B3242B; color:#6E1725; padding:0.7rem 0.9rem; border-radius:10px; font-size:0.8rem; margin-bottom:1rem; }
+  .alert-box .alert-item{ display:flex; justify-content:space-between; align-items:center; gap:0.6rem; padding:0.3rem 0; border-bottom:1px solid rgba(179,36,43,0.25); }
+  .alert-box .alert-item:last-child{ border-bottom:none; }
+  .alert-box button{ font-size:0.7rem; padding:0.25rem 0.6rem; border-radius:6px; border:1px solid #B3242B; background:#fff; cursor:pointer; flex-shrink:0; }
+  table{ width:100%; border-collapse:collapse; font-size:0.78rem; }
+  th, td{ text-align:left; padding:0.4rem 0.3rem; border-bottom:1px solid var(--line); }
+  th{ font-family:'Space Mono',monospace; font-size:0.65rem; text-transform:uppercase; color:var(--ink-soft); }
+  td input{ width:60px; padding:0.25rem; margin:0; font-size:0.75rem; }
+  td select{ margin:0; padding:0.25rem; font-size:0.75rem; }
+  .status-line{ font-size:0.78rem; margin-top:0.6rem; min-height:1.2em; }
+  .status-line.error{ color:#B3242B; }
+  .status-line.ok{ color:#1F6740; }
+  .q-row{ display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem; font-size:0.8rem; }
+  .q-row input[type=text]{ margin:0; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>PREM<span>IQ19</span> — Admin</h1>
+    <p>Keep this page and link private — don't share it with players.</p>
+  </div>
+
+  <div class="wrap">
+
+    <div id="alertBanner"></div>
+
+    <div class="panel">
+      <h2>1. Admin Login</h2>
+      <label for="adminPassword">Password</label>
+      <input type="password" id="adminPassword" placeholder="Enter admin password">
+      <button class="btn" id="connectBtn">Log in</button>
+      <div class="status-line" id="connectStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h2>2. Enter Matchweek Results</h2>
+      <label for="mwSelect">Matchweek</label>
+      <select id="mwSelect" disabled></select>
+      <div id="mwGrid"></div>
+      <button class="btn" id="saveMwBtn" disabled>Save this matchweek &amp; recalculate table</button>
+      <div class="status-line" id="mwStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h2>3. Current Table</h2>
+      <button class="btn btn-secondary" id="loadTableBtn" disabled>Load current table</button>
+      <p class="note">This recalculates automatically every time you save a matchweek — use this button just to double-check without re-saving.</p>
+      <div id="tableWrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>4. Manual override</h2>
+      <p class="note">Only needed if you want to hand-edit a team's totals directly, bypassing the matchweek grid — e.g. to fix a one-off mistake.</p>
+      <div id="overrideWrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>5. Monthly Super Sunday</h2>
+      <p class="note">Set each month's head-to-head fixture (Team A vs Team B). Once it's been played, come back and enter the final score.</p>
+      <div id="h2hWrap"></div>
+      <div class="status-line" id="h2hStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h2>6. Question Answers</h2>
+      <p class="note">Fill in the correct answer for each question once it's known. Leaderboard points for that question apply immediately once saved.</p>
+      <div id="questionsWrap"></div>
+      <button class="btn" id="saveQuestionsBtn">Save all question answers</button>
+      <div class="status-line" id="questionsStatus"></div>
+    </div>
+
+  </div>
+
+<script>
+  let supabaseAdmin = null;
+
+  document.getElementById('connectBtn').addEventListener('click', () => {
+    const entered = document.getElementById('adminPassword').value;
+    const status = document.getElementById('connectStatus');
+    if(entered !== ADMIN_PASSWORD){
+      status.textContent = 'Wrong password.'; status.className='status-line error'; return;
+    }
+    supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    status.textContent = 'Logged in.';
+    status.className = 'status-line ok';
+    document.getElementById('mwSelect').disabled = false;
+    document.getElementById('saveMwBtn').disabled = false;
+    document.getElementById('loadTableBtn').disabled = false;
+    populateMwSelect();
+    loadH2HPanel();
+    loadQuestionsPanel();
+    loadOverridePanel();
+    loadAlerts();
+  });
+
+  async function loadAlerts(){
+    const { data } = await supabaseAdmin.from('fixture_alerts').select('*').eq('resolved', false).order('detected_at', { ascending:false });
+    const box = document.getElementById('alertBanner');
+    if(!data || data.length === 0){ box.innerHTML=''; return; }
+    box.innerHTML = `<div class="alert-box">
+      <strong>⚠ ${data.length} fixture change${data.length>1?'s':''} detected by the daily check:</strong>
+      ${data.map(a => `<div class="alert-item"><span>${a.description}</span><button data-id="${a.id}">Dismiss</button></div>`).join('')}
+    </div>`;
+    box.querySelectorAll('button[data-id]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseAdmin.from('fixture_alerts').update({ resolved:true }).eq('id', btn.dataset.id);
+        loadAlerts();
+      });
+    });
+  }
+
+  // Matchweeks 1–19 for 2026/27: [homeTag, awayTag] × 10 games each.
+  // This is a clean single round-robin for this season — every club
+  // faces each of the other 19 exactly once across these 19 rounds.
+  const MATCHWEEK_FIXTURES = {
+    1:  [['ARS','COV'],['HUL','MUN'],['EVE','CRY'],['IPS','SUN'],['NFO','LEE'],['BRE','TOT'],['BHA','AVL'],['MCI','BOU'],['NEW','LIV'],['FUL','CHE']],
+    2:  [['CRY','MCI'],['LIV','NFO'],['BOU','EVE'],['COV','HUL'],['TOT','NEW'],['CHE','BHA'],['LEE','BRE'],['SUN','FUL'],['MUN','IPS'],['AVL','ARS']],
+    3:  [['IPS','LIV'],['NEW','BOU'],['BRE','SUN'],['BHA','LEE'],['FUL','CRY'],['MCI','COV'],['NFO','TOT'],['HUL','AVL'],['EVE','MUN'],['ARS','CHE']],
+    4:  [['BOU','BRE'],['AVL','NFO'],['CHE','HUL'],['CRY','IPS'],['LIV','FUL'],['TOT','EVE'],['SUN','ARS'],['COV','BHA'],['MUN','MCI'],['LEE','NEW']],
+    5:  [['BRE','CHE'],['TOT','AVL'],['BHA','ARS'],['EVE','IPS'],['LEE','CRY'],['MCI','SUN'],['NEW','HUL'],['NFO','COV'],['BOU','LIV'],['FUL','MUN']],
+    6:  [['ARS','LEE'],['AVL','BRE'],['CHE','BOU'],['COV','NEW'],['CRY','NFO'],['HUL','EVE'],['IPS','FUL'],['LIV','MCI'],['MUN','TOT'],['SUN','BHA']],
+    7:  [['BOU','SUN'],['BRE','LIV'],['BHA','CRY'],['EVE','CHE'],['FUL','HUL'],['LEE','MUN'],['MCI','IPS'],['NEW','AVL'],['NFO','ARS'],['TOT','COV']],
+    8:  [['ARS','EVE'],['AVL','MCI'],['CHE','TOT'],['COV','FUL'],['CRY','NEW'],['HUL','BRE'],['IPS','NFO'],['LIV','BHA'],['MUN','BOU'],['SUN','LEE']],
+    9:  [['BOU','LEE'],['AVL','FUL'],['BRE','NFO'],['CHE','MUN'],['COV','SUN'],['HUL','IPS'],['LIV','ARS'],['MCI','BHA'],['NEW','EVE'],['TOT','CRY']],
+    10: [['ARS','HUL'],['BHA','BRE'],['CRY','LIV'],['EVE','COV'],['FUL','NEW'],['IPS','BOU'],['LEE','TOT'],['MUN','AVL'],['NFO','MCI'],['SUN','CHE']],
+    11: [['BOU','NFO'],['AVL','SUN'],['BRE','EVE'],['CHE','LEE'],['COV','CRY'],['HUL','BHA'],['LIV','MUN'],['MCI','FUL'],['NEW','ARS'],['TOT','IPS']],
+    12: [['ARS','MCI'],['BHA','NEW'],['CRY','HUL'],['EVE','LIV'],['FUL','BOU'],['IPS','AVL'],['LEE','COV'],['MUN','BRE'],['NFO','CHE'],['SUN','TOT']],
+    13: [['BOU','BHA'],['AVL','EVE'],['BRE','ARS'],['CHE','CRY'],['COV','IPS'],['HUL','NFO'],['LIV','SUN'],['MCI','LEE'],['NEW','MUN'],['TOT','FUL']],
+    14: [['BOU','HUL'],['AVL','CRY'],['BRE','MCI'],['CHE','LIV'],['EVE','FUL'],['LEE','IPS'],['MUN','COV'],['NEW','SUN'],['NFO','BHA'],['TOT','ARS']],
+    15: [['ARS','BOU'],['BHA','EVE'],['COV','AVL'],['CRY','MUN'],['FUL','BRE'],['HUL','TOT'],['IPS','NEW'],['LIV','LEE'],['MCI','CHE'],['SUN','NFO']],
+    16: [['BOU','COV'],['ARS','MUN'],['BRE','NEW'],['BHA','IPS'],['CHE','AVL'],['LEE','FUL'],['LIV','TOT'],['MCI','HUL'],['NFO','EVE'],['SUN','CRY']],
+    17: [['AVL','LEE'],['COV','CHE'],['CRY','ARS'],['EVE','SUN'],['FUL','BHA'],['HUL','LIV'],['IPS','BRE'],['MUN','NFO'],['NEW','MCI'],['TOT','BOU']],
+    18: [['AVL','LIV'],['COV','BRE'],['CRY','BOU'],['EVE','MCI'],['FUL','ARS'],['HUL','LEE'],['IPS','CHE'],['MUN','SUN'],['NEW','NFO'],['TOT','BHA']],
+    19: [['BOU','AVL'],['ARS','IPS'],['BRE','CRY'],['BHA','MUN'],['CHE','NEW'],['LEE','EVE'],['LIV','COV'],['MCI','TOT'],['NFO','FUL'],['SUN','HUL']],
+  };
+
+  function populateMwSelect(){
+    const sel = document.getElementById('mwSelect');
+    sel.innerHTML = Object.keys(MATCHWEEK_FIXTURES).map(mw => `<option value="${mw}">Matchweek ${mw}</option>`).join('');
+    sel.addEventListener('change', () => renderMwGrid(parseInt(sel.value)));
+    renderMwGrid(1);
+  }
+
+  async function renderMwGrid(mw){
+    const { data: existing } = await supabaseAdmin.from('match_results').select('*').eq('matchweek', mw);
+    const grid = document.getElementById('mwGrid');
+    const fixtures = MATCHWEEK_FIXTURES[mw];
+    grid.innerHTML = fixtures.map(([h,a]) => {
+      const found = (existing||[]).find(m => m.home_tag===h && m.away_tag===a);
+      const hs = found && found.home_score!=null ? found.home_score : '';
+      const as = found && found.away_score!=null ? found.away_score : '';
+      return `<div class="q-row" data-home="${h}" data-away="${a}">
+        <span style="flex:1;">${teamByTag(h).name}</span>
+        <input type="text" class="score-home" value="${hs}" style="width:44px; text-align:center;">
+        <span>–</span>
+        <input type="text" class="score-away" value="${as}" style="width:44px; text-align:center;">
+        <span style="flex:1;">${teamByTag(a).name}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function blankStats(){
+    const stats = {};
+    TEAMS.forEach(t => stats[t.tag] = { team_tag:t.tag, team_name:t.name, matches_played:0, wins:0, draws:0, losses:0, goals_for:0, goals_against:0 });
+    return stats;
+  }
+
+  function computeStandingsAndSlots(stats){
+    const list = Object.values(stats);
+    const allPlayed19 = list.every(s => s.matches_played >= 19);
+    list.sort((a,b) => {
+      const ptsA = a.wins*3 + a.draws, ptsB = b.wins*3 + b.draws;
+      if(ptsB !== ptsA) return ptsB - ptsA;
+      const gdA = a.goals_for - a.goals_against, gdB = b.goals_for - b.goals_against;
+      if(gdB !== gdA) return gdB - gdA;
+      return b.goals_for - a.goals_for;
+    });
+    if(!allPlayed19){
+      list.forEach(s => s.finishing_slot = null);
+      return { list, complete:false };
+    }
+    list.forEach((s, i) => {
+      const pos = i+1;
+      if(pos===1) s.finishing_slot='1st';
+      else if(pos===2) s.finishing_slot='2nd';
+      else if(pos<=6) s.finishing_slot='3-6';
+      else if(pos<=12) s.finishing_slot='7-12';
+      else if(pos<=18) s.finishing_slot='13-18';
+      else if(pos===19) s.finishing_slot='19';
+      else s.finishing_slot='20';
+    });
+    return { list, complete:true };
+  }
+
+  async function saveTeamStats(list){
+    const rows = list.map(s => ({ ...s, updated_at: new Date().toISOString() }));
+    const { error } = await supabaseAdmin.from('team_stats').upsert(rows, { onConflict:'team_tag' });
+    if(error) throw error;
+  }
+
+  function renderTable(list){
+    const wrap = document.getElementById('tableWrap');
+    const rows = list.map((s,i) => `<tr><td>${i+1}</td><td>${s.team_name}</td><td>${s.matches_played}</td><td>${s.wins}</td><td>${s.draws}</td><td>${s.losses}</td><td>${s.goals_for}</td><td>${s.goals_against}</td><td>${s.finishing_slot||'—'}</td></tr>`).join('');
+    wrap.innerHTML = `<table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Slot</th></tr>${rows}</table>`;
+  }
+
+  async function saveMatchweek(){
+    const status = document.getElementById('mwStatus');
+    status.textContent = 'Saving…'; status.className='status-line';
+    try{
+      const mw = parseInt(document.getElementById('mwSelect').value);
+      const rows = document.querySelectorAll('#mwGrid .q-row');
+      const toSave = [];
+      rows.forEach(row => {
+        const h = row.dataset.home, a = row.dataset.away;
+        const hsVal = row.querySelector('.score-home').value.trim();
+        const asVal = row.querySelector('.score-away').value.trim();
+        toSave.push({
+          matchweek: mw, home_tag: h, away_tag: a,
+          home_score: hsVal==='' ? null : parseInt(hsVal),
+          away_score: asVal==='' ? null : parseInt(asVal),
+          updated_at: new Date().toISOString(),
+        });
+      });
+      const { error: saveErr } = await supabaseAdmin.from('match_results').upsert(toSave, { onConflict:'matchweek,home_tag,away_tag' });
+      if(saveErr) throw saveErr;
+
+      await recalcFromAllResults();
+      await supabaseAdmin.from('settings').upsert({ key:'last_results_refresh', value: new Date().toISOString() });
+      status.textContent = 'Saved and table recalculated.'; status.className='status-line ok';
+    } catch(err){
+      status.textContent = 'Error: ' + err.message; status.className='status-line error';
+    }
+  }
+  document.getElementById('saveMwBtn').addEventListener('click', saveMatchweek);
+
+  async function recalcFromAllResults(){
+    const { data: allResults } = await supabaseAdmin.from('match_results').select('*');
+    const stats = blankStats();
+    (allResults||[]).forEach(m => {
+      if(m.home_score==null || m.away_score==null) return; // not played yet
+      const h = stats[m.home_tag], a = stats[m.away_tag];
+      if(!h || !a) return;
+      h.matches_played++; a.matches_played++;
+      h.goals_for += m.home_score; h.goals_against += m.away_score;
+      a.goals_for += m.away_score; a.goals_against += m.home_score;
+      if(m.home_score > m.away_score){ h.wins++; a.losses++; }
+      else if(m.home_score < m.away_score){ a.wins++; h.losses++; }
+      else { h.draws++; a.draws++; }
+    });
+    const { list } = computeStandingsAndSlots(stats);
+    await saveTeamStats(list);
+    renderTable(list);
+    return list;
+  }
+
+  document.getElementById('loadTableBtn').addEventListener('click', async () => {
+    const { data } = await supabaseAdmin.from('team_stats').select('*');
+    if(data && data.length){
+      data.sort((a,b) => (b.wins*3+b.draws) - (a.wins*3+a.draws));
+      renderTable(data);
+    }
+  });
+
+  // --- Manual override panel ---
+  async function loadOverridePanel(){
+    const { data } = await supabaseAdmin.from('team_stats').select('*');
+    const wrap = document.getElementById('overrideWrap');
+    const stats = {}; TEAMS.forEach(t => stats[t.tag] = { team_tag:t.tag, team_name:t.name, matches_played:0, wins:0, draws:0, losses:0, goals_for:0, goals_against:0, finishing_slot:null });
+    (data||[]).forEach(s => stats[s.team_tag] = s);
+
+    const slotOptions = ['','1st','2nd','3-6','7-12','13-18','19','20'];
+    const rows = TEAMS.map(t => {
+      const s = stats[t.tag];
+      const opts = slotOptions.map(o => `<option value="${o}" ${s.finishing_slot===o?'selected':''}>${o||'—'}</option>`).join('');
+      return `<tr data-tag="${t.tag}">
+        <td>${t.name}</td>
+        <td><input type="text" class="f-mp" value="${s.matches_played}"></td>
+        <td><input type="text" class="f-w" value="${s.wins}"></td>
+        <td><input type="text" class="f-d" value="${s.draws}"></td>
+        <td><input type="text" class="f-l" value="${s.losses}"></td>
+        <td><input type="text" class="f-gf" value="${s.goals_for}"></td>
+        <td><input type="text" class="f-ga" value="${s.goals_against}"></td>
+        <td><select class="f-slot">${opts}</select></td>
+        <td><button class="btn btn-secondary save-row">Save</button></td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Slot</th><th></th></tr>${rows}</table>`;
+
+    wrap.querySelectorAll('.save-row').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const tr = e.target.closest('tr');
+        const tag = tr.dataset.tag;
+        const t = teamByTag(tag);
+        const row = {
+          team_tag: tag, team_name: t.name,
+          matches_played: parseInt(tr.querySelector('.f-mp').value)||0,
+          wins: parseInt(tr.querySelector('.f-w').value)||0,
+          draws: parseInt(tr.querySelector('.f-d').value)||0,
+          losses: parseInt(tr.querySelector('.f-l').value)||0,
+          goals_for: parseInt(tr.querySelector('.f-gf').value)||0,
+          goals_against: parseInt(tr.querySelector('.f-ga').value)||0,
+          finishing_slot: tr.querySelector('.f-slot').value || null,
+          updated_at: new Date().toISOString(),
+        };
+        await supabaseAdmin.from('team_stats').upsert(row, { onConflict:'team_tag' });
+        btn.textContent = 'Saved ✓';
+        setTimeout(()=>btn.textContent='Save', 1500);
+      });
+    });
+  }
+
+  // --- Monthly Super Sunday panel ---
+  async function loadH2HPanel(){
+    const { data } = await supabaseAdmin.from('h2h_fixtures').select('*').order('month');
+    const wrap = document.getElementById('h2hWrap');
+    const teamOptions = TEAMS.map(t => `<option value="${t.tag}">${t.name}</option>`).join('');
+    wrap.innerHTML = (data||[]).map(f => `
+      <div class="q-row" data-month="${f.month}" style="flex-wrap:wrap;">
+        <strong style="width:90px;">${f.month}</strong>
+        <select class="h2h-a"><option value="">— Team A —</option>${teamOptions}</select>
+        <span>vs</span>
+        <select class="h2h-b"><option value="">— Team B —</option>${teamOptions}</select>
+        <input type="text" class="h2h-scorea" placeholder="Score A" style="width:60px;">
+        <input type="text" class="h2h-scoreb" placeholder="Score B" style="width:60px;">
+        <button class="btn btn-secondary h2h-save">Save</button>
+      </div>
+    `).join('');
+
+    (data||[]).forEach(f => {
+      const row = wrap.querySelector(`[data-month="${f.month}"]`);
+      if(f.team_a) row.querySelector('.h2h-a').value = f.team_a;
+      if(f.team_b) row.querySelector('.h2h-b').value = f.team_b;
+      if(f.score_a != null) row.querySelector('.h2h-scorea').value = f.score_a;
+      if(f.score_b != null) row.querySelector('.h2h-scoreb').value = f.score_b;
+    });
+
+    wrap.querySelectorAll('.h2h-save').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('.q-row');
+        const month = row.dataset.month;
+        const teamA = row.querySelector('.h2h-a').value || null;
+        const teamB = row.querySelector('.h2h-b').value || null;
+        const scoreAraw = row.querySelector('.h2h-scorea').value.trim();
+        const scoreBraw = row.querySelector('.h2h-scoreb').value.trim();
+        const scoreA = scoreAraw==='' ? null : parseInt(scoreAraw);
+        const scoreB = scoreBraw==='' ? null : parseInt(scoreBraw);
+        let result = null;
+        if(scoreA!=null && scoreB!=null){ result = scoreA>scoreB ? 'A' : scoreA<scoreB ? 'B' : 'D'; }
+        const { error } = await supabaseAdmin.from('h2h_fixtures')
+          .update({ team_a:teamA, team_b:teamB, score_a:scoreA, score_b:scoreB, result, updated_at:new Date().toISOString() })
+          .eq('month', month);
+        const status = document.getElementById('h2hStatus');
+        if(error){ status.textContent = 'Error: '+error.message; status.className='status-line error'; }
+        else { status.textContent = `${month} saved.`; status.className='status-line ok'; }
+      });
+    });
+  }
+
+  // --- Question answers panel ---
+  function correctAnswerInputHtml(q){
+    if(q.type==='multi3' || q.type==='single1'){
+      return `<input type="text" class="q-ans" placeholder="Beaten opponents, comma separated (e.g. MCI, LIV, CHE)" style="flex:2;">`;
+    }
+    if(q.type==='yesno'){
+      return `<select class="q-ans" style="flex:1;"><option value="">— pick —</option><option value="yes">Yes</option><option value="no">No</option></select>`;
+    }
+    if(q.type==='twochoice'){
+      return `<select class="q-ans" style="flex:1;"><option value="">— pick —</option><option value="${q.optionA}">${q.optionA}</option><option value="${q.optionB}">${q.optionB}</option>${q.void?'<option value="__void__">Void</option>':''}</select>`;
+    }
+    if(q.type==='text'){
+      return `<input type="text" class="q-ans" placeholder="Accepted names, comma separated" style="flex:2;">`;
+    }
+    if(q.type==='teamselect'){
+      const opts = TEAMS.map(t=>`<option value="${t.tag}">${t.name}</option>`).join('');
+      return `<select class="q-ans" multiple size="4" style="flex:1;">${opts}</select>`;
+    }
+    if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+      return `<input type="text" class="q-ans" placeholder="Actual value" style="width:100px;">`;
+    }
+    return '';
+  }
+
+  function parseAnswerInput(q, row){
+    const el = row.querySelector('.q-ans');
+    if(q.type==='multi3' || q.type==='single1'){
+      const opponents = el.value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+      return opponents.length ? { opponents } : null;
+    }
+    if(q.type==='yesno' || q.type==='twochoice'){
+      if(!el.value) return null;
+      if(el.value==='__void__') return { void:true };
+      return { value: el.value };
+    }
+    if(q.type==='text'){
+      const acceptedNames = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+      return acceptedNames.length ? { acceptedNames } : null;
+    }
+    if(q.type==='teamselect'){
+      const validTeams = Array.from(el.selectedOptions).map(o=>o.value);
+      return validTeams.length ? { validTeams } : null;
+    }
+    if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+      return el.value.trim()!=='' ? { actualValue: Number(el.value.trim()) } : null;
+    }
+    return null;
+  }
+
+  function fillAnswerInput(q, row, correctAnswer){
+    if(!correctAnswer) return;
+    const el = row.querySelector('.q-ans');
+    if(q.type==='multi3' || q.type==='single1') el.value = (correctAnswer.opponents||[]).join(', ');
+    else if(q.type==='yesno' || q.type==='twochoice') el.value = correctAnswer.void ? '__void__' : (correctAnswer.value||'');
+    else if(q.type==='text') el.value = (correctAnswer.acceptedNames||[]).join(', ');
+    else if(q.type==='teamselect') { Array.from(el.options).forEach(o => o.selected = (correctAnswer.validTeams||[]).includes(o.value)); }
+    else if(q.type==='numeric-tiered' || q.type==='numeric-single') el.value = correctAnswer.actualValue!=null ? correctAnswer.actualValue : '';
+  }
+
+  async function loadQuestionsPanel(){
+    const { data } = await supabaseAdmin.from('questions').select('*').order('id');
+    const wrap = document.getElementById('questionsWrap');
+    wrap.innerHTML = QUESTIONS.map(q => `
+      <div class="q-row" data-id="${q.id}" style="align-items:flex-start;">
+        <span style="width:26px; font-weight:700;">Q${q.id}</span>
+        <span style="flex:2; font-size:0.75rem;">${(typeof q.label==='function' ? q.label('[team]') : q.label)}</span>
+        ${correctAnswerInputHtml(q)}
+      </div>
+    `).join('');
+    (data||[]).forEach(dbQ => {
+      const row = wrap.querySelector(`[data-id="${dbQ.id}"]`);
+      if(row) fillAnswerInput(questionById(dbQ.id), row, dbQ.correct_answer);
+    });
+  }
+
+  document.getElementById('saveQuestionsBtn').addEventListener('click', async () => {
+    const status = document.getElementById('questionsStatus');
+    try{
+      for(const q of QUESTIONS){
+        const row = document.querySelector(`#questionsWrap [data-id="${q.id}"]`);
+        if(!row) continue;
+        const correctAnswer = parseAnswerInput(q, row);
+        await supabaseAdmin.from('questions').update({
+          correct_answer: correctAnswer,
+          resolved: correctAnswer != null,
+          updated_at: new Date().toISOString(),
+        }).eq('id', q.id);
+      }
+      status.textContent = 'All question answers saved.'; status.className='status-line ok';
+      loadQuestionsPanel();
+    } catch(err){
+      status.textContent = 'Error: ' + err.message; status.className='status-line error';
+    }
+  });
+</script>
+</body>
+</html>
