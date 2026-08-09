@@ -22,7 +22,7 @@
     --z1-a:#CBA633; --z1-b:#8C6E15; --z2-a:#4A7FA0; --z2-b:#2E5470;
     --z3-a:#2E8B57; --z3-b:#1F6740; --z4-a:#2E9B8F; --z4-b:#1F6E65;
     --z5-a:#D98A2B; --z5-b:#A8641A; --z6-a:#C8562C; --z6-b:#96401F;
-    --z7-a:#A32638; --z7-b:#6E1725;
+    --z7-a:#A32638; --z7-b:#6E1725; --bj-a:#0F5C3D; --bj-b:#073923;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
@@ -56,6 +56,39 @@
     font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; color:var(--ink);
   }
   .playing-as span{ color:var(--pitch); }
+
+  /* --- Landing --- */
+  #landingStep{ max-width:420px; margin:0 auto; text-align:center; }
+  #enterGameBtn{ width:100%; font-size:1rem; padding:0.9rem 1.1rem; margin-top:0.4rem; }
+  .landing-leaderboard-link{ display:block; margin-top:0.9rem; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.75rem; text-decoration:underline; }
+
+  /* --- Hub --- */
+  .hub-grid{ display:grid; grid-template-columns:1fr; gap:0.9rem; max-width:760px; margin:0 auto; }
+  @media (min-width:640px){ .hub-grid{ grid-template-columns:1fr 1fr; } }
+  .hub-room{ border-radius:18px; overflow:hidden; box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); position:relative; }
+  .hub-room-btn{
+    width:100%; border:none; cursor:pointer; text-align:left; padding:1.1rem 1.1rem 0.9rem;
+    font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.02em; color:#fff;
+    display:flex; align-items:center; justify-content:space-between; gap:0.6rem;
+  }
+  .hub-room-btn .room-sub{ font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; display:block; margin-top:0.2rem; }
+  .room-check{
+    font-family:'Space Mono',monospace; font-size:0.62rem; font-weight:700; padding:0.25rem 0.55rem; border-radius:999px;
+    background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); white-space:nowrap; flex-shrink:0;
+  }
+  .room-check.done{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
+  .hub-how-to{ background:var(--chalk); padding:0.8rem 1.1rem 1rem; font-size:0.74rem; color:var(--ink-soft); line-height:1.5; }
+  .hub-room.slots .hub-room-btn{ background:linear-gradient(120deg,var(--z1-a),var(--z1-b)); }
+  .hub-room.blackjack .hub-room-btn{ background:linear-gradient(120deg,var(--bj-a),var(--bj-b)); }
+  .hub-room.quiz .hub-room-btn{ background:linear-gradient(120deg,var(--z2-a),var(--z2-b)); }
+  .hub-room.supersunday .hub-room-btn{ background:linear-gradient(120deg,var(--z5-a),var(--z5-b)); }
+  .hub-footer{ max-width:760px; margin:1.3rem auto 0; text-align:center; }
+  .hub-footer .btn{ width:100%; max-width:340px; }
+  .hub-links{ text-align:center; margin-top:1rem; }
+  .hub-links a{ color:var(--gold); font-family:'Space Mono',monospace; font-size:0.72rem; text-decoration:underline; margin:0 0.6rem; }
+
+  .room-header{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.8rem; }
+  .room-header h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin:0; color:var(--ink-soft); }
 
   .rules-note{
     max-width:640px; margin:0 auto 0.5rem; background:rgba(255,255,255,0.08);
@@ -112,7 +145,35 @@
   .option-btn:hover:not([disabled]){ border-color:var(--gold); }
   .option-btn.selected{ background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:800; box-shadow:0 0 0 3px rgba(203,166,51,0.25); }
 
-  .tab-bar{ display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1.5px solid var(--line); }
+  /* --- Blackjack --- */
+  .felt{ background:radial-gradient(ellipse at center, #0F5C3D 0%, #073923 100%); border-radius:16px; padding:1.2rem 1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.5); }
+  .felt h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
+  .bj-team-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:1rem; }
+  .bj-team-line strong{ color:#fff; }
+  .card-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:0.8rem; max-width:480px; margin:0 auto; }
+  @media (min-width:500px){ .card-grid{ grid-template-columns:repeat(4,1fr); } }
+  .playing-card{
+    background:#fff; border-radius:12px; padding:0.6rem 0.5rem; position:relative; aspect-ratio:2.5/3.5;
+    display:flex; flex-direction:column; box-shadow:0 8px 18px -6px rgba(0,0,0,0.4); border:1.5px solid var(--line);
+  }
+  .card-pip{ font-family:'Space Mono',monospace; font-weight:800; font-size:1.1rem; color:var(--pitch); line-height:1; }
+  .card-pip.bottom{ align-self:flex-end; transform:rotate(180deg); }
+  .card-player-input{
+    flex:1; border:none; text-align:center; font-family:'Bebas Neue',sans-serif; font-size:0.95rem; color:var(--ink);
+    width:100%; padding:0.2rem; background:transparent; outline:none;
+  }
+  .card-player-input::placeholder{ color:#B7C2BB; font-family:'Inter',sans-serif; font-size:0.68rem; }
+  .card-goals-input{
+    width:44px; margin:0.3rem auto 0; text-align:center; font-family:'Space Mono',monospace; font-weight:800; font-size:0.95rem;
+    border:1.5px solid var(--line); border-radius:8px; padding:0.25rem; color:var(--pitch);
+  }
+  .bj-total-box{ text-align:center; margin-top:1.2rem; }
+  .bj-total-num{ font-family:'Bebas Neue',sans-serif; font-size:2.4rem; color:#fff; line-height:1; }
+  .bj-total-num.bust{ color:#F2A6A6; }
+  .bj-total-num.perfect{ color:var(--gold); }
+  .bj-total-label{ font-family:'Space Mono',monospace; font-size:0.66rem; color:#B9C4BB; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.2rem; }
+
+  .tab-bar{ display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1.5px solid var(--line); flex-wrap:wrap; }
   .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:var(--ink-soft); padding:0.5rem 0.2rem; cursor:pointer; margin-right:1rem; }
   .tab-btn.active{ color:var(--ink); border-bottom-color:var(--gold); }
   .summary-row{ display:flex; justify-content:space-between; gap:0.7rem; padding:0.55rem 0; border-bottom:1px solid var(--line); font-size:0.82rem; }
@@ -146,21 +207,68 @@
 
   <div class="header">
     <h1>PREM<span>IQ19</span></h1>
-    <p class="subtitle" id="subtitleText">Slots: Select 7 clubs to finish in the slots</p>
+    <p class="subtitle" id="subtitleText">Enter your name to begin</p>
     <div class="status-pill" id="statusPill">Loading…</div>
     <p style="margin-top:0.5rem;"><a href="admin.html" style="color:#6E7C74; font-family:'Space Mono',monospace; font-size:0.62rem; text-decoration:underline;">Admin</a></p>
   </div>
 
   <div class="wrap">
-    <div class="name-box" id="nameBox">
-      <label for="playerName">Name:</label>
-      <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
-    </div>
-    <div class="playing-as" id="playingAs" style="display:none;"></div>
-    <p style="text-align:center;"><a class="leaderboard-link" href="premiq19-fixture-grid.html" target="_blank">View fixture grid ↗</a></p>
-    <p id="leaderboardLinkWrap" style="text-align:center;"><a class="leaderboard-link" href="leaderboard.html">View live leaderboard →</a></p>
 
-    <div id="slotsStep">
+    <!-- ============== LANDING ============== -->
+    <div id="landingStep">
+      <div class="name-box" id="nameBox">
+        <label for="playerName">Name:</label>
+        <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="enterGameBtn" disabled>Enter the Game →</button>
+      <a class="landing-leaderboard-link" href="leaderboard.html">View Leaderboard →</a>
+    </div>
+
+    <!-- ============== HUB ============== -->
+    <div id="hubStep" style="display:none;">
+      <div class="playing-as" id="playingAsHub"></div>
+      <div class="hub-grid">
+        <div class="hub-room slots">
+          <button class="hub-room-btn" id="roomSlotsBtn">
+            <span>PREM IQ19: Slots<span class="room-sub">Pick 7 clubs, 7 slots</span></span>
+            <span class="room-check" id="checkSlots">0/7</span>
+          </button>
+          <div class="hub-how-to">Drag a club into where you think they'll finish after 19 first-time fixtures. Correct slot = big multiplier. Wrong slot = flat 50 points.</div>
+        </div>
+        <div class="hub-room blackjack">
+          <button class="hub-room-btn" id="roomBlackjackBtn">
+            <span>PREM IQ19: Blackjack<span class="room-sub">4 players, 19 goals</span></span>
+            <span class="room-check" id="checkBlackjack">0/4</span>
+          </button>
+          <div class="hub-how-to">Name 4 players from your Slot 1st club and predict how many goals each scores in the first 19 fixtures — get as close to 19 combined without going over.</div>
+        </div>
+        <div class="hub-room quiz">
+          <button class="hub-room-btn" id="roomQuizBtn">
+            <span>PREM IQ19: Quiz<span class="room-sub">19 questions</span></span>
+            <span class="room-check" id="checkQuiz">0/19</span>
+          </button>
+          <div class="hub-how-to">19 questions covering fixtures, form, and Prem trivia — from Yes/No calls to numeric guesses. Points vary by question.</div>
+        </div>
+        <div class="hub-room supersunday">
+          <button class="hub-room-btn" id="roomH2HBtn">
+            <span>PREM IQ19: Monthly Super Sunday<span class="room-sub">One fixture, every month</span></span>
+            <span class="room-check" id="checkH2H">0/0</span>
+          </button>
+          <div class="hub-how-to">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</div>
+        </div>
+      </div>
+      <div class="hub-footer">
+        <button class="btn btn-primary" id="submitAllBtn" disabled>Submit My Picks</button>
+        <div class="feedback" id="hubFeedback" style="margin-top:0.6rem;"></div>
+      </div>
+      <div class="hub-links">
+        <a href="leaderboard.html">View Leaderboard →</a>
+        <a href="premiq19-fixture-grid.html" target="_blank">View Fixture Grid ↗</a>
+      </div>
+    </div>
+
+    <!-- ============== SLOTS ROOM ============== -->
+    <div id="slotsStep" style="display:none;">
       <ul class="rules-note">
         <li>Select the finishing slots of 7 different clubs, after teams have played 19 opponents once.</li>
         <li><strong>Scoring for your selected clubs:</strong> Goals For = 2 Points, Match wins = 3 Points</li>
@@ -184,14 +292,31 @@
         </div>
       </div>
       <div class="footer-actions">
-        <button class="btn btn-primary" id="continueBtn" disabled>Continue to questions →</button>
+        <button class="btn btn-ghost" id="slotsBackBtn">← Back to hub</button>
         <button class="btn btn-ghost" id="resetBtn">Reset all</button>
       </div>
     </div>
 
+    <!-- ============== BLACKJACK ROOM ============== -->
+    <div id="blackjackStep" style="display:none;">
+      <div class="felt">
+        <h2>PremIQ19: Blackjack</h2>
+        <p class="bj-team-line" id="bjTeamLine"></p>
+        <div class="card-grid" id="cardGrid"></div>
+        <div class="bj-total-box">
+          <div class="bj-total-num" id="bjTotalNum">0</div>
+          <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 19</div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-ghost" id="bjBackBtn">← Back to hub</button>
+      </div>
+    </div>
+
+    <!-- ============== QUIZ ROOM ============== -->
     <div id="questionsStep" style="display:none;">
       <div class="questions-panel">
-        <h2>PREM IQ19 Questions</h2>
+        <div class="room-header"><h2>PREM IQ19 Quiz</h2></div>
         <div id="questionsList"></div>
       </div>
       <div class="footer-actions">
@@ -201,28 +326,31 @@
       </div>
     </div>
 
+    <!-- ============== SUPER SUNDAY ROOM ============== -->
     <div id="h2hStep" style="display:none;">
       <div class="questions-panel">
-        <h2>Monthly Super Sunday</h2>
+        <div class="room-header"><h2>Monthly Super Sunday</h2></div>
         <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
         <div id="h2hList"></div>
       </div>
       <div class="footer-actions">
-        <button class="btn btn-primary" id="h2hContinueBtn">Continue to summary →</button>
-        <button class="btn btn-ghost" id="h2hBackBtn">← Back</button>
+        <button class="btn btn-ghost" id="h2hBackBtn">← Back to hub</button>
       </div>
     </div>
 
+    <!-- ============== SUMMARY ============== -->
     <div id="summaryStep" style="display:none;">
       <div class="questions-panel">
         <h2>You're all set!</h2>
         <p style="text-align:center; color:var(--ink-soft); font-size:0.82rem; margin-top:-0.4rem;">Here's a summary of everything you submitted.</p>
         <div class="tab-bar">
           <button class="tab-btn active" id="tabSlotsBtn">My Slots</button>
+          <button class="tab-btn" id="tabBlackjackBtn">My Blackjack</button>
           <button class="tab-btn" id="tabQuestionsBtn">My Questions</button>
           <button class="tab-btn" id="tabH2HBtn">My Super Sunday Picks</button>
         </div>
         <div id="summarySlotsPanel"></div>
+        <div id="summaryBlackjackPanel" style="display:none;"></div>
         <div id="summaryQuestionsPanel" style="display:none;"></div>
         <div id="summaryH2HPanel" style="display:none;"></div>
       </div>
@@ -231,19 +359,137 @@
         <span class="feedback" id="feedback"></span>
       </div>
     </div>
+
   </div>
 
   <div id="ghost"><span class="badge" id="ghostBadge"></span><span class="name" id="ghostName"></span></div>
 
 <script>
   let sb = null;
-  try{
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch(err){
-    console.warn('Supabase not configured yet — running in preview mode.', err);
+  try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(err){ console.warn('Supabase not configured yet — running in preview mode.', err); }
+
+  // ============================================================
+  // Shared state
+  // ============================================================
+  let assignments = {}; SLOTS.forEach(s => assignments[s.id] = null);
+  let answersState = {};
+  QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
+  let h2hFixtures = [];
+  let h2hAnswers = {};
+  let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
+  let slotSnapshotQ1 = null, slotSnapshotQ2 = null, slotSnapshotBJ = null;
+
+  function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
+  function showStep(id){
+    ['landingStep','hubStep','slotsStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
+      document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
+    });
+    window.scrollTo({ top:0, behavior:'smooth' });
   }
 
-  let assignments = {}; SLOTS.forEach(s => assignments[s.id] = null);
+  // ============================================================
+  // Landing
+  // ============================================================
+  document.getElementById('playerName').addEventListener('input', ()=>{
+    document.getElementById('enterGameBtn').disabled = document.getElementById('playerName').value.trim().length===0;
+  });
+  document.getElementById('enterGameBtn').addEventListener('click', enterHub);
+
+  async function enterHub(){
+    const name = document.getElementById('playerName').value.trim();
+    document.getElementById('playingAsHub').innerHTML = `Playing as <span>${name}</span>`;
+    setSubtitle('Pick a room to get started');
+    if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
+    h2hFixtures.forEach(f => { if(!h2hAnswers[f.month]) h2hAnswers[f.month] = { result:'', scoreA:'', scoreB:'' }; });
+    updateHubChecks();
+    showStep('hubStep');
+  }
+
+  document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
+  document.getElementById('slotsBackBtn').addEventListener('click', ()=>{
+    if(cameFromQuizToSlots){
+      cameFromQuizToSlots = false;
+      document.getElementById('slotsBackBtn').textContent = '← Back to hub';
+      checkSlotChangeAndReturn();
+    } else {
+      setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep');
+    }
+  });
+
+  document.getElementById('roomQuizBtn').addEventListener('click', enterQuiz);
+  let cameFromQuizToSlots = false;
+  document.getElementById('viewSlotsBtn').addEventListener('click', ()=>{
+    slotSnapshotQ1 = assignments['1st']; slotSnapshotQ2 = assignments['20'];
+    cameFromQuizToSlots = true;
+    setSubtitle('Slots: Select 7 clubs to finish in the slots');
+    render(); showStep('slotsStep');
+    document.getElementById('slotsBackBtn').textContent = '← Back to quiz';
+  });
+  document.getElementById('prevBtn').addEventListener('click', ()=>{
+    if(currentQ > 1){ currentQ--; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); }
+  });
+
+  document.getElementById('roomH2HBtn').addEventListener('click', enterH2H);
+  document.getElementById('h2hBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+
+  document.getElementById('roomBlackjackBtn').addEventListener('click', enterBlackjack);
+  document.getElementById('bjBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+
+  document.getElementById('submitAllBtn').addEventListener('click', submitAll);
+
+  function checkSlotChangeAndReturn(){
+    const q1Changed = slotSnapshotQ1 !== assignments['1st'];
+    const q2Changed = slotSnapshotQ2 !== assignments['20'];
+    let jumpTo = null, lines = [];
+    if(q1Changed){ answersState[1] = []; lines.push('Your Slot 1st pick changed, so your Question 1 selections have been reset — please redo it.'); jumpTo = 1; }
+    if(q2Changed){ answersState[2] = []; lines.push('Your Slot 20th pick changed, so your Question 2 selection has been reset — please redo it.'); if(jumpTo===null) jumpTo = 2; }
+    if(jumpTo !== null){ alert(lines.join('\n\n')); currentQ = jumpTo; }
+    setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
+    renderQuestion();
+    showStep('questionsStep');
+  }
+
+  // ============================================================
+  // Hub completion tracking
+  // ============================================================
+  function slotsCompleteCount(){ return Object.values(assignments).filter(Boolean).length; }
+  function blackjackCompleteCount(){ return blackjackCards.filter(c=>c.player.trim()!=='' && c.goals!=='').length; }
+  function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
+  function h2hSetFixtures(){ return h2hFixtures.filter(f=>f.team_a && f.team_b); }
+  function h2hCompleteCount(){
+    return h2hSetFixtures().filter(f=>{
+      const a = h2hAnswers[f.month];
+      return a && a.result && a.scoreA!=='' && a.scoreB!=='';
+    }).length;
+  }
+
+  function updateHubChecks(){
+    const sCount = slotsCompleteCount();
+    const bCount = blackjackCompleteCount();
+    const qCount = quizCompleteCount();
+    const hSet = h2hSetFixtures().length;
+    const hCount = h2hCompleteCount();
+
+    setCheck('checkSlots', sCount, 7);
+    setCheck('checkBlackjack', bCount, 4);
+    setCheck('checkQuiz', qCount, 19);
+    document.getElementById('checkH2H').textContent = hSet===0 ? 'No fixtures yet' : `${hCount}/${hSet}`;
+    document.getElementById('checkH2H').classList.toggle('done', hSet>0 && hCount===hSet);
+
+    const allDone = sCount===7 && bCount===4 && qCount===19 && (hSet===0 || hCount===hSet);
+    document.getElementById('submitAllBtn').disabled = !allDone;
+  }
+  function setCheck(id, count, total){
+    const el = document.getElementById(id);
+    el.textContent = `${count}/${total}`;
+    el.classList.toggle('done', count===total);
+  }
+
+  // ============================================================
+  // Slots (drag & drop) — unchanged mechanics
+  // ============================================================
   let dragTeamId=null, dragFromZone=null, dragActive=false, dragStartX=0, dragStartY=0;
   const DRAG_THRESHOLD = 6;
   const ghostEl = document.getElementById('ghost'), ghostBadge = document.getElementById('ghostBadge'), ghostName = document.getElementById('ghostName');
@@ -307,6 +553,7 @@
   function placeInZone(zoneId){ if(!selectedTeamId) return; commitDrop(selectedTeamId, selectedFromZone, zoneId); selectedTeamId=null; selectedFromZone=null; }
   function removeFromZone(zoneId, evt){ if(evt) evt.stopPropagation(); assignments[zoneId]=null; render(); }
   function resetAll(){ SLOTS.forEach(s=>assignments[s.id]=null); selectedTeamId=null; selectedFromZone=null; render(); }
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
 
   function render(){
     const placedIds = assignedTeamIds();
@@ -315,8 +562,6 @@
     document.getElementById('poolCount').textContent = `${unplaced.length}/${TEAMS.length}`;
     const filledCount = placedIds.length;
     document.getElementById('zoneCount').textContent = `${filledCount}/7`;
-    const nameFilled = document.getElementById('playerName').value.trim().length > 0;
-    document.getElementById('continueBtn').disabled = !(filledCount === 7 && nameFilled);
 
     if(unplaced.length===0){
       const div=document.createElement('div'); div.className='pool-empty'; div.textContent='All 20 clubs placed.';
@@ -359,72 +604,84 @@
       zonesEl.appendChild(zoneDiv);
     });
   }
-  document.getElementById('playerName').addEventListener('input', render);
-  document.getElementById('resetBtn').addEventListener('click', resetAll);
-  document.getElementById('continueBtn').addEventListener('click', goToQuestions);
 
   // ============================================================
-  // Questions flow (19 questions, one at a time)
+  // Blackjack
+  // ============================================================
+  function enterBlackjack(){
+    slotSnapshotBJ = assignments['1st'];
+    const slotTeamId = assignments['1st'];
+    const teamLine = document.getElementById('bjTeamLine');
+    if(!slotTeamId){
+      teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
+      document.getElementById('cardGrid').innerHTML = '';
+      document.getElementById('bjTotalNum').textContent = '—';
+      showStep('blackjackStep');
+      document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='← Back to hub'; });
+      return;
+    }
+    const team = teamByTag(slotTeamId);
+    teamLine.innerHTML = `Choose 4 players from <strong>${team.name}</strong> and predict their goals across the first 19 fixtures.`;
+    renderCards();
+    showStep('blackjackStep');
+  }
+
+  function renderCards(){
+    const grid = document.getElementById('cardGrid');
+    grid.innerHTML = blackjackCards.map((c,i) => `
+      <div class="playing-card">
+        <span class="card-pip" id="pip-top-${i}">${c.goals||''}</span>
+        <input type="text" class="card-player-input" data-idx="${i}" placeholder="Player name" value="${c.player}">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="card-goals-input" data-idx="${i}" placeholder="0" value="${c.goals}">
+        <span class="card-pip bottom" id="pip-bottom-${i}">${c.goals||''}</span>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.card-player-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        blackjackCards[e.target.dataset.idx].player = e.target.value;
+        updateHubChecks();
+      });
+    });
+    grid.querySelectorAll('.card-goals-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const idx = e.target.dataset.idx;
+        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
+        e.target.value = digitsOnly;
+        blackjackCards[idx].goals = digitsOnly;
+        document.getElementById('pip-top-'+idx).textContent = digitsOnly;
+        document.getElementById('pip-bottom-'+idx).textContent = digitsOnly;
+        updateBjTotal();
+        updateHubChecks();
+      });
+    });
+    updateBjTotal();
+  }
+
+  function updateBjTotal(){
+    const total = blackjackCards.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
+    const numEl = document.getElementById('bjTotalNum');
+    const labelEl = document.getElementById('bjTotalLabel');
+    numEl.textContent = total;
+    numEl.className = 'bj-total-num';
+    if(total > 19){ numEl.classList.add('bust'); labelEl.textContent = 'BUST! Over 19 — try lowering a prediction.'; }
+    else if(total === 19){ numEl.classList.add('perfect'); labelEl.textContent = 'Perfect 19!'; }
+    else { labelEl.textContent = `Goals predicted — ${19-total} more to reach 19`; }
+  }
+
+  // ============================================================
+  // Quiz (19 questions)
   // ============================================================
   const TOTAL_QUESTIONS = 19;
   let currentQ = 1;
-  let hasStartedQuestions = false;
-  let slotSnapshotQ1 = null, slotSnapshotQ2 = null;
-  let answersState = {}; // questionId -> raw answer (shape depends on type)
-  QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
 
-  function goToQuestions(){
-    document.getElementById('nameBox').style.display = 'none';
-    const name = document.getElementById('playerName').value.trim();
-    const playingAs = document.getElementById('playingAs');
-    playingAs.style.display = 'block';
-    playingAs.innerHTML = `Playing as <span>${name}</span>`;
-    document.getElementById('slotsStep').style.display = 'none';
-    document.getElementById('questionsStep').style.display = 'block';
-    document.getElementById('leaderboardLinkWrap').style.display = 'none';
-    document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
-
-    if(!hasStartedQuestions){
-      currentQ = 1; hasStartedQuestions = true;
-    } else {
-      // Returning from the slots view — check whether the teams linked
-      // to Q1 (Slot 1st) or Q2 (Slot 20th) changed, since their opponent
-      // selections were built around the OLD team and no longer apply.
-      const q1Changed = slotSnapshotQ1 !== assignments['1st'];
-      const q2Changed = slotSnapshotQ2 !== assignments['20'];
-      let jumpTo = null;
-      let lines = [];
-      if(q1Changed){
-        answersState[1] = [];
-        lines.push('Your Slot 1st pick changed, so your Question 1 selections have been reset — please redo it.');
-        jumpTo = 1;
-      }
-      if(q2Changed){
-        answersState[2] = [];
-        lines.push('Your Slot 20th pick changed, so your Question 2 selection has been reset — please redo it.');
-        if(jumpTo === null) jumpTo = 2;
-      }
-      if(jumpTo !== null){
-        alert(lines.join('\n\n'));
-        currentQ = jumpTo;
-      }
-    }
+  function enterQuiz(){
+    slotSnapshotQ1 = slotSnapshotQ1 ?? assignments['1st'];
+    slotSnapshotQ2 = slotSnapshotQ2 ?? assignments['20'];
+    setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
     renderQuestion();
-    window.scrollTo({ top:0, behavior:'smooth' });
+    showStep('questionsStep');
   }
-
-  function viewSlots(){
-    slotSnapshotQ1 = assignments['1st'];
-    slotSnapshotQ2 = assignments['20'];
-    document.getElementById('questionsStep').style.display = 'none';
-    document.getElementById('slotsStep').style.display = 'block';
-    document.getElementById('leaderboardLinkWrap').style.display = 'block';
-    document.getElementById('subtitleText').textContent = 'Slots: Select 7 clubs to finish in the slots';
-    document.getElementById('continueBtn').textContent = 'Back to questions →';
-    render();
-    window.scrollTo({ top:0, behavior:'smooth' });
-  }
-  document.getElementById('viewSlotsBtn').addEventListener('click', viewSlots);
 
   function isAnswered(q){
     const a = answersState[q.id];
@@ -571,40 +828,29 @@
   function updateQNav(){
     const q = questionById(currentQ);
     const nextBtn = document.getElementById('nextBtn');
-    nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Submit my picks';
+    nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Finish quiz →';
     nextBtn.disabled = !isAnswered(q);
+    updateHubChecks();
   }
 
   document.getElementById('nextBtn').addEventListener('click', ()=>{
-    if(currentQ < TOTAL_QUESTIONS){ currentQ++; renderQuestion(); }
-    else { goToH2H(); }
-    window.scrollTo({ top:0, behavior:'smooth' });
-  });
-  document.getElementById('prevBtn').addEventListener('click', ()=>{
-    if(currentQ > 1){ currentQ--; renderQuestion(); window.scrollTo({ top:0, behavior:'smooth' }); }
-    else { viewSlots(); }
+    if(currentQ < TOTAL_QUESTIONS){ currentQ++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); }
   });
 
   // ============================================================
   // Monthly Super Sunday
   // ============================================================
-  let h2hFixtures = []; // loaded from Supabase
-  let h2hAnswers = {};
-
   async function loadH2HFixtures(){
     if(!sb) return [];
     const { data } = await sb.from('h2h_fixtures').select('*');
     return sortByMonth(data || []);
   }
 
-  async function goToH2H(){
-    document.getElementById('questionsStep').style.display='none';
-    document.getElementById('h2hStep').style.display='block';
-    document.getElementById('subtitleText').textContent = 'One monthly head-to-head — 75 points up for grabs';
-    h2hFixtures = await loadH2HFixtures();
-    h2hFixtures.forEach(f => h2hAnswers[f.month] = { result:'', scoreA:'', scoreB:'' });
+  function enterH2H(){
+    setSubtitle('One monthly head-to-head — 75 points up for grabs');
     renderH2H();
-    window.scrollTo({ top:0, behavior:'smooth' });
+    showStep('h2hStep');
   }
 
   function renderH2H(){
@@ -642,32 +888,23 @@
         </div>`;
     }).join('');
     list.querySelectorAll('[data-result]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ h2hAnswers[btn.dataset.month].result = btn.dataset.result; renderH2H(); });
+      btn.addEventListener('click', ()=>{ h2hAnswers[btn.dataset.month].result = btn.dataset.result; renderH2H(); updateHubChecks(); });
     });
     list.querySelectorAll('.h2h-score').forEach(input=>{
       input.addEventListener('input', e=>{
         const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
         e.target.value = digitsOnly;
         h2hAnswers[e.target.dataset.month][e.target.dataset.side==='A'?'scoreA':'scoreB'] = digitsOnly;
+        updateHubChecks();
       });
     });
   }
 
-  document.getElementById('h2hContinueBtn').addEventListener('click', submitAll);
-  document.getElementById('h2hBackBtn').addEventListener('click', ()=>{
-    document.getElementById('h2hStep').style.display='none';
-    document.getElementById('questionsStep').style.display='block';
-    document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
-    currentQ = TOTAL_QUESTIONS;
-    renderQuestion();
-    window.scrollTo({ top:0, behavior:'smooth' });
-  });
-
   // ============================================================
-  // Final submit
+  // Final submit (from hub, once all 4 rooms complete)
   // ============================================================
   async function submitAll(){
-    const feedback = document.getElementById('feedback');
+    const feedback = document.getElementById('hubFeedback');
     const name = document.getElementById('playerName').value.trim();
 
     if(!sb){
@@ -704,6 +941,11 @@
         if(h2hErr) throw h2hErr;
       }
 
+      await sb.from('blackjack_picks').delete().eq('player_id', player.id);
+      const bjRows = blackjackCards.map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
+      const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
+      if(bjErr) throw bjErr;
+
       showSummary();
       feedback.textContent = `Submitted! Good luck, ${name}.`; feedback.className = 'feedback';
     } catch(err){
@@ -713,26 +955,27 @@
   }
 
   function showSummary(){
-    document.getElementById('h2hStep').style.display='none';
-    document.getElementById('summaryStep').style.display='block';
-    document.getElementById('leaderboardLinkWrap').style.display='block';
-    document.getElementById('subtitleText').textContent = 'Submission complete — here\u2019s what you picked';
+    setSubtitle('Submission complete — here\u2019s what you picked');
     switchSummaryTab('slots');
-    window.scrollTo({ top:0, behavior:'smooth' });
+    showStep('summaryStep');
   }
 
   function switchSummaryTab(tab){
     document.getElementById('tabSlotsBtn').classList.toggle('active', tab==='slots');
+    document.getElementById('tabBlackjackBtn').classList.toggle('active', tab==='blackjack');
     document.getElementById('tabQuestionsBtn').classList.toggle('active', tab==='questions');
     document.getElementById('tabH2HBtn').classList.toggle('active', tab==='h2h');
     document.getElementById('summarySlotsPanel').style.display = tab==='slots' ? 'block' : 'none';
+    document.getElementById('summaryBlackjackPanel').style.display = tab==='blackjack' ? 'block' : 'none';
     document.getElementById('summaryQuestionsPanel').style.display = tab==='questions' ? 'block' : 'none';
     document.getElementById('summaryH2HPanel').style.display = tab==='h2h' ? 'block' : 'none';
     if(tab==='slots') renderSlotsSummary();
+    else if(tab==='blackjack') renderBlackjackSummary();
     else if(tab==='questions') renderQuestionsSummary();
     else renderH2HSummary();
   }
   document.getElementById('tabSlotsBtn').addEventListener('click', ()=>switchSummaryTab('slots'));
+  document.getElementById('tabBlackjackBtn').addEventListener('click', ()=>switchSummaryTab('blackjack'));
   document.getElementById('tabQuestionsBtn').addEventListener('click', ()=>switchSummaryTab('questions'));
   document.getElementById('tabH2HBtn').addEventListener('click', ()=>switchSummaryTab('h2h'));
 
@@ -742,6 +985,13 @@
       const team = assignments[s.id] ? teamByTag(assignments[s.id]) : null;
       return `<div class="summary-row"><span class="s-label">${s.label} (x${s.mult})</span><span class="s-value">${team?team.name:'—'}</span></div>`;
     }).join('');
+  }
+
+  function renderBlackjackSummary(){
+    const panel = document.getElementById('summaryBlackjackPanel');
+    const total = blackjackCards.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
+    const rows = blackjackCards.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'} — ${c.goals||0} goals</span></div>`).join('');
+    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Total</strong></span><span class="s-value">${total}${total>19?' (BUST)':total===19?' (Perfect!)':''}</span></div>`;
   }
 
   function fmtAnswer(q){
@@ -784,7 +1034,6 @@
   }
 
   loadStatus();
-  render();
 </script>
 
 </body>
