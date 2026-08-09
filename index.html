@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="questions-data.js"></script>
+<script src="squads-data.js"></script>
 <style>
   :root{
     --pitch-dark:#0B2E22; --pitch:#0F3D2C; --chalk:#F6F5EF; --chalk-dim:#EAE7DB;
@@ -150,8 +151,8 @@
   .felt h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
   .bj-team-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:1rem; }
   .bj-team-line strong{ color:#fff; }
-  .card-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:0.8rem; max-width:480px; margin:0 auto; }
-  @media (min-width:500px){ .card-grid{ grid-template-columns:repeat(4,1fr); } }
+  .card-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:0.7rem; max-width:560px; margin:0 auto; }
+  @media (min-width:500px){ .card-grid{ grid-template-columns:repeat(5,1fr); } }
   .playing-card{
     background:#fff; border-radius:12px; padding:0.6rem 0.5rem; position:relative; aspect-ratio:2.5/3.5;
     display:flex; flex-direction:column; box-shadow:0 8px 18px -6px rgba(0,0,0,0.4); border:1.5px solid var(--line);
@@ -179,6 +180,17 @@
   }
   .bj-count-btn:disabled{ opacity:0.3; cursor:not-allowed; }
   #bjCountLabel{ font-family:'Space Mono',monospace; font-size:0.78rem; color:#D8E0DA; min-width:90px; text-align:center; }
+  .add-card{
+    background:rgba(255,255,255,0.06); border:2px dashed rgba(255,255,255,0.35); border-radius:12px;
+    aspect-ratio:2.5/3.5; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; color:#B9C4BB; gap:0.3rem;
+  }
+  .add-card:hover{ background:rgba(255,255,255,0.12); border-color:var(--gold); color:var(--gold); }
+  .add-card .plus{ font-family:'Bebas Neue',sans-serif; font-size:1.8rem; line-height:1; }
+  .add-card .add-label{ font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; }
+  .card-remove-btn{
+    position:absolute; top:2px; right:4px; background:none; border:none; color:#B7C2BB; font-size:0.9rem; cursor:pointer; line-height:1;
+  }
 
   .room-complete-banner{
     max-width:640px; margin:0.9rem auto 0; text-align:center; background:#E4F1E8; border:1.5px solid #2E8B57;
@@ -233,7 +245,7 @@
         <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
       </div>
       <button class="btn btn-primary" id="enterGameBtn" disabled>Enter the Game →</button>
-      <a class="landing-leaderboard-link" href="leaderboard.html">View Leaderboard →</a>
+      <a class="landing-leaderboard-link" href="leaderboard.html" target="_blank">View Leaderboard →</a>
     </div>
 
     <!-- ============== HUB ============== -->
@@ -274,7 +286,7 @@
         <div class="feedback" id="hubFeedback" style="margin-top:0.6rem;"></div>
       </div>
       <div class="hub-links">
-        <a href="leaderboard.html">View Leaderboard →</a>
+        <a href="leaderboard.html" target="_blank">View Leaderboard →</a>
         <a href="premiq19-fixture-grid.html" target="_blank">View Fixture Grid ↗</a>
       </div>
     </div>
@@ -305,7 +317,7 @@
       </div>
       <div class="room-complete-banner" id="slotsCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
-        <button class="btn btn-ghost" id="slotsBackBtn">← Back to hub</button>
+        <button class="btn btn-ghost" id="slotsBackBtn">Submit and back to hub</button>
         <button class="btn btn-ghost" id="resetBtn">Reset all</button>
       </div>
     </div>
@@ -315,11 +327,6 @@
       <div class="felt">
         <h2>PremIQ19: Blackjack</h2>
         <p class="bj-team-line" id="bjTeamLine"></p>
-        <div class="bj-player-count">
-          <button class="bj-count-btn" id="bjMinusBtn">–</button>
-          <span id="bjCountLabel">4 players</span>
-          <button class="bj-count-btn" id="bjPlusBtn">+</button>
-        </div>
         <div class="card-grid" id="cardGrid"></div>
         <div class="bj-total-box">
           <div class="bj-total-num" id="bjTotalNum">0</div>
@@ -328,7 +335,7 @@
       </div>
       <div class="room-complete-banner" id="bjCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
-        <button class="btn btn-ghost" id="bjBackBtn">← Back to hub</button>
+        <button class="btn btn-ghost" id="bjBackBtn">Submit and back to hub</button>
       </div>
     </div>
 
@@ -355,7 +362,7 @@
       </div>
       <div class="room-complete-banner" id="h2hCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
-        <button class="btn btn-ghost" id="h2hBackBtn">← Back to hub</button>
+        <button class="btn btn-ghost" id="h2hBackBtn">Submit and back to hub</button>
       </div>
     </div>
 
@@ -376,7 +383,7 @@
         <div id="summaryH2HPanel" style="display:none;"></div>
       </div>
       <div class="footer-actions">
-        <a class="btn btn-primary" href="leaderboard.html" style="text-decoration:none; display:inline-block;">View leaderboard →</a>
+        <a class="btn btn-primary" href="leaderboard.html" target="_blank" style="text-decoration:none; display:inline-block;">View leaderboard →</a>
         <span class="feedback" id="feedback"></span>
       </div>
     </div>
@@ -399,7 +406,7 @@
   let h2hFixtures = [];
   let h2hAnswers = {};
   const BLACKJACK_TARGET = 21;
-  let numCards = 4; // 3–5 players, adjustable
+  let numCards = 3; // 3–5 players, adjustable via the "+" tiles
   let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
   let slotSnapshotQ1 = null, slotSnapshotQ2 = null, slotSnapshotBJ = null;
 
@@ -433,10 +440,10 @@
   document.getElementById('slotsBackBtn').addEventListener('click', ()=>{
     if(cameFromQuizToSlots){
       cameFromQuizToSlots = false;
-      document.getElementById('slotsBackBtn').textContent = '← Back to hub';
+      document.getElementById('slotsBackBtn').textContent = 'Submit and back to hub';
       checkSlotChangeAndReturn();
     } else {
-      setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep');
+      saveAndReturnToHub();
     }
   });
 
@@ -455,10 +462,10 @@
   });
 
   document.getElementById('roomH2HBtn').addEventListener('click', enterH2H);
-  document.getElementById('h2hBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('h2hBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('roomBlackjackBtn').addEventListener('click', enterBlackjack);
-  document.getElementById('bjBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('bjBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('submitAllBtn').addEventListener('click', submitAll);
 
@@ -640,42 +647,49 @@
       teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
       document.getElementById('cardGrid').innerHTML = '';
       document.getElementById('bjTotalNum').textContent = '—';
-      document.querySelector('.bj-player-count').style.display = 'none';
       showStep('blackjackStep');
-      document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='← Back to hub'; });
+      document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='Submit and back to hub'; });
       return;
     }
-    document.querySelector('.bj-player-count').style.display = 'flex';
     const team = teamByTag(slotTeamId);
     teamLine.innerHTML = `Choose 3 to 5 players from <strong>${team.name}</strong> and predict their goals across the first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going over.`;
     renderCards();
     showStep('blackjackStep');
   }
 
-  document.getElementById('bjMinusBtn').addEventListener('click', ()=>{
-    if(numCards > 3){ numCards--; renderCards(); updateHubChecks(); }
-  });
-  document.getElementById('bjPlusBtn').addEventListener('click', ()=>{
-    if(numCards < 5){ numCards++; renderCards(); updateHubChecks(); }
-  });
+  function squadOptionsHtml(teamTag, selectedName){
+    const players = (SQUADS[teamTag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    return `<option value="">Select a player…</option>` + players.map(p =>
+      `<option value="${p.name}" ${p.name===selectedName?'selected':''}>${p.name} — ${p.pos}</option>`
+    ).join('');
+  }
 
   function renderCards(){
-    document.getElementById('bjCountLabel').textContent = `${numCards} player${numCards===1?'':'s'}`;
-    document.getElementById('bjMinusBtn').disabled = numCards <= 3;
-    document.getElementById('bjPlusBtn').disabled = numCards >= 5;
-
+    const team = teamByTag(assignments['1st']);
     const grid = document.getElementById('cardGrid');
-    grid.innerHTML = blackjackCards.slice(0, numCards).map((c,i) => `
-      <div class="playing-card">
-        <span class="card-pip" id="pip-top-${i}">${c.goals||''}</span>
-        <input type="text" class="card-player-input" data-idx="${i}" placeholder="Player name" value="${c.player}">
-        <input type="text" inputmode="numeric" pattern="[0-9]*" class="card-goals-input" data-idx="${i}" placeholder="0" value="${c.goals}">
-        <span class="card-pip bottom" id="pip-bottom-${i}">${c.goals||''}</span>
-      </div>
-    `).join('');
+    let html = '';
 
-    grid.querySelectorAll('.card-player-input').forEach(inp=>{
-      inp.addEventListener('input', e=>{
+    for(let i=0; i<5; i++){
+      if(i < numCards){
+        const c = blackjackCards[i];
+        html += `
+          <div class="playing-card">
+            ${i>=3 ? `<button class="card-remove-btn" data-remove="${i}" title="Remove this card">×</button>` : ''}
+            <span class="card-pip" id="pip-top-${i}">${c.goals||''}</span>
+            <select class="card-player-input" data-idx="${i}" style="font-family:'Bebas Neue',sans-serif; font-size:0.82rem; text-align:center; border:none; background:transparent; flex:1;">
+              ${squadOptionsHtml(team.tag, c.player)}
+            </select>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="card-goals-input" data-idx="${i}" placeholder="0" value="${c.goals}">
+            <span class="card-pip bottom" id="pip-bottom-${i}">${c.goals||''}</span>
+          </div>`;
+      } else {
+        html += `<div class="add-card" data-add="${i}"><span class="plus">+</span><span class="add-label">Add player</span></div>`;
+      }
+    }
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.card-player-input').forEach(sel=>{
+      sel.addEventListener('change', e=>{
         blackjackCards[e.target.dataset.idx].player = e.target.value;
         updateHubChecks();
         updateBjCompleteBanner();
@@ -692,6 +706,22 @@
         updateBjTotal();
         updateHubChecks();
         updateBjCompleteBanner();
+      });
+    });
+    grid.querySelectorAll('[data-add]').forEach(tile=>{
+      tile.addEventListener('click', ()=>{
+        if(numCards < 5){ numCards++; renderCards(); updateHubChecks(); }
+      });
+    });
+    grid.querySelectorAll('[data-remove]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(numCards > 3){
+          blackjackCards[numCards-1] = { player:'', goals:'' }; // clear the slot being dropped
+          numCards--;
+          renderCards();
+          updateBjTotal();
+          updateHubChecks();
+        }
       });
     });
     updateBjTotal();
@@ -818,14 +848,19 @@
     }
 
     if(q.type==='text'){
+      const allPlayers = allSquadPlayers().slice().sort((a,b)=>a.name.localeCompare(b.name));
+      const optionsHtml = `<option value="">Select a player…</option>` + allPlayers.map(p =>
+        `<option value="${p.name}" ${p.name===answersState[q.id]?'selected':''}>${p.name} — ${p.pos}, ${teamByTag(p.team)?teamByTag(p.team).name:p.team}</option>`
+      ).join('');
       list.innerHTML = `
         <div class="question-block">
           <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
           ${q.hint ? hintBoxHtml(q.hint) : ''}
-          <input type="text" id="qTextInput" value="${answersState[q.id]}" placeholder="Player name"
-            style="width:220px; max-width:100%; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;">
+          <select id="qTextInput" style="width:280px; max-width:100%; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;">
+            ${optionsHtml}
+          </select>
         </div>`;
-      document.getElementById('qTextInput').addEventListener('input', e=>{ answersState[q.id]=e.target.value; updateQNav(); });
+      document.getElementById('qTextInput').addEventListener('change', e=>{ answersState[q.id]=e.target.value; updateQNav(); });
       updateQNav();
       return;
     }
@@ -953,18 +988,13 @@
   // ============================================================
   // Final submit (from hub, once all 4 rooms complete)
   // ============================================================
-  async function submitAll(){
-    const feedback = document.getElementById('hubFeedback');
+  // Core save routine — writes whatever's currently filled in to Supabase.
+  // Used both by the room "Submit and back to hub" buttons (partial saves
+  // as you go) and the hub's final "Submit My Picks" button.
+  async function saveProgress(){
+    if(!sb) return { ok:false, error:'Preview mode — connect Supabase in config.js before this can actually submit.' };
     const name = document.getElementById('playerName').value.trim();
-
-    if(!sb){
-      showSummary();
-      feedback.textContent = 'Preview mode — connect Supabase in config.js before this can actually submit.';
-      feedback.className = 'feedback error';
-      return;
-    }
-
-    feedback.textContent = 'Submitting…'; feedback.className = 'feedback';
+    if(!name) return { ok:false, error:'Enter your name before submitting.' };
     try{
       const { data: player, error: playerErr } = await sb
         .from('players')
@@ -973,14 +1003,18 @@
       if(playerErr) throw playerErr;
 
       await sb.from('picks').delete().eq('player_id', player.id);
-      const pickRows = SLOTS.map(s => ({ player_id: player.id, slot: s.id, team_tag: assignments[s.id] }));
-      const { error: picksErr } = await sb.from('picks').insert(pickRows);
-      if(picksErr) throw picksErr;
+      const pickRows = SLOTS.map(s => ({ player_id: player.id, slot: s.id, team_tag: assignments[s.id] })).filter(p=>p.team_tag);
+      if(pickRows.length){
+        const { error: picksErr } = await sb.from('picks').insert(pickRows);
+        if(picksErr) throw picksErr;
+      }
 
       await sb.from('answers').delete().eq('player_id', player.id);
-      const answerRows = QUESTIONS.map(q => ({ player_id: player.id, question_id: q.id, answer: answersState[q.id] }));
-      const { error: ansErr } = await sb.from('answers').insert(answerRows);
-      if(ansErr) throw ansErr;
+      const answerRows = QUESTIONS.filter(q=>isAnswered(q)).map(q => ({ player_id: player.id, question_id: q.id, answer: answersState[q.id] }));
+      if(answerRows.length){
+        const { error: ansErr } = await sb.from('answers').insert(answerRows);
+        if(ansErr) throw ansErr;
+      }
 
       await sb.from('h2h_predictions').delete().eq('player_id', player.id);
       const h2hRows = h2hFixtures
@@ -992,16 +1026,40 @@
       }
 
       await sb.from('blackjack_picks').delete().eq('player_id', player.id);
-      const bjRows = blackjackCards.slice(0,numCards).map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
-      const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
-      if(bjErr) throw bjErr;
+      const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='' && c.goals!=='').map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
+      if(bjRows.length){
+        const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
+        if(bjErr) throw bjErr;
+      }
 
-      showSummary();
-      feedback.textContent = `Submitted! Good luck, ${name}.`; feedback.className = 'feedback';
+      return { ok:true };
     } catch(err){
-      feedback.textContent = 'Something went wrong — try again. (' + (err.message||err) + ')';
+      return { ok:false, error: err.message || String(err) };
+    }
+  }
+
+  async function submitAll(){
+    const feedback = document.getElementById('hubFeedback');
+    feedback.textContent = 'Submitting…'; feedback.className = 'feedback';
+    const result = await saveProgress();
+    if(result.ok){
+      showSummary();
+      feedback.textContent = `Submitted! Good luck, ${document.getElementById('playerName').value.trim()}.`; feedback.className = 'feedback';
+    } else {
+      if(!sb) showSummary();
+      feedback.textContent = result.ok===false ? ('Something went wrong — try again. (' + result.error + ')') : '';
       feedback.className = 'feedback error';
     }
+  }
+
+  async function saveAndReturnToHub(){
+    const result = await saveProgress();
+    setSubtitle('Pick a room to get started');
+    updateHubChecks();
+    showStep('hubStep');
+    const feedback = document.getElementById('hubFeedback');
+    if(result.ok){ feedback.textContent = 'Progress saved.'; feedback.className = 'feedback'; }
+    else if(sb){ feedback.textContent = 'Could not save — try again. (' + result.error + ')'; feedback.className = 'feedback error'; }
   }
 
   function showSummary(){
