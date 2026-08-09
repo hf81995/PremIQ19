@@ -147,7 +147,16 @@
   .option-btn.selected{ background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:800; box-shadow:0 0 0 3px rgba(203,166,51,0.25); }
 
   /* --- Blackjack --- */
+  .bj-layout{ display:flex; flex-direction:column; gap:0.8rem; }
+  @media (min-width:800px){ .bj-layout{ flex-direction:row; align-items:flex-start; } .bj-layout .felt{ flex:1.4; } .bj-layout .squad-ref{ flex:1; } }
   .felt{ background:radial-gradient(ellipse at center, #0F5C3D 0%, #073923 100%); border-radius:16px; padding:1.2rem 1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.5); }
+  .squad-ref{ background:var(--chalk); border-radius:16px; padding:0.9rem 1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); max-height:520px; overflow-y:auto; }
+  .squad-ref h3{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; margin:0 0 0.6rem; color:var(--ink-soft); }
+  .squad-ref-row{ display:flex; justify-content:space-between; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid var(--line); font-size:0.78rem; }
+  .squad-ref-row:last-child{ border-bottom:none; }
+  .squad-ref-row .sq-name{ font-weight:700; color:var(--ink); }
+  .squad-ref-row .sq-pos{ font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--ink-soft); background:var(--chalk-dim); padding:0.1rem 0.5rem; border-radius:999px; white-space:nowrap; }
+  .squad-ref-note{ font-size:0.66rem; color:var(--ink-soft); font-style:italic; margin-top:0.6rem; line-height:1.4; }
   .felt h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
   .bj-team-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:1rem; }
   .bj-team-line strong{ color:#fff; }
@@ -324,14 +333,17 @@
 
     <!-- ============== BLACKJACK ROOM ============== -->
     <div id="blackjackStep" style="display:none;">
-      <div class="felt">
-        <h2>PremIQ19: Blackjack</h2>
-        <p class="bj-team-line" id="bjTeamLine"></p>
-        <div class="card-grid" id="cardGrid"></div>
-        <div class="bj-total-box">
-          <div class="bj-total-num" id="bjTotalNum">0</div>
-          <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 21</div>
+      <div class="bj-layout">
+        <div class="felt">
+          <h2>PremIQ19: Blackjack</h2>
+          <p class="bj-team-line" id="bjTeamLine"></p>
+          <div class="card-grid" id="cardGrid"></div>
+          <div class="bj-total-box">
+            <div class="bj-total-num" id="bjTotalNum">0</div>
+            <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 21</div>
+          </div>
         </div>
+        <div class="squad-ref" id="squadRef"></div>
       </div>
       <div class="room-complete-banner" id="bjCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
@@ -647,14 +659,27 @@
       teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
       document.getElementById('cardGrid').innerHTML = '';
       document.getElementById('bjTotalNum').textContent = '—';
+      document.getElementById('squadRef').innerHTML = '';
       showStep('blackjackStep');
       document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='Submit and back to hub'; });
       return;
     }
     const team = teamByTag(slotTeamId);
-    teamLine.innerHTML = `Choose 3 to 5 players from <strong>${team.name}</strong> and predict their goals across the first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going over.`;
+    teamLine.innerHTML = `You selected <strong>${team.name}</strong> to be in 1st. Now choose 3 to 5 players from ${team.name} to score ${BLACKJACK_TARGET} goals (Blackjack!) between them, in their first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going bust.`;
+    renderSquadRef(team);
     renderCards();
     showStep('blackjackStep');
+  }
+
+  function renderSquadRef(team){
+    const panel = document.getElementById('squadRef');
+    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}</span></div>`).join('');
+    panel.innerHTML = `
+      <h3>${team.name} Squad</h3>
+      ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available.</p>'}
+      <p class="squad-ref-note">For reference only — not individually verified against confirmed 2026/27 squads, so treat as a guide rather than gospel.</p>
+    `;
   }
 
   function squadOptionsHtml(teamTag, selectedName){
