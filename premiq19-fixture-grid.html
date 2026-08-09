@@ -200,7 +200,7 @@
   <div class="header">
     <p class="eyebrow">PremIQ19</p>
     <h1>FIXTURE <span>GRID</span></h1>
-    <p>Every club's opponent for Matchweeks 1–20 of the 2026/27 season. Scroll sideways to see all 20 teams.</p>
+    <p>Every club's opponent for Matchweeks 1–19 of the 2026/27 season — their 19 first-time fixtures only. Scroll sideways to see all 20 teams.</p>
     <div class="legend">
       <span><span class="swatch home"></span> Home fixture</span>
       <span><span class="swatch away"></span> Away fixture</span>
@@ -210,7 +210,7 @@
       <span class="status-text">Fixtures last verified: <strong id="verifiedDate">—</strong></span>
       <span class="status-text" id="changeCount"></span>
     </div>
-    <p class="refresh-note">This is a static page, so it can't auto-check premierleague.com itself. Just ask Claude "please refresh the PremIQ19 fixture grid" any time — it'll re-check the official fixtures, regenerate this page, and highlight exactly which cells moved.</p>
+    <p class="refresh-note">Be aware that fixtures are currently locked in and correct. If any rescheduling takes place, the organiser will let you know — but the game still stands as 19 fixtures per club, opponents faced for the first time only. (Rescheduling was minimal in 25/26, with every club having played all 19 by early January.)</p>
   </div>
 
   <p class="hint">↔ Scroll to see every club</p>
@@ -318,7 +318,7 @@
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    for(let mw = 1; mw <= 20; mw++){
+    for(let mw = 1; mw <= 19; mw++){
       const row = document.createElement('tr');
       const rowTh = document.createElement('th');
       rowTh.textContent = 'MW' + mw;

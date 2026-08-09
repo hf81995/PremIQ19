@@ -57,6 +57,17 @@
   }
   .playing-as span{ color:var(--pitch); }
 
+  .rules-note{
+    max-width:640px; margin:0 auto 0.5rem; background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.16); color:#D8E0DA; font-size:0.62rem; line-height:1.4;
+    text-align:left; padding:0.5rem 0.9rem; border-radius:10px; list-style:none;
+  }
+  .rules-note li{ position:relative; padding-left:1.15em; margin:0.28em 0; }
+  .rules-note li::before{ content:"⚽"; position:absolute; left:0; top:0; font-size:0.85em; line-height:1.3; }
+  .rules-footnote{ max-width:640px; margin:0 auto 1.2rem; color:#8FA398; font-size:0.64rem; line-height:1.5; text-align:center; padding:0 1rem; }
+  .note-link{ color:#CBA633; font-weight:700; text-decoration:underline; text-underline-offset:2px; }
+  @media (min-width:640px){ .rules-note{ font-size:0.7rem; padding:0.65rem 1rem; } .rules-footnote{ font-size:0.8rem; } }
+
   .arena{ display:flex; gap:0.6rem; align-items:flex-start; }
   .col{ flex:1 1 0; min-width:0; background:var(--chalk); border-radius:16px; padding:0.7rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
   .col-pool{ flex:0.92 1 0; } .col-zones{ flex:1.08 1 0; }
@@ -150,6 +161,17 @@
     <p id="leaderboardLinkWrap" style="text-align:center;"><a class="leaderboard-link" href="leaderboard.html">View live leaderboard →</a></p>
 
     <div id="slotsStep">
+      <ul class="rules-note">
+        <li>Select the finishing slots of 7 different clubs, after teams have played 19 opponents once.</li>
+        <li><strong>Scoring for your selected clubs:</strong> Goals For = 2 Points, Match wins = 3 Points</li>
+        <li>If a selected club falls outside of your selected slot, a flat 50 points is awarded.</li>
+        <li>Slot multipliers are applied if your selected club is in the correct slot.</li>
+        <li>The game ends after all teams have played 19 opponents once.</li>
+      </ul>
+      <p class="rules-footnote">PREM IQ19 involves teams playing their opponents for the first time only. In 25/26, each club faced 18 out of 19 clubs in its first 19 matches (there was one reverse fixture week in MatchWeek 15 due to some rescheduling). In 25/26, teams had all played each other once by MatchWeek 20, early January, the proposed end to PREM IQ19.<br><br>
+        PREM IQ19 will mirror the actual PL table up until a reverse fixture takes place, but will always reflect first meetings/fixtures only.<br><br>
+        <a href="premiq19-fixture-grid.html" target="_blank" class="note-link">Click here</a> for the latest fixture grid.
+      </p>
       <div class="arena">
         <div class="col col-pool">
           <div class="col-title"><h2>Teams</h2><span class="count" id="poolCount">20/20</span></div>
@@ -174,14 +196,15 @@
       </div>
       <div class="footer-actions">
         <button class="btn btn-primary" id="nextBtn" disabled>Move onto Q2 →</button>
-        <button class="btn btn-ghost" id="prevBtn">← Back to slots</button>
+        <button class="btn btn-ghost" id="prevBtn">← Back</button>
+        <button class="btn btn-ghost" id="viewSlotsBtn">View/change slots</button>
       </div>
     </div>
 
     <div id="h2hStep" style="display:none;">
       <div class="questions-panel">
         <h2>Monthly Super Sunday</h2>
-        <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One head-to-head fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
+        <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
         <div id="h2hList"></div>
       </div>
       <div class="footer-actions">
@@ -345,6 +368,8 @@
   // ============================================================
   const TOTAL_QUESTIONS = 19;
   let currentQ = 1;
+  let hasStartedQuestions = false;
+  let slotSnapshotQ1 = null, slotSnapshotQ2 = null;
   let answersState = {}; // questionId -> raw answer (shape depends on type)
   QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
 
@@ -358,10 +383,48 @@
     document.getElementById('questionsStep').style.display = 'block';
     document.getElementById('leaderboardLinkWrap').style.display = 'none';
     document.getElementById('subtitleText').textContent = 'Answer 19 questions to earn more points and prove your Prem IQ';
-    currentQ = 1;
+
+    if(!hasStartedQuestions){
+      currentQ = 1; hasStartedQuestions = true;
+    } else {
+      // Returning from the slots view — check whether the teams linked
+      // to Q1 (Slot 1st) or Q2 (Slot 20th) changed, since their opponent
+      // selections were built around the OLD team and no longer apply.
+      const q1Changed = slotSnapshotQ1 !== assignments['1st'];
+      const q2Changed = slotSnapshotQ2 !== assignments['20'];
+      let jumpTo = null;
+      let lines = [];
+      if(q1Changed){
+        answersState[1] = [];
+        lines.push('Your Slot 1st pick changed, so your Question 1 selections have been reset — please redo it.');
+        jumpTo = 1;
+      }
+      if(q2Changed){
+        answersState[2] = [];
+        lines.push('Your Slot 20th pick changed, so your Question 2 selection has been reset — please redo it.');
+        if(jumpTo === null) jumpTo = 2;
+      }
+      if(jumpTo !== null){
+        alert(lines.join('\n\n'));
+        currentQ = jumpTo;
+      }
+    }
     renderQuestion();
     window.scrollTo({ top:0, behavior:'smooth' });
   }
+
+  function viewSlots(){
+    slotSnapshotQ1 = assignments['1st'];
+    slotSnapshotQ2 = assignments['20'];
+    document.getElementById('questionsStep').style.display = 'none';
+    document.getElementById('slotsStep').style.display = 'block';
+    document.getElementById('leaderboardLinkWrap').style.display = 'block';
+    document.getElementById('subtitleText').textContent = 'Slots: Select 7 clubs to finish in the slots';
+    document.getElementById('continueBtn').textContent = 'Back to questions →';
+    render();
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+  document.getElementById('viewSlotsBtn').addEventListener('click', viewSlots);
 
   function isAnswered(q){
     const a = answersState[q.id];
@@ -518,16 +581,8 @@
     window.scrollTo({ top:0, behavior:'smooth' });
   });
   document.getElementById('prevBtn').addEventListener('click', ()=>{
-    if(currentQ > 1){ currentQ--; renderQuestion(); }
-    else {
-      document.getElementById('questionsStep').style.display='none';
-      document.getElementById('slotsStep').style.display='block';
-      document.getElementById('nameBox').style.display='flex';
-      document.getElementById('playingAs').style.display='none';
-      document.getElementById('leaderboardLinkWrap').style.display='block';
-      document.getElementById('subtitleText').textContent = 'Slots: Select 7 clubs to finish in the slots';
-    }
-    window.scrollTo({ top:0, behavior:'smooth' });
+    if(currentQ > 1){ currentQ--; renderQuestion(); window.scrollTo({ top:0, behavior:'smooth' }); }
+    else { viewSlots(); }
   });
 
   // ============================================================
@@ -691,7 +746,13 @@
 
   function fmtAnswer(q){
     const a = answersState[q.id];
-    if(q.type==='multi3' || q.type==='single1') return a.map(t => { const tm=teamByTag(t); return tm?tm.name:t; }).join(', ') || '—';
+    if(q.type==='multi3' || q.type==='single1'){
+      const oppNames = a.map(t => { const tm=teamByTag(t); return tm?tm.name:t; }).join(', ');
+      if(!oppNames) return '—';
+      const slotTeamId = q.slotLink ? assignments[q.slotLink] : null;
+      const slotTeam = slotTeamId ? teamByTag(slotTeamId) : null;
+      return slotTeam ? `${slotTeam.name} to beat: ${oppNames}` : oppNames;
+    }
     if(q.type==='numeric-tiered' || q.type==='numeric-single') return a!=='' ? `${a} ${q.unit||''}`.trim() : '—';
     if(q.type==='yesno') return a==='yes' ? 'Yes' : a==='no' ? 'No' : '—';
     return a || '—';

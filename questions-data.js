@@ -63,7 +63,7 @@ const QUESTIONS = [
     label: 'Question 5: How many managers will no longer be in post by the culmination of first fixtures played (early January)?',
     hint: 'Last season 6 managers were sacked in the first half of the season (up to 6 January): Nuno, Potter, Postecoglou, Pereira, Maresca, Amorim. A further 5 were sacked in the second half: Frank, Dyche, Tudor, Rosenior, Parker.',
     pointsText: '25 points for exact or nearest' },
-  { id:6, short:'5 different Managers of the Month again?', type:'yesno', points:25,
+  { id:6, short:'5 different Managers of the Month?', type:'yesno', points:25,
     label: 'Question 6: Manager of the Month last season went to 5 different managers across Aug, Sep, Oct, Nov and Dec. Will the same thing happen again?',
     hint: '2025: 5 different managers. 2024: 4 different managers. 2023: 3 different managers. 2022: 3 different managers.',
     pointsText: '25 points' },
