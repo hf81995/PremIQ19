@@ -147,6 +147,14 @@
   .htp-list li:last-child{ border-bottom:none; }
   .htp-list li::before{ content:"⚽"; position:absolute; left:0; top:0.35rem; font-size:0.8rem; }
   .htp-footnote{ font-size:0.72rem !important; color:var(--ink-soft); font-style:italic; line-height:1.5; border-top:1px solid var(--line); padding-top:0.7rem; margin-top:1rem !important; }
+  .bj-score-table{ width:100%; max-width:320px; border-collapse:collapse; margin:0.5rem 0 1rem; font-size:0.85rem; }
+  .bj-score-table td{ padding:0.4rem 0.3rem; border-bottom:1px solid var(--line); color:var(--ink); }
+  .bj-score-table td:last-child{ text-align:right; font-family:'Space Mono',monospace; font-weight:700; color:var(--pitch); }
+  .bj-example-btns{ display:flex; gap:0.6rem; flex-wrap:wrap; margin:0.6rem 0 1rem; }
+  .bj-example-btns .btn{ font-size:0.75rem; padding:0.5rem 0.9rem; background:var(--chalk-dim); color:var(--ink); border:1.5px solid var(--line); }
+  .bj-example-box{ background:var(--chalk-dim); border-radius:10px; padding:0.8rem 0.9rem; margin-bottom:0.8rem; }
+  .bj-example-box p{ font-size:0.8rem !important; }
+  .bj-example-box .htp-list li{ font-size:0.8rem; }
   .question-block{ margin-bottom:1rem; }
   .question-text{ font-size:0.85rem; font-weight:500; color:var(--ink-soft); line-height:1.5; margin-bottom:0.7rem; display:flex; flex-direction:column; gap:0.5rem; }
   .question-points{ font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--pitch); background:var(--chalk-dim); padding:0.25rem 0.6rem; border-radius:999px; white-space:nowrap; width:fit-content; font-weight:700; }
@@ -368,16 +376,85 @@
     </div>
 
     <!-- ============== BLACKJACK ROOM ============== -->
+    <!-- ============== HOW TO PLAY: BLACKJACK ============== -->
+    <div id="howToPlayBlackjackStep" style="display:none;">
+      <div class="questions-panel htp-panel">
+        <h2>How To Play - Blackjack</h2>
+        <p class="htp-lead">Whichever team you selected in Slot 1st Place, you now have a big call to make at the Blackjack table.</p>
+
+        <p>Select a minimum of 3 players (max. of 5) from that side to score 21 goals between them in 19 fixtures. Use the squad list on the right hand side — which also tells you their total goals from the 25/26 season — and type names onto the playing cards.</p>
+
+        <p class="htp-subhead">Scoring:</p>
+        <table class="bj-score-table">
+          <tr><td>Score 21</td><td>400 points</td></tr>
+          <tr><td>20</td><td>250 points</td></tr>
+          <tr><td>19</td><td>200 points</td></tr>
+          <tr><td>18</td><td>150 points</td></tr>
+          <tr><td>17</td><td>100 points</td></tr>
+          <tr><td>16</td><td>50 points</td></tr>
+          <tr><td>Go bust (22+)</td><td>0 points</td></tr>
+        </table>
+
+        <p class="htp-footnote">The same applies where the 19 fixtures includes playing all opponents for the first time only.</p>
+        <p class="htp-footnote">You can view the squad list, including their total goals from season 25/26, on the right hand side.</p>
+
+        <p class="htp-subhead">Examples from last season</p>
+        <div class="bj-example-btns">
+          <button class="btn btn-ghost" id="bjExample1Btn">25/26 Blackjack Example 1</button>
+          <button class="btn btn-ghost" id="bjExample2Btn">25/26 Blackjack Example 2</button>
+        </div>
+        <div class="bj-example-box" id="bjExample1Box" style="display:none;">
+          <p><strong>An example based on Manchester City in the 25/26 season:</strong></p>
+          <p>Man City goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
+          <ul class="htp-list">
+            <li>Haaland — 19</li>
+            <li>Foden — 7</li>
+            <li>Reijnders — 5</li>
+            <li>Cherki — 2</li>
+            <li>Dias — 2</li>
+            <li>Gvardiol — 2</li>
+            <li>Nunes — 1</li>
+            <li>O'Reilly — 1</li>
+            <li>González — 1</li>
+            <li>Doku — 1</li>
+          </ul>
+          <p>So say last year you opted for Haaland, you would have then probably wanted to go for two defenders (or even a GK…) to not go bust!</p>
+        </div>
+        <div class="bj-example-box" id="bjExample2Box" style="display:none;">
+          <p><strong>An example based on Arsenal in the 25/26 season:</strong></p>
+          <p>Arsenal goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
+          <ul class="htp-list">
+            <li>Viktor Gyökeres — 5</li>
+            <li>Bukayo Saka — 4</li>
+            <li>Leandro Trossard — 4</li>
+            <li>Declan Rice — 4</li>
+            <li>Eberechi Eze — 4</li>
+            <li>Mikel Merino — 3</li>
+            <li>Jurrien Timber — 2</li>
+            <li>Martin Zubimendi — 2</li>
+            <li>Gabriel Magalhães — 2</li>
+            <li>Riccardo Calafiori — 1</li>
+            <li>Gabriel Martinelli — 1</li>
+            <li>Martin Ødegaard — 1</li>
+          </ul>
+          <p>Arsenal in 25/26 had a much more spread out version of goalscorers compared to City, for example. You may have wanted to opt for 4 players, possibly 5!</p>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="htpBjPlayBtn">▶ Play</button>
+        <button class="btn btn-ghost" id="htpBjBackBtn">← Back to hub</button>
+      </div>
+    </div>
+
     <div id="blackjackStep" style="display:none;">
+      <div style="text-align:center; margin-bottom:0.7rem;">
+        <button class="btn btn-ghost" id="howToPlayBjRecallBtn" style="font-size:0.75rem; padding:0.45rem 0.9rem;">📖 How to Play</button>
+      </div>
       <div class="bj-layout">
         <div class="felt">
           <h2>PremIQ19: Blackjack</h2>
           <p class="bj-team-line" id="bjTeamLine"></p>
           <div class="card-grid" id="cardGrid"></div>
-          <div class="bj-total-box">
-            <div class="bj-total-num" id="bjTotalNum">0</div>
-            <div class="bj-total-label" id="bjTotalLabel">Goals predicted — aim for 21</div>
-          </div>
         </div>
         <div class="squad-ref" id="squadRef"></div>
       </div>
@@ -460,7 +537,7 @@
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
-    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
+    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','howToPlayBlackjackStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
       document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
     });
     window.scrollTo({ top:0, behavior:'smooth' });
@@ -488,6 +565,7 @@
   document.getElementById('htpPlayBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
   document.getElementById('htpBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
   document.getElementById('howToPlaySlotsRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
+  document.getElementById('howToPlayBjRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
   document.getElementById('slotsBackBtn').addEventListener('click', ()=>{
     if(cameFromQuizToSlots){
       cameFromQuizToSlots = false;
@@ -515,7 +593,17 @@
   document.getElementById('roomH2HBtn').addEventListener('click', enterH2H);
   document.getElementById('h2hBackBtn').addEventListener('click', saveAndReturnToHub);
 
-  document.getElementById('roomBlackjackBtn').addEventListener('click', enterBlackjack);
+  document.getElementById('roomBlackjackBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
+  document.getElementById('htpBjPlayBtn').addEventListener('click', enterBlackjack);
+  document.getElementById('htpBjBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('bjExample1Btn').addEventListener('click', ()=>{
+    const box = document.getElementById('bjExample1Box');
+    box.style.display = box.style.display==='none' ? 'block' : 'none';
+  });
+  document.getElementById('bjExample2Btn').addEventListener('click', ()=>{
+    const box = document.getElementById('bjExample2Box');
+    box.style.display = box.style.display==='none' ? 'block' : 'none';
+  });
   document.getElementById('bjBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('submitAllBtn').addEventListener('click', submitAll);
@@ -536,7 +624,7 @@
   // Hub completion tracking
   // ============================================================
   function slotsCompleteCount(){ return Object.values(assignments).filter(Boolean).length; }
-  function blackjackCompleteCount(){ return blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='' && c.goals!=='').length; }
+  function blackjackCompleteCount(){ return blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').length; }
   function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
   function h2hSetFixtures(){ return h2hFixtures.filter(f=>f.team_a && f.team_b); }
   function h2hCompleteCount(){
@@ -697,14 +785,13 @@
     if(!slotTeamId){
       teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
       document.getElementById('cardGrid').innerHTML = '';
-      document.getElementById('bjTotalNum').textContent = '—';
       document.getElementById('squadRef').innerHTML = '';
       showStep('blackjackStep');
       document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='Submit and back to hub'; });
       return;
     }
     const team = teamByTag(slotTeamId);
-    teamLine.innerHTML = `You selected <strong>${team.name}</strong> to be in 1st. Now choose 3 to 5 players from ${team.name} to score ${BLACKJACK_TARGET} goals (Blackjack!) between them, in their first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going bust.`;
+    teamLine.innerHTML = `You selected <strong>${team.name}</strong> to be in 1st. Choose 3 to 5 players from ${team.name} to score ${BLACKJACK_TARGET} goals (Blackjack!) between them, in their first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going bust.`;
     renderSquadRef(team);
     renderCards();
     showStep('blackjackStep');
@@ -712,24 +799,16 @@
 
   function renderSquadRef(team){
     const panel = document.getElementById('squadRef');
-    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=> (b.goals??-1) - (a.goals??-1));
     const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}${p.goals!=null ? ` · ${p.goals}g 25/26` : ''}</span></div>`).join('');
     panel.innerHTML = `
-      <h3>${team.name} Squad</h3>
+      <h3>${team.name} Squad — most goals first</h3>
       ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available for this club yet.</p>'}
-      <p class="squad-ref-note">Goals shown are 2025/26 Premier League appearances for reference only — not a prediction.</p>
+      <p class="squad-ref-note">Goals shown are 2025/26 Premier League totals for reference only — not a prediction.</p>
     `;
   }
 
-  function squadOptionsHtml(teamTag, selectedName){
-    const players = (SQUADS[teamTag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
-    return `<option value="">Select a player…</option>` + players.map(p =>
-      `<option value="${p.name}" ${p.name===selectedName?'selected':''}>${p.name} — ${p.pos}${p.goals!=null ? ` (${p.goals}g 25/26)` : ''}</option>`
-    ).join('');
-  }
-
   function renderCards(){
-    const team = teamByTag(assignments['1st']);
     const grid = document.getElementById('cardGrid');
     let html = '';
 
@@ -739,12 +818,10 @@
         html += `
           <div class="playing-card">
             ${i>=3 ? `<button class="card-remove-btn" data-remove="${i}" title="Remove this card">×</button>` : ''}
-            <span class="card-pip" id="pip-top-${i}">${c.goals||''}</span>
-            <select class="card-player-input" data-idx="${i}" style="font-family:'Bebas Neue',sans-serif; font-size:0.82rem; text-align:center; border:none; background:transparent; flex:1;">
-              ${squadOptionsHtml(team.tag, c.player)}
-            </select>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" class="card-goals-input" data-idx="${i}" placeholder="0" value="${c.goals}">
-            <span class="card-pip bottom" id="pip-bottom-${i}">${c.goals||''}</span>
+            <span class="card-pip">⚽</span>
+            <input type="text" class="card-player-input" data-idx="${i}" placeholder="Type player name" value="${c.player}"
+              style="font-family:'Bebas Neue',sans-serif; font-size:0.8rem; text-align:center; border:none; background:transparent; flex:1; width:100%;">
+            <span class="card-pip bottom">⚽</span>
           </div>`;
       } else {
         html += `<div class="add-card" data-add="${i}"><span class="plus">+</span><span class="add-label">Add player</span></div>`;
@@ -752,22 +829,9 @@
     }
     grid.innerHTML = html;
 
-    grid.querySelectorAll('.card-player-input').forEach(sel=>{
-      sel.addEventListener('change', e=>{
-        blackjackCards[e.target.dataset.idx].player = e.target.value;
-        updateHubChecks();
-        updateBjCompleteBanner();
-      });
-    });
-    grid.querySelectorAll('.card-goals-input').forEach(inp=>{
+    grid.querySelectorAll('.card-player-input').forEach(inp=>{
       inp.addEventListener('input', e=>{
-        const idx = e.target.dataset.idx;
-        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
-        e.target.value = digitsOnly;
-        blackjackCards[idx].goals = digitsOnly;
-        document.getElementById('pip-top-'+idx).textContent = digitsOnly;
-        document.getElementById('pip-bottom-'+idx).textContent = digitsOnly;
-        updateBjTotal();
+        blackjackCards[e.target.dataset.idx].player = e.target.value;
         updateHubChecks();
         updateBjCompleteBanner();
       });
@@ -783,24 +847,11 @@
           blackjackCards[numCards-1] = { player:'', goals:'' }; // clear the slot being dropped
           numCards--;
           renderCards();
-          updateBjTotal();
           updateHubChecks();
         }
       });
     });
-    updateBjTotal();
     updateBjCompleteBanner();
-  }
-
-  function updateBjTotal(){
-    const total = blackjackCards.slice(0,numCards).reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
-    const numEl = document.getElementById('bjTotalNum');
-    const labelEl = document.getElementById('bjTotalLabel');
-    numEl.textContent = total;
-    numEl.className = 'bj-total-num';
-    if(total > BLACKJACK_TARGET){ numEl.classList.add('bust'); labelEl.textContent = `BUST! Over ${BLACKJACK_TARGET} — try lowering a prediction.`; }
-    else if(total === BLACKJACK_TARGET){ numEl.classList.add('perfect'); labelEl.textContent = `Perfect ${BLACKJACK_TARGET}!`; }
-    else { labelEl.textContent = `Goals predicted — ${BLACKJACK_TARGET-total} more to reach ${BLACKJACK_TARGET}`; }
   }
 
   function updateBjCompleteBanner(){
@@ -912,19 +963,14 @@
     }
 
     if(q.type==='text'){
-      const allPlayers = allSquadPlayers().slice().sort((a,b)=>a.name.localeCompare(b.name));
-      const optionsHtml = `<option value="">Select a player…</option>` + allPlayers.map(p =>
-        `<option value="${p.name}" ${p.name===answersState[q.id]?'selected':''}>${p.name} — ${p.pos}, ${teamByTag(p.team)?teamByTag(p.team).name:p.team}${p.goals!=null ? ` (${p.goals}g 25/26)` : ''}</option>`
-      ).join('');
       list.innerHTML = `
         <div class="question-block">
           <div class="question-text"><span>${label}</span><span class="question-points">${q.pointsText}</span></div>
           ${q.hint ? hintBoxHtml(q.hint) : ''}
-          <select id="qTextInput" style="width:280px; max-width:100%; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;">
-            ${optionsHtml}
-          </select>
+          <input type="text" id="qTextInput" value="${answersState[q.id]}" placeholder="Type any name from any PL club here"
+            style="width:280px; max-width:100%; padding:0.5rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;">
         </div>`;
-      document.getElementById('qTextInput').addEventListener('change', e=>{ answersState[q.id]=e.target.value; updateQNav(); });
+      document.getElementById('qTextInput').addEventListener('input', e=>{ answersState[q.id]=e.target.value; updateQNav(); });
       updateQNav();
       return;
     }
@@ -1090,7 +1136,7 @@
       }
 
       await sb.from('blackjack_picks').delete().eq('player_id', player.id);
-      const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='' && c.goals!=='').map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: parseInt(c.goals)||0 }));
+      const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: 0 }));
       if(bjRows.length){
         const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
         if(bjErr) throw bjErr;
@@ -1162,9 +1208,9 @@
   function renderBlackjackSummary(){
     const panel = document.getElementById('summaryBlackjackPanel');
     const used = blackjackCards.slice(0,numCards);
-    const total = used.reduce((sum,c)=> sum + (parseInt(c.goals)||0), 0);
-    const rows = used.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'} — ${c.goals||0} goals</span></div>`).join('');
-    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Total</strong></span><span class="s-value">${total}${total>BLACKJACK_TARGET?' (BUST)':total===BLACKJACK_TARGET?' (Perfect!)':''}</span></div>`;
+    const team = assignments['1st'] ? teamByTag(assignments['1st']) : null;
+    const rows = used.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'}</span></div>`).join('');
+    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Team</strong></span><span class="s-value">${team?team.name:'—'}</span></div>`;
   }
 
   function fmtAnswer(q){
