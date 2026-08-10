@@ -672,7 +672,7 @@
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
-    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','howToPlayBlackjackStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
+    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','howToPlayBlackjackStep','blackjackStep','questionsStep','howToPlayH2HStep','h2hStep','summaryStep'].forEach(s=>{
       document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
     });
     window.scrollTo({ top:0, behavior:'smooth' });
