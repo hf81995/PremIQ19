@@ -153,6 +153,10 @@
   .bj-example-btns{ display:flex; gap:0.6rem; flex-wrap:wrap; margin:0.6rem 0 1rem; }
   .bj-example-btns .btn{ font-size:0.75rem; padding:0.5rem 0.9rem; background:var(--chalk-dim); color:var(--ink); border:1.5px solid var(--line); }
   .bj-example-box{ background:var(--chalk-dim); border-radius:10px; padding:0.8rem 0.9rem; margin-bottom:0.8rem; }
+  .felt .bj-example-box{ background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16); }
+  .felt .bj-example-box p{ color:#D8E0DA !important; }
+  .felt .bj-example-box .htp-list li{ color:#EAE7DB; border-bottom-color:rgba(255,255,255,0.14); }
+  .felt .bj-example-btns .btn{ background:rgba(255,255,255,0.1); color:#fff; border:1.5px solid rgba(255,255,255,0.3); }
   .bj-example-box p{ font-size:0.8rem !important; }
   .bj-example-box .htp-list li{ font-size:0.8rem; }
   .question-block{ margin-bottom:1rem; }
@@ -455,6 +459,46 @@
           <h2>PremIQ19: Blackjack</h2>
           <p class="bj-team-line" id="bjTeamLine"></p>
           <div class="card-grid" id="cardGrid"></div>
+          <div class="bj-example-btns" style="justify-content:center; margin-top:1.2rem;">
+            <button class="btn btn-ghost" id="bjExample1BtnGame">25/26 Blackjack Example 1</button>
+            <button class="btn btn-ghost" id="bjExample2BtnGame">25/26 Blackjack Example 2</button>
+          </div>
+          <div class="bj-example-box" id="bjExample1BoxGame" style="display:none;">
+            <p><strong>An example based on Manchester City in the 25/26 season:</strong></p>
+            <p>Man City goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
+            <ul class="htp-list">
+              <li>Haaland — 19</li>
+              <li>Foden — 7</li>
+              <li>Reijnders — 5</li>
+              <li>Cherki — 2</li>
+              <li>Dias — 2</li>
+              <li>Gvardiol — 2</li>
+              <li>Nunes — 1</li>
+              <li>O'Reilly — 1</li>
+              <li>González — 1</li>
+              <li>Doku — 1</li>
+            </ul>
+            <p>So say last year you opted for Haaland, you would have then probably wanted to go for two defenders (or even a GK…) to not go bust!</p>
+          </div>
+          <div class="bj-example-box" id="bjExample2BoxGame" style="display:none;">
+            <p><strong>An example based on Arsenal in the 25/26 season:</strong></p>
+            <p>Arsenal goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
+            <ul class="htp-list">
+              <li>Viktor Gyökeres — 5</li>
+              <li>Bukayo Saka — 4</li>
+              <li>Leandro Trossard — 4</li>
+              <li>Declan Rice — 4</li>
+              <li>Eberechi Eze — 4</li>
+              <li>Mikel Merino — 3</li>
+              <li>Jurrien Timber — 2</li>
+              <li>Martin Zubimendi — 2</li>
+              <li>Gabriel Magalhães — 2</li>
+              <li>Riccardo Calafiori — 1</li>
+              <li>Gabriel Martinelli — 1</li>
+              <li>Martin Ødegaard — 1</li>
+            </ul>
+            <p>Arsenal in 25/26 had a much more spread out version of goalscorers compared to City, for example. You may have wanted to opt for 4 players, possibly 5!</p>
+          </div>
         </div>
         <div class="squad-ref" id="squadRef"></div>
       </div>
@@ -602,6 +646,14 @@
   });
   document.getElementById('bjExample2Btn').addEventListener('click', ()=>{
     const box = document.getElementById('bjExample2Box');
+    box.style.display = box.style.display==='none' ? 'block' : 'none';
+  });
+  document.getElementById('bjExample1BtnGame').addEventListener('click', ()=>{
+    const box = document.getElementById('bjExample1BoxGame');
+    box.style.display = box.style.display==='none' ? 'block' : 'none';
+  });
+  document.getElementById('bjExample2BtnGame').addEventListener('click', ()=>{
+    const box = document.getElementById('bjExample2BoxGame');
     box.style.display = box.style.display==='none' ? 'block' : 'none';
   });
   document.getElementById('bjBackBtn').addEventListener('click', saveAndReturnToHub);
