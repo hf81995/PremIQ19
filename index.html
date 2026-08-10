@@ -86,6 +86,11 @@
   .hub-footer{ max-width:760px; margin:1.3rem auto 0; text-align:center; }
   .hub-footer .btn{ width:100%; max-width:340px; }
   .hub-links{ text-align:center; margin-top:1rem; }
+  .slots-points-reminder{
+    text-align:center; max-width:420px; margin:0 auto 0.9rem; background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.16); color:#EADFB4; font-size:0.72rem; font-weight:700;
+    padding:0.5rem 0.9rem; border-radius:999px;
+  }
   .hub-links a{ color:var(--gold); font-family:'Space Mono',monospace; font-size:0.72rem; text-decoration:underline; margin:0 0.6rem; }
 
   .room-header{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.8rem; }
@@ -111,7 +116,7 @@
   .arrow-hint{ display:flex; align-items:center; justify-content:center; color:#8FA398; font-size:0.85rem; width:14px; padding-top:2.2rem; flex:0 0 auto; }
 
   #pool{ display:flex; flex-direction:column; gap:0.4rem; max-height:72vh; overflow-y:auto; }
-  .chip{ display:flex; align-items:center; gap:0.5rem; background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:0.42rem 0.5rem; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:grab; min-width:0; }
+  .chip{ display:flex; align-items:center; gap:0.5rem; background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:0.42rem 0.5rem; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:grab; min-width:0; }
   .chip.ghosted{ opacity:0.35; }
   .chip .badge{ width:24px; height:24px; border-radius:7px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.6rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .chip .name{ font-size:0.72rem; font-weight:700; min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -181,6 +186,45 @@
   .squad-ref-row .sq-name{ font-weight:700; color:var(--ink); }
   .squad-ref-row .sq-pos{ font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--ink-soft); background:var(--chalk-dim); padding:0.1rem 0.5rem; border-radius:999px; white-space:nowrap; }
   .squad-ref-note{ font-size:0.66rem; color:var(--ink-soft); font-style:italic; margin-top:0.6rem; line-height:1.4; }
+
+  .roulette-table{ background:radial-gradient(ellipse at center, #0F5C3D 0%, #073923 100%); border-radius:16px; padding:1.2rem 1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.5); }
+  .roulette-table h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
+  .roulette-fixture-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:0.4rem; }
+  .roulette-fixture-line strong{ color:#fff; }
+  .roulette-spend{ text-align:center; font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--gold); font-weight:700; margin-bottom:1rem; }
+  .roulette-categories{ display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.2rem; }
+  .roulette-cat{
+    background:rgba(255,255,255,0.06); border:2px dashed rgba(255,255,255,0.3); border-radius:12px;
+    padding:0.7rem 0.8rem; transition:all .15s ease;
+  }
+  .roulette-cat.droptarget{ border-color:var(--gold); background:rgba(203,166,51,0.15); transform:scale(1.02); }
+  .roulette-cat.filled{ border-style:solid; border-color:var(--gold); background:rgba(255,255,255,0.1); }
+  .roulette-cat-head{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
+  .roulette-cat-name{ font-family:'Bebas Neue',sans-serif; font-size:1rem; color:#fff; letter-spacing:0.02em; }
+  .roulette-cat-odds{ font-family:'Space Mono',monospace; font-size:0.65rem; color:#B9C4BB; }
+  .roulette-cat-empty{ font-size:0.72rem; color:#8FA398; font-style:italic; margin-top:0.4rem; }
+  .roulette-cat-predict{ margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; }
+  .roulette-chip-slot{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:var(--gold); color:var(--ink); font-family:'Bebas Neue',sans-serif; font-size:0.85rem; font-weight:800;
+    box-shadow:0 4px 8px -2px rgba(0,0,0,0.4); border:2px solid #8C6E15;
+  }
+  .roulette-chip-remove{ background:none; border:none; color:#F2A6A6; font-size:0.85rem; cursor:pointer; }
+
+  .roulette-chip-tray{ display:flex; flex-wrap:wrap; gap:0.9rem; justify-content:center; padding-top:0.8rem; border-top:1px dashed rgba(255,255,255,0.2); }
+  .roulette-chip{
+    width:64px; display:flex; flex-direction:column; align-items:center; gap:0.3rem; cursor:grab;
+    touch-action:pan-y; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .roulette-chip.ghosted{ opacity:0.3; }
+  .roulette-chip-token{
+    width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 35% 30%, #E8C468, var(--gold) 60%, #8C6E15 100%);
+    color:var(--ink); font-family:'Bebas Neue',sans-serif; font-size:1rem; font-weight:800;
+    box-shadow:0 6px 12px -3px rgba(0,0,0,0.5); border:3px dashed rgba(255,255,255,0.5);
+  }
+  .roulette-chip.optional .roulette-chip-token{ background:radial-gradient(circle at 35% 30%, #E08A6A, #C8562C 60%, #7A3316 100%); border-style:dotted; }
+  .roulette-chip-label{ font-family:'Space Mono',monospace; font-size:0.6rem; color:#EAE7DB; text-align:center; line-height:1.3; }
   .felt h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
   .bj-team-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:1rem; }
   .bj-team-line strong{ color:#fff; }
@@ -308,7 +352,7 @@
         </div>
         <div class="hub-room supersunday">
           <button class="hub-room-btn" id="roomH2HBtn">
-            <span>PREM IQ19: Monthly Super Sunday<span class="room-sub">One fixture, every month</span></span>
+            <span>PREM IQ19: Monthly Super Sunday Roulette<span class="room-sub">One fixture, every month</span></span>
             <span class="room-check" id="checkH2H">0/0</span>
           </button>
           <div class="hub-how-to">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</div>
@@ -364,6 +408,7 @@
       <div style="text-align:center; margin-bottom:0.7rem;">
         <button class="btn btn-ghost" id="howToPlaySlotsRecallBtn" style="font-size:0.75rem; padding:0.45rem 0.9rem;">📖 How to Play</button>
       </div>
+      <p class="slots-points-reminder">💡 Reminder: Match win = 3 points, Goal scored = 2 points</p>
       <div class="arena">
         <div class="col col-pool">
           <div class="col-title"><h2>Teams</h2><span class="count" id="poolCount">20/20</span></div>
@@ -535,11 +580,46 @@
     </div>
 
     <!-- ============== SUPER SUNDAY ROOM ============== -->
+    <!-- ============== HOW TO PLAY: ROULETTE ============== -->
+    <div id="howToPlayH2HStep" style="display:none;">
+      <div class="questions-panel htp-panel">
+        <h2>How To Play - Monthly Super Sunday Roulette</h2>
+        <p class="htp-lead">Every month, one fixture is chosen for all players. Whatever your points from Slots are at that point, you head to the roulette table and spend points on 7 different bets — a minimum of 100 points, up to a maximum of 150.</p>
+
+        <p class="htp-subhead">5 chips are mandatory — you must use these:</p>
+        <table class="bj-score-table">
+          <tr><td>25pt chip — Result</td><td>Evens, win 50</td></tr>
+          <tr><td>10pt chip — Scoreline</td><td>10/1, win 100</td></tr>
+          <tr><td>25pt chip — Both Teams To Score</td><td>Evens, win 50</td></tr>
+          <tr><td>20pt chip — Most Corners</td><td>Evens, win 40</td></tr>
+          <tr><td>20pt chip — Most Shots on Target</td><td>Evens, win 40</td></tr>
+        </table>
+
+        <p class="htp-subhead">2 chips are optional — higher risk, your choice:</p>
+        <table class="bj-score-table">
+          <tr><td>25pt chip — Red Card in the Match</td><td>4/1, win 100</td></tr>
+          <tr><td>25pt chip — Penalty in the Match</td><td>Evens, win 50</td></tr>
+        </table>
+
+        <p>Drag each chip onto its matching spot on the table to place your bet, just like a real roulette table — then make your prediction for that category.</p>
+        <p class="htp-footnote">This is a single-game prediction, resolved once that month's fixture is played.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="htpH2HPlayBtn">▶ Play</button>
+        <button class="btn btn-ghost" id="htpH2HBackBtn">← Back to hub</button>
+      </div>
+    </div>
+
     <div id="h2hStep" style="display:none;">
-      <div class="questions-panel">
-        <div class="room-header"><h2>Monthly Super Sunday</h2></div>
-        <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:-0.4rem;">One fixture is added each month. Predict the Result (25 points) and the exact Scoreline (50 points) — 75 points up for grabs each month.</p>
-        <div id="h2hList"></div>
+      <div style="text-align:center; margin-bottom:0.7rem;">
+        <button class="btn btn-ghost" id="howToPlayH2HRecallBtn" style="font-size:0.75rem; padding:0.45rem 0.9rem;">📖 How to Play</button>
+      </div>
+      <div class="roulette-table">
+        <h2>Monthly Super Sunday Roulette</h2>
+        <p class="roulette-fixture-line" id="rouletteFixtureLine"></p>
+        <p class="roulette-spend" id="rouletteSpend">Points spent: 0 / 150</p>
+        <div class="roulette-categories" id="rouletteCategories"></div>
+        <div class="roulette-chip-tray" id="rouletteChipTray"></div>
       </div>
       <div class="room-complete-banner" id="h2hCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
       <div class="footer-actions">
@@ -585,7 +665,6 @@
   let answersState = {};
   QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
   let h2hFixtures = [];
-  let h2hAnswers = {};
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles
   let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
@@ -612,7 +691,6 @@
     document.getElementById('playingAsHub').innerHTML = `Playing as <span>${name}</span>`;
     setSubtitle('Pick a room to get started');
     if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
-    h2hFixtures.forEach(f => { if(!h2hAnswers[f.month]) h2hAnswers[f.month] = { result:'', scoreA:'', scoreB:'' }; });
     updateHubChecks();
     showStep('hubStep');
   }
@@ -646,7 +724,10 @@
     else { setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); }
   });
 
-  document.getElementById('roomH2HBtn').addEventListener('click', enterH2H);
+  document.getElementById('roomH2HBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Monthly Super Sunday Roulette'); showStep('howToPlayH2HStep'); });
+  document.getElementById('htpH2HPlayBtn').addEventListener('click', enterH2H);
+  document.getElementById('htpH2HBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('howToPlayH2HRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Monthly Super Sunday Roulette'); showStep('howToPlayH2HStep'); });
   document.getElementById('h2hBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('roomBlackjackBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
@@ -690,28 +771,26 @@
   function slotsCompleteCount(){ return Object.values(assignments).filter(Boolean).length; }
   function blackjackCompleteCount(){ return blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').length; }
   function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
-  function h2hSetFixtures(){ return h2hFixtures.filter(f=>f.team_a && f.team_b); }
-  function h2hCompleteCount(){
-    return h2hSetFixtures().filter(f=>{
-      const a = h2hAnswers[f.month];
-      return a && a.result && a.scoreA!=='' && a.scoreB!=='';
-    }).length;
-  }
+  function rouletteHasFixture(){ return h2hFixtures.some(f=>f.team_a && f.team_b); }
+  function rouletteMandatoryDone(){ return CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c)); }
+  function rouletteOptionalOk(){ return CHIP_CONFIG.filter(c=>!c.mandatory).every(c=> !chipState[c.id].placed || isChipComplete(c)); }
+  function rouletteMandatoryCount(){ return CHIP_CONFIG.filter(c=>c.mandatory && isChipComplete(c)).length; }
 
   function updateHubChecks(){
     const sCount = slotsCompleteCount();
     const bCount = blackjackCompleteCount();
     const qCount = quizCompleteCount();
-    const hSet = h2hSetFixtures().length;
-    const hCount = h2hCompleteCount();
+    const hasFixture = rouletteHasFixture();
+    const hMandatoryCount = rouletteMandatoryCount();
+    const hDone = hasFixture && rouletteMandatoryDone() && rouletteOptionalOk();
 
     setCheck('checkSlots', sCount, 7);
     setCheck('checkBlackjack', bCount, numCards);
     setCheck('checkQuiz', qCount, 19);
-    document.getElementById('checkH2H').textContent = hSet===0 ? 'No fixtures yet' : `${hCount}/${hSet}`;
-    document.getElementById('checkH2H').classList.toggle('done', hSet>0 && hCount===hSet);
+    document.getElementById('checkH2H').textContent = !hasFixture ? 'No fixture yet' : `${hMandatoryCount}/5`;
+    document.getElementById('checkH2H').classList.toggle('done', hDone);
 
-    const allDone = sCount===7 && bCount===numCards && qCount===19 && (hSet===0 || hCount===hSet);
+    const allDone = sCount===7 && bCount===numCards && qCount===19 && (!hasFixture || hDone);
     document.getElementById('submitAllBtn').disabled = !allDone;
   }
   function setCheck(id, count, total){
@@ -728,7 +807,7 @@
   const ghostEl = document.getElementById('ghost'), ghostBadge = document.getElementById('ghostBadge'), ghostName = document.getElementById('ghostName');
 
   function assignedTeamIds(){ return Object.values(assignments).filter(Boolean); }
-  function startGhost(t,x,y){ ghostBadge.textContent=t.tag; ghostName.textContent=t.name; ghostEl.style.display='flex'; moveGhost(x,y); }
+  function startGhost(badgeText, labelText, x, y){ ghostBadge.textContent=badgeText; ghostName.textContent=labelText; ghostEl.style.display='flex'; moveGhost(x,y); }
   function moveGhost(x,y){ ghostEl.style.left=x+'px'; ghostEl.style.top=y+'px'; }
   function endGhost(){ ghostEl.style.display='none'; }
   function clearZoneHighlights(){ document.querySelectorAll('.zone').forEach(z=>z.classList.remove('droptarget')); }
@@ -745,17 +824,19 @@
 
   function attachDrag(el, teamId, fromZone){
     el.addEventListener('pointerdown',(e)=>{
-      e.preventDefault();
       dragTeamId=teamId; dragFromZone=fromZone; dragActive=false; dragStartX=e.clientX; dragStartY=e.clientY;
-      el.setPointerCapture(e.pointerId);
+      let captured = false;
       const onMove=(ev)=>{
         const dx=ev.clientX-dragStartX, dy=ev.clientY-dragStartY;
         if(!dragActive && Math.hypot(dx,dy)>DRAG_THRESHOLD){
-          dragActive=true; const t=teamByTag(dragTeamId);
-          startGhost(t, ev.clientX, ev.clientY);
+          dragActive=true;
+          if(!captured){ el.setPointerCapture(e.pointerId); captured=true; }
+          const t=teamByTag(dragTeamId);
+          startGhost(t.tag, t.name, ev.clientX, ev.clientY);
           document.querySelectorAll('.chip,.placed-team').forEach(c=>{ if(c.dataset.teamid===dragTeamId) c.classList.add('ghosted'); });
         }
         if(dragActive){
+          ev.preventDefault();
           moveGhost(ev.clientX, ev.clientY); clearZoneHighlights();
           const z=zoneElAtPoint(ev.clientX, ev.clientY); if(z) z.classList.add('droptarget');
         }
@@ -1097,8 +1178,21 @@
   });
 
   // ============================================================
-  // Monthly Super Sunday
+  // Monthly Super Sunday Roulette
   // ============================================================
+  const CHIP_CONFIG = [
+    { id:'result',  name:'Result',                 points:25, odds:'Evens', payout:50,  mandatory:true,  type:'threeway' },
+    { id:'scoreline', name:'Scoreline',             points:10, odds:'10/1',  payout:100, mandatory:true,  type:'scoreline' },
+    { id:'btts',    name:'Both Teams To Score',     points:25, odds:'Evens', payout:50,  mandatory:true,  type:'yesno' },
+    { id:'corners', name:'Most Corners',            points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
+    { id:'shots',   name:'Most Shots on Target',    points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
+    { id:'redcard', name:'Red Card in the Match',   points:25, odds:'4/1',   payout:100, mandatory:false, type:'yesno' },
+    { id:'penalty', name:'Penalty in the Match',    points:25, odds:'Evens', payout:50,  mandatory:false, type:'yesno' },
+  ];
+  let chipState = {}; // categoryId -> { placed: bool, prediction: {...} }
+  CHIP_CONFIG.forEach(c => chipState[c.id] = { placed:false, prediction:{} });
+  let currentFixture = null; // the month's fixture object being bet on
+
   async function loadH2HFixtures(){
     if(!sb) return [];
     const { data } = await sb.from('h2h_fixtures').select('*');
@@ -1106,60 +1200,208 @@
   }
 
   function enterH2H(){
-    setSubtitle('One monthly head-to-head — 75 points up for grabs');
-    renderH2H();
+    setSubtitle('Place your chips — up to 150 points on one Super Sunday fixture');
+    currentFixture = h2hFixtures.find(f => f.team_a && f.team_b) || null;
+    renderRoulette();
     showStep('h2hStep');
   }
 
-  function renderH2H(){
-    const list = document.getElementById('h2hList');
-    const banner = document.getElementById('h2hCompleteBanner');
-    if(h2hFixtures.length===0){
-      list.innerHTML = `<p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">No Super Sunday fixtures set yet — check back once the organiser adds one.</p>`;
-      banner.style.display = 'none';
+  function chipSpend(){
+    return CHIP_CONFIG.filter(c => chipState[c.id].placed).reduce((sum,c)=>sum+c.points, 0);
+  }
+
+  function isChipComplete(c){
+    const s = chipState[c.id];
+    if(!s.placed) return false;
+    const p = s.prediction;
+    if(c.type==='threeway') return !!p.value;
+    if(c.type==='twoway') return !!p.value;
+    if(c.type==='yesno') return !!p.value;
+    if(c.type==='scoreline') return p.scoreA!=='' && p.scoreA!=null && p.scoreB!=='' && p.scoreB!=null;
+    return false;
+  }
+
+  function renderRoulette(){
+    const fixtureLine = document.getElementById('rouletteFixtureLine');
+    const catsEl = document.getElementById('rouletteCategories');
+    const trayEl = document.getElementById('rouletteChipTray');
+    const spendEl = document.getElementById('rouletteSpend');
+
+    if(!currentFixture){
+      fixtureLine.textContent = 'No Super Sunday fixture set yet — check back once the organiser adds one.';
+      catsEl.innerHTML = ''; trayEl.innerHTML = ''; spendEl.textContent = '';
+      document.getElementById('h2hCompleteBanner').style.display = 'none';
       return;
     }
-    list.innerHTML = h2hFixtures.map(f => {
-      if(!f.team_a || !f.team_b){
-        return `<div class="question-block"><div class="question-text"><span>${f.month}</span><span class="question-points">Fixture not added yet</span></div></div>`;
-      }
-      const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
-      const ans = h2hAnswers[f.month];
+
+    const teamA = teamByTag(currentFixture.team_a), teamB = teamByTag(currentFixture.team_b);
+    fixtureLine.innerHTML = `<strong>${currentFixture.month}: ${teamA.name} v ${teamB.name}</strong>`;
+    spendEl.textContent = `Points spent: ${chipSpend()} / 150`;
+
+    catsEl.innerHTML = CHIP_CONFIG.map(c => {
+      const s = chipState[c.id];
       return `
-        <div class="question-block">
-          <div class="question-text">
-            <span>${f.month}: ${teamA.name} v ${teamB.name}</span>
-            <span class="question-points">Result = 25pts, Scoreline = 50pts</span>
+        <div class="roulette-cat ${s.placed?'filled':''}" data-category="${c.id}">
+          <div class="roulette-cat-head">
+            <span class="roulette-cat-name">${c.name}${c.mandatory?'':' (optional)'}</span>
+            <span class="roulette-cat-odds">${c.odds} · win ${c.payout}</span>
           </div>
-          <div class="option-row" style="margin-bottom:0.6rem;">
-            <button class="option-btn ${ans.result==='A'?'selected':''}" data-month="${f.month}" data-result="A">${teamA.name} win</button>
-            <button class="option-btn ${ans.result==='D'?'selected':''}" data-month="${f.month}" data-result="D">Draw</button>
-            <button class="option-btn ${ans.result==='B'?'selected':''}" data-month="${f.month}" data-result="B">${teamB.name} win</button>
-          </div>
-          <div style="display:flex; align-items:center; gap:0.5rem;">
-            <span style="font-size:0.78rem; color:var(--ink-soft);">${teamA.tag}</span>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" class="h2h-score" data-month="${f.month}" data-side="A" value="${ans.scoreA}" placeholder="0"
-              style="width:50px; padding:0.4rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
-            <span>–</span>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" class="h2h-score" data-month="${f.month}" data-side="B" value="${ans.scoreB}" placeholder="0"
-              style="width:50px; padding:0.4rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
-            <span style="font-size:0.78rem; color:var(--ink-soft);">${teamB.tag}</span>
-          </div>
-        </div>`;
+          ${s.placed ? `<div class="roulette-cat-predict" id="predict-${c.id}"></div>` : `<div class="roulette-cat-empty">Drag the ${c.points}pt chip here to place this bet${c.mandatory?'':' (optional)'}</div>`}
+        </div>
+      `;
     }).join('');
-    banner.style.display = (h2hSetFixtures().length>0 && h2hCompleteCount()===h2hSetFixtures().length) ? 'block' : 'none';
-    list.querySelectorAll('[data-result]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ h2hAnswers[btn.dataset.month].result = btn.dataset.result; renderH2H(); updateHubChecks(); });
+
+    trayEl.innerHTML = CHIP_CONFIG.filter(c => !chipState[c.id].placed).map(c => `
+      <div class="roulette-chip ${c.mandatory?'':'optional'}" data-chipid="${c.id}">
+        <div class="roulette-chip-token">${c.points}</div>
+        <div class="roulette-chip-label">${c.name}</div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.roulette-cat').forEach(el => {
+      attachChipDrag(null, el.dataset.category, true); // register as a drop-only zone
     });
-    list.querySelectorAll('.h2h-score').forEach(input=>{
-      input.addEventListener('input', e=>{
-        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
-        e.target.value = digitsOnly;
-        h2hAnswers[e.target.dataset.month][e.target.dataset.side==='A'?'scoreA':'scoreB'] = digitsOnly;
+    trayEl.querySelectorAll('.roulette-chip').forEach(el => {
+      attachChipDrag(el, el.dataset.chipid, false);
+    });
+
+    CHIP_CONFIG.forEach(c => { if(chipState[c.id].placed) renderChipPrediction(c); });
+
+    updateRouletteCompleteBanner();
+  }
+
+  function chipElAtPoint(x,y){
+    const el = document.elementFromPoint(x,y);
+    return el ? el.closest('.roulette-cat') : null;
+  }
+
+  let selectedChipId = null;
+  function attachChipDrag(el, categoryId, isDropZone){
+    if(isDropZone) return; // drop zones don't need their own pointer handlers, just used as targets
+    el.addEventListener('pointerdown', (e)=>{
+      const startX=e.clientX, startY=e.clientY;
+      let dragging=false, captured=false;
+      const onMove=(ev)=>{
+        const dx=ev.clientX-startX, dy=ev.clientY-startY;
+        if(!dragging && Math.hypot(dx,dy)>6){
+          dragging=true;
+          if(!captured){ el.setPointerCapture(e.pointerId); captured=true; }
+          const chip = CHIP_CONFIG.find(c=>c.id===categoryId);
+          startGhost(chip.points, chip.name, ev.clientX, ev.clientY);
+          el.classList.add('ghosted');
+        }
+        if(dragging){
+          ev.preventDefault();
+          moveGhost(ev.clientX, ev.clientY);
+          document.querySelectorAll('.roulette-cat').forEach(z=>z.classList.remove('droptarget'));
+          const z = chipElAtPoint(ev.clientX, ev.clientY);
+          if(z && z.dataset.category===categoryId) z.classList.add('droptarget');
+        }
+      };
+      const onUp=(ev)=>{
+        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+        endGhost();
+        document.querySelectorAll('.roulette-cat').forEach(z=>z.classList.remove('droptarget'));
+        el.classList.remove('ghosted');
+        if(dragging){
+          const z = chipElAtPoint(ev.clientX, ev.clientY);
+          if(z && z.dataset.category===categoryId) placeChip(categoryId);
+        } else {
+          // tap-to-select fallback
+          if(selectedChipId===categoryId){ selectedChipId=null; }
+          else { selectedChipId=categoryId; }
+        }
+      };
+      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+    });
+    el.addEventListener('click', ()=>{
+      // if a chip is selected via tap and this same chip tapped again, or used as quick-place, no-op here;
+      // placement via tap happens by tapping the category box itself (handled below).
+    });
+  }
+
+  // tap-to-place: tapping a category box while a chip is selected places it, if it's the right match
+  document.getElementById('rouletteCategories').addEventListener('click', (e)=>{
+    const catEl = e.target.closest('.roulette-cat');
+    if(!catEl || !selectedChipId) return;
+    if(catEl.dataset.category === selectedChipId){
+      placeChip(selectedChipId);
+      selectedChipId = null;
+    }
+  });
+
+  function placeChip(categoryId){
+    chipState[categoryId].placed = true;
+    renderRoulette();
+  }
+
+  function removeChip(categoryId){
+    chipState[categoryId] = { placed:false, prediction:{} };
+    renderRoulette();
+  }
+
+  function renderChipPrediction(c){
+    const el = document.getElementById(`predict-${c.id}`);
+    if(!el) return;
+    const s = chipState[c.id];
+    const teamA = teamByTag(currentFixture.team_a), teamB = teamByTag(currentFixture.team_b);
+
+    let html = `<button class="roulette-chip-remove" data-removechip="${c.id}" title="Remove this chip">✕ remove</button>`;
+
+    if(c.type==='threeway'){
+      html += `<div class="option-row" style="margin-top:0.4rem;">
+        <button class="option-btn ${s.prediction.value==='A'?'selected':''}" data-predict="${c.id}" data-value="A">${teamA.name} win</button>
+        <button class="option-btn ${s.prediction.value==='D'?'selected':''}" data-predict="${c.id}" data-value="D">Draw</button>
+        <button class="option-btn ${s.prediction.value==='B'?'selected':''}" data-predict="${c.id}" data-value="B">${teamB.name} win</button>
+      </div>`;
+    } else if(c.type==='twoway'){
+      html += `<div class="option-row" style="margin-top:0.4rem;">
+        <button class="option-btn ${s.prediction.value==='A'?'selected':''}" data-predict="${c.id}" data-value="A">${teamA.name}</button>
+        <button class="option-btn ${s.prediction.value==='B'?'selected':''}" data-predict="${c.id}" data-value="B">${teamB.name}</button>
+      </div>`;
+    } else if(c.type==='yesno'){
+      html += `<div class="option-row" style="margin-top:0.4rem;">
+        <button class="option-btn ${s.prediction.value==='yes'?'selected':''}" data-predict="${c.id}" data-value="yes">Yes</button>
+        <button class="option-btn ${s.prediction.value==='no'?'selected':''}" data-predict="${c.id}" data-value="no">No</button>
+      </div>`;
+    } else if(c.type==='scoreline'){
+      html += `<div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.4rem;">
+        <span style="font-size:0.72rem; color:#D8E0DA;">${teamA.tag}</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="roulette-score-input" data-cat="${c.id}" data-side="A" value="${s.prediction.scoreA||''}" placeholder="0"
+          style="width:44px; padding:0.3rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
+        <span style="color:#D8E0DA;">–</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="roulette-score-input" data-cat="${c.id}" data-side="B" value="${s.prediction.scoreB||''}" placeholder="0"
+          style="width:44px; padding:0.3rem; text-align:center; border:1.5px solid var(--line); border-radius:8px; font-family:'Space Mono',monospace;">
+        <span style="font-size:0.72rem; color:#D8E0DA;">${teamB.tag}</span>
+      </div>`;
+    }
+    el.innerHTML = html;
+
+    el.querySelectorAll('[data-predict]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        chipState[btn.dataset.predict].prediction.value = btn.dataset.value;
+        renderRoulette();
         updateHubChecks();
-        document.getElementById('h2hCompleteBanner').style.display = (h2hSetFixtures().length>0 && h2hCompleteCount()===h2hSetFixtures().length) ? 'block' : 'none';
       });
     });
+    el.querySelectorAll('.roulette-score-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
+        e.target.value = digitsOnly;
+        chipState[e.target.dataset.cat].prediction[e.target.dataset.side==='A'?'scoreA':'scoreB'] = digitsOnly;
+        updateHubChecks();
+        updateRouletteCompleteBanner();
+      });
+    });
+    el.querySelectorAll('[data-removechip]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ removeChip(btn.dataset.removechip); updateHubChecks(); });
+    });
+  }
+
+  function updateRouletteCompleteBanner(){
+    const mandatoryDone = CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c));
+    const optionalOk = CHIP_CONFIG.filter(c=>!c.mandatory).every(c=> !chipState[c.id].placed || isChipComplete(c));
+    document.getElementById('h2hCompleteBanner').style.display = (currentFixture && mandatoryDone && optionalOk) ? 'block' : 'none';
   }
 
   // ============================================================
@@ -1193,13 +1435,17 @@
         if(ansErr) throw ansErr;
       }
 
-      await sb.from('h2h_predictions').delete().eq('player_id', player.id);
-      const h2hRows = h2hFixtures
-        .filter(f => f.team_a && f.team_b && h2hAnswers[f.month].result && h2hAnswers[f.month].scoreA!=='' && h2hAnswers[f.month].scoreB!=='')
-        .map(f => ({ player_id: player.id, month: f.month, result: h2hAnswers[f.month].result, score_a: parseInt(h2hAnswers[f.month].scoreA), score_b: parseInt(h2hAnswers[f.month].scoreB) }));
-      if(h2hRows.length){
-        const { error: h2hErr } = await sb.from('h2h_predictions').insert(h2hRows);
-        if(h2hErr) throw h2hErr;
+      await sb.from('roulette_predictions').delete().eq('player_id', player.id);
+      const rouletteRows = currentFixture ? CHIP_CONFIG.filter(c => chipState[c.id].placed && isChipComplete(c)).map(c => ({
+        player_id: player.id,
+        month: currentFixture.month,
+        category: c.id,
+        chip_points: c.points,
+        prediction: chipState[c.id].prediction,
+      })) : [];
+      if(rouletteRows.length){
+        const { error: rouletteErr } = await sb.from('roulette_predictions').insert(rouletteRows);
+        if(rouletteErr) throw rouletteErr;
       }
 
       await sb.from('blackjack_picks').delete().eq('player_id', player.id);
@@ -1301,15 +1547,19 @@
 
   function renderH2HSummary(){
     const panel = document.getElementById('summaryH2HPanel');
-    if(h2hFixtures.length===0){ panel.innerHTML = `<div class="summary-row"><span class="s-label">No fixtures yet</span><span class="s-value">—</span></div>`; return; }
-    panel.innerHTML = h2hFixtures.map(f => {
-      if(!f.team_a || !f.team_b) return `<div class="summary-row"><span class="s-label">${f.month}</span><span class="s-value">—</span></div>`;
-      const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
-      const ans = h2hAnswers[f.month] || {};
-      const resultLabel = ans.result==='A' ? `${teamA.name} win` : ans.result==='D' ? 'Draw' : ans.result==='B' ? `${teamB.name} win` : '—';
-      const scoreLabel = (ans.scoreA!=='' && ans.scoreB!=='' && ans.scoreA!=null) ? `${ans.scoreA}-${ans.scoreB}` : '—';
-      return `<div class="summary-row"><span class="s-label">${f.month}: ${teamA.name} v ${teamB.name}</span><span class="s-value">${resultLabel} (${scoreLabel})</span></div>`;
+    if(!currentFixture){ panel.innerHTML = `<div class="summary-row"><span class="s-label">No fixture yet</span><span class="s-value">—</span></div>`; return; }
+    const teamA = teamByTag(currentFixture.team_a), teamB = teamByTag(currentFixture.team_b);
+    const rows = CHIP_CONFIG.filter(c => chipState[c.id].placed).map(c => {
+      const p = chipState[c.id].prediction;
+      let valueLabel = '—';
+      if(c.type==='threeway') valueLabel = p.value==='A' ? `${teamA.name} win` : p.value==='D' ? 'Draw' : p.value==='B' ? `${teamB.name} win` : '—';
+      else if(c.type==='twoway') valueLabel = p.value==='A' ? teamA.name : p.value==='B' ? teamB.name : '—';
+      else if(c.type==='yesno') valueLabel = p.value==='yes' ? 'Yes' : p.value==='no' ? 'No' : '—';
+      else if(c.type==='scoreline') valueLabel = (p.scoreA!=null && p.scoreB!=null) ? `${p.scoreA}-${p.scoreB}` : '—';
+      return `<div class="summary-row"><span class="s-label">${c.name} (${c.points}pt chip)</span><span class="s-value">${valueLabel}</span></div>`;
     }).join('');
+    panel.innerHTML = `<div class="summary-row"><span class="s-label"><strong>${currentFixture.month}</strong></span><span class="s-value">${teamA.name} v ${teamB.name}</span></div>`
+      + (rows || `<div class="summary-row"><span class="s-label">No chips placed</span><span class="s-value">—</span></div>`);
   }
 
   async function loadStatus(){

@@ -89,9 +89,10 @@ create table if not exists fixture_alerts (
   resolved boolean not null default false
 );
 
--- Monthly Super Sunday: one head-to-head fixture per month, set by the
+-- Monthly Super Sunday Roulette: one fixture per month, set by the
 -- organiser closer to the time. teamA/teamB null = not announced yet.
--- result/scoreA/scoreB null = not played yet.
+-- The extra actual_* columns are filled in by the organiser once the
+-- match has been played, to resolve each of the 7 chip categories.
 create table if not exists h2h_fixtures (
   month text primary key check (month in ('August','September','October','November','December')),
   team_a text,
@@ -99,19 +100,34 @@ create table if not exists h2h_fixtures (
   result text check (result in ('A','D','B')),
   score_a integer,
   score_b integer,
+  btts_actual boolean,
+  corners_actual text check (corners_actual in ('A','B')),
+  shots_actual text check (shots_actual in ('A','B')),
+  redcard_actual boolean,
+  penalty_actual boolean,
   updated_at timestamptz default now()
 );
 
--- Each player's Result + Scoreline prediction for that month's fixture.
-create table if not exists h2h_predictions (
+-- Each player's roulette chip placements for that month's fixture —
+-- one row per chip actually placed (5 mandatory categories, plus up to
+-- 2 optional ones if the player chose to use them).
+-- prediction shape depends on category:
+--   result   -> {"value":"A"|"D"|"B"}
+--   scoreline-> {"scoreA":n,"scoreB":n}
+--   btts     -> {"value":"yes"|"no"}
+--   corners  -> {"value":"A"|"B"}
+--   shots    -> {"value":"A"|"B"}
+--   redcard  -> {"value":"yes"|"no"}
+--   penalty  -> {"value":"yes"|"no"}
+create table if not exists roulette_predictions (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references players(id) on delete cascade,
   month text references h2h_fixtures(month) on delete cascade,
-  result text not null check (result in ('A','D','B')),
-  score_a integer not null,
-  score_b integer not null,
+  category text not null check (category in ('result','scoreline','btts','corners','shots','redcard','penalty')),
+  chip_points integer not null,
+  prediction jsonb not null,
   created_at timestamptz default now(),
-  unique (player_id, month)
+  unique (player_id, month, category)
 );
 
 -- Blackjack: for each player's Slot 1st team pick, they name 4 players
@@ -158,7 +174,7 @@ alter table team_stats enable row level security;
 alter table match_results enable row level security;
 alter table fixture_alerts enable row level security;
 alter table h2h_fixtures enable row level security;
-alter table h2h_predictions enable row level security;
+alter table roulette_predictions enable row level security;
 alter table settings enable row level security;
 
 create policy "public read players" on players for select using (true);
@@ -195,10 +211,10 @@ create policy "public read h2h_fixtures" on h2h_fixtures for select using (true)
 create policy "public write h2h_fixtures" on h2h_fixtures for insert with check (true);
 create policy "public update h2h_fixtures" on h2h_fixtures for update using (true);
 
-create policy "public read h2h_predictions" on h2h_predictions for select using (true);
-create policy "public write h2h_predictions" on h2h_predictions for insert with check (true);
-create policy "public update h2h_predictions" on h2h_predictions for update using (true);
-create policy "public delete h2h_predictions" on h2h_predictions for delete using (true);
+create policy "public read roulette_predictions" on roulette_predictions for select using (true);
+create policy "public write roulette_predictions" on roulette_predictions for insert with check (true);
+create policy "public update roulette_predictions" on roulette_predictions for update using (true);
+create policy "public delete roulette_predictions" on roulette_predictions for delete using (true);
 
 create policy "public read settings" on settings for select using (true);
 create policy "public write settings" on settings for insert with check (true);
