@@ -192,7 +192,18 @@
   .roulette-fixture-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:0.4rem; }
   .roulette-fixture-line strong{ color:#fff; }
   .roulette-spend{ text-align:center; font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--gold); font-weight:700; margin-bottom:1rem; }
-  .roulette-categories{ display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.2rem; }
+  .roulette-categories{ display:grid; grid-template-columns:1fr; gap:0.6rem; margin-bottom:1rem; }
+  @media (min-width:560px){ .roulette-categories{ grid-template-columns:1fr 1fr; } }
+  .roulette-optional-rail{
+    border:2px dashed rgba(200,86,44,0.6); border-radius:12px; padding:0.8rem 0.8rem 0.9rem;
+    margin-bottom:1.2rem; background:rgba(200,86,44,0.08);
+  }
+  .roulette-optional-label{
+    font-family:'Space Mono',monospace; font-size:0.68rem; color:#E8A57A; text-transform:uppercase;
+    letter-spacing:0.06em; margin:0 0 0.6rem; text-align:center; font-weight:700;
+  }
+  .roulette-optional-cats{ display:grid; grid-template-columns:1fr; gap:0.6rem; }
+  @media (min-width:560px){ .roulette-optional-cats{ grid-template-columns:1fr 1fr; } }
   .roulette-cat{
     background:rgba(255,255,255,0.06); border:2px dashed rgba(255,255,255,0.3); border-radius:12px;
     padding:0.7rem 0.8rem; transition:all .15s ease;
@@ -200,8 +211,11 @@
   .roulette-cat.droptarget{ border-color:var(--gold); background:rgba(203,166,51,0.15); transform:scale(1.02); }
   .roulette-cat.filled{ border-style:solid; border-color:var(--gold); background:rgba(255,255,255,0.1); }
   .roulette-cat-head{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
-  .roulette-cat-name{ font-family:'Bebas Neue',sans-serif; font-size:1rem; color:#fff; letter-spacing:0.02em; }
-  .roulette-cat-odds{ font-family:'Space Mono',monospace; font-size:0.65rem; color:#B9C4BB; }
+  .roulette-cat-name{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:#fff; letter-spacing:0.02em; }
+  .roulette-cat-odds{
+    font-family:'Space Mono',monospace; font-size:0.74rem; font-weight:800; color:var(--ink);
+    background:var(--gold); padding:0.2rem 0.55rem; border-radius:999px; white-space:nowrap;
+  }
   .roulette-cat-empty{ font-size:0.72rem; color:#8FA398; font-style:italic; margin-top:0.4rem; }
   .roulette-cat-predict{ margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; }
   .roulette-chip-slot{
@@ -619,6 +633,10 @@
         <p class="roulette-fixture-line" id="rouletteFixtureLine"></p>
         <p class="roulette-spend" id="rouletteSpend">Points spent: 0 / 150</p>
         <div class="roulette-categories" id="rouletteCategories"></div>
+        <div class="roulette-optional-rail">
+          <p class="roulette-optional-label">⚠ High Risk / Optional Bets</p>
+          <div class="roulette-optional-cats" id="rouletteOptionalCategories"></div>
+        </div>
         <div class="roulette-chip-tray" id="rouletteChipTray"></div>
       </div>
       <div class="room-complete-banner" id="h2hCompleteBanner" style="display:none;">✅ Complete — head back to the Hub!</div>
@@ -773,7 +791,6 @@
   function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
   function rouletteHasFixture(){ return h2hFixtures.some(f=>f.team_a && f.team_b); }
   function rouletteMandatoryDone(){ return CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c)); }
-  function rouletteOptionalOk(){ return CHIP_CONFIG.filter(c=>!c.mandatory).every(c=> !chipState[c.id].placed || isChipComplete(c)); }
   function rouletteMandatoryCount(){ return CHIP_CONFIG.filter(c=>c.mandatory && isChipComplete(c)).length; }
 
   function updateHubChecks(){
@@ -782,7 +799,7 @@
     const qCount = quizCompleteCount();
     const hasFixture = rouletteHasFixture();
     const hMandatoryCount = rouletteMandatoryCount();
-    const hDone = hasFixture && rouletteMandatoryDone() && rouletteOptionalOk();
+    const hDone = hasFixture && rouletteMandatoryDone();
 
     setCheck('checkSlots', sCount, 7);
     setCheck('checkBlackjack', bCount, numCards);
@@ -1238,18 +1255,20 @@
     fixtureLine.innerHTML = `<strong>${currentFixture.month}: ${teamA.name} v ${teamB.name}</strong>`;
     spendEl.textContent = `Points spent: ${chipSpend()} / 150`;
 
-    catsEl.innerHTML = CHIP_CONFIG.map(c => {
+    function catBoxHtml(c){
       const s = chipState[c.id];
       return `
         <div class="roulette-cat ${s.placed?'filled':''}" data-category="${c.id}">
           <div class="roulette-cat-head">
-            <span class="roulette-cat-name">${c.name}${c.mandatory?'':' (optional)'}</span>
+            <span class="roulette-cat-name">${c.name}</span>
             <span class="roulette-cat-odds">${c.odds} · win ${c.payout}</span>
           </div>
-          ${s.placed ? `<div class="roulette-cat-predict" id="predict-${c.id}"></div>` : `<div class="roulette-cat-empty">Drag the ${c.points}pt chip here to place this bet${c.mandatory?'':' (optional)'}</div>`}
+          ${s.placed ? `<div class="roulette-cat-predict" id="predict-${c.id}"></div>` : `<div class="roulette-cat-empty">Drag the ${c.points}pt chip here to place this bet</div>`}
         </div>
       `;
-    }).join('');
+    }
+    catsEl.innerHTML = CHIP_CONFIG.filter(c=>c.mandatory).map(catBoxHtml).join('');
+    document.getElementById('rouletteOptionalCategories').innerHTML = CHIP_CONFIG.filter(c=>!c.mandatory).map(catBoxHtml).join('');
 
     trayEl.innerHTML = CHIP_CONFIG.filter(c => !chipState[c.id].placed).map(c => `
       <div class="roulette-chip ${c.mandatory?'':'optional'}" data-chipid="${c.id}">
@@ -1321,14 +1340,16 @@
   }
 
   // tap-to-place: tapping a category box while a chip is selected places it, if it's the right match
-  document.getElementById('rouletteCategories').addEventListener('click', (e)=>{
+  function handleCategoryTap(e){
     const catEl = e.target.closest('.roulette-cat');
     if(!catEl || !selectedChipId) return;
     if(catEl.dataset.category === selectedChipId){
       placeChip(selectedChipId);
       selectedChipId = null;
     }
-  });
+  }
+  document.getElementById('rouletteCategories').addEventListener('click', handleCategoryTap);
+  document.getElementById('rouletteOptionalCategories').addEventListener('click', handleCategoryTap);
 
   function placeChip(categoryId){
     chipState[categoryId].placed = true;
@@ -1400,8 +1421,7 @@
 
   function updateRouletteCompleteBanner(){
     const mandatoryDone = CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c));
-    const optionalOk = CHIP_CONFIG.filter(c=>!c.mandatory).every(c=> !chipState[c.id].placed || isChipComplete(c));
-    document.getElementById('h2hCompleteBanner').style.display = (currentFixture && mandatoryDone && optionalOk) ? 'block' : 'none';
+    document.getElementById('h2hCompleteBanner').style.display = (currentFixture && mandatoryDone) ? 'block' : 'none';
   }
 
   // ============================================================
