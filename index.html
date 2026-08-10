@@ -863,10 +863,13 @@
 
   function renderSquadRef(team){
     const panel = document.getElementById('squadRef');
-    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=> (b.goals??-1) - (a.goals??-1));
+    const posOrder = { FWD:0, MID:1, DEF:2, GK:3 };
+    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=>
+      (posOrder[a.pos]??9) - (posOrder[b.pos]??9) || (b.goals??-1) - (a.goals??-1)
+    );
     const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}${p.goals!=null ? ` · ${p.goals}g 25/26` : ''}</span></div>`).join('');
     panel.innerHTML = `
-      <h3>${team.name} Squad — most goals first</h3>
+      <h3>${team.name} Squad</h3>
       ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available for this club yet.</p>'}
       <p class="squad-ref-note">Goals shown are 2025/26 Premier League totals for reference only — not a prediction.</p>
     `;
