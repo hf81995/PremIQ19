@@ -45,9 +45,9 @@ function sortByMonth(fixtures){
 }
 
 const QUESTIONS = [
-  { id:1, short:'Slot 1st team — 3 opponents beaten by 2+', type:'multi3', points:{p0:0,p1:20,p2:40,p3:100}, slotLink:'1st',
+  { id:1, short:'Slot 1st team — 3 opponents beaten by 2+', type:'multi3', points:{p0:0,p1:20,p2:50,p3:100}, slotLink:'1st',
     label: teamName => `Question 1: The team you have picked in Slot 1st is: "${teamName}" — now select 3 of their 19 opponents who they must beat by 2 or more goals.`,
-    pointsText: '0 (0/3), 20 (1/3), 40 (2/3), 100 (3/3) points available' },
+    pointsText: '0 correct = 0 pts, 1 correct = 20 pts, 2 correct = 50 points, 3 correct = 100 points' },
   { id:2, short:'Slot 20th team — 1 opponent beaten', type:'single1', points:25, slotLink:'20',
     label: teamName => `Question 2: The team you have picked in Slot 20th is: "${teamName}" — now select 1 of their 19 opponents who they must simply beat.`,
     pointsText: '25 points if correct' },
