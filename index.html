@@ -713,18 +713,18 @@
   function renderSquadRef(team){
     const panel = document.getElementById('squadRef');
     const players = (SQUADS[team.tag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
-    const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}</span></div>`).join('');
+    const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}${p.goals!=null ? ` · ${p.goals}g 25/26` : ''}</span></div>`).join('');
     panel.innerHTML = `
       <h3>${team.name} Squad</h3>
-      ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available.</p>'}
-      <p class="squad-ref-note">For reference only — not individually verified against confirmed 2026/27 squads, so treat as a guide rather than gospel.</p>
+      ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available for this club yet.</p>'}
+      <p class="squad-ref-note">Goals shown are 2025/26 Premier League appearances for reference only — not a prediction.</p>
     `;
   }
 
   function squadOptionsHtml(teamTag, selectedName){
     const players = (SQUADS[teamTag] || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
     return `<option value="">Select a player…</option>` + players.map(p =>
-      `<option value="${p.name}" ${p.name===selectedName?'selected':''}>${p.name} — ${p.pos}</option>`
+      `<option value="${p.name}" ${p.name===selectedName?'selected':''}>${p.name} — ${p.pos}${p.goals!=null ? ` (${p.goals}g 25/26)` : ''}</option>`
     ).join('');
   }
 
@@ -914,7 +914,7 @@
     if(q.type==='text'){
       const allPlayers = allSquadPlayers().slice().sort((a,b)=>a.name.localeCompare(b.name));
       const optionsHtml = `<option value="">Select a player…</option>` + allPlayers.map(p =>
-        `<option value="${p.name}" ${p.name===answersState[q.id]?'selected':''}>${p.name} — ${p.pos}, ${teamByTag(p.team)?teamByTag(p.team).name:p.team}</option>`
+        `<option value="${p.name}" ${p.name===answersState[q.id]?'selected':''}>${p.name} — ${p.pos}, ${teamByTag(p.team)?teamByTag(p.team).name:p.team}${p.goals!=null ? ` (${p.goals}g 25/26)` : ''}</option>`
       ).join('');
       list.innerHTML = `
         <div class="question-block">
