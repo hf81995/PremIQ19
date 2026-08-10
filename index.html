@@ -138,6 +138,15 @@
 
   .questions-panel{ background:var(--chalk); border-radius:16px; padding:1rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
   .questions-panel h2{ font-family:'Bebas Neue',sans-serif; font-size:1.3rem; margin:0 0 0.8rem; color:var(--ink-soft); letter-spacing:0.02em; }
+  .htp-panel{ max-width:640px; margin:0 auto; }
+  .htp-panel p{ font-size:0.85rem; color:var(--ink-soft); line-height:1.6; margin:0.6rem 0; }
+  .htp-lead{ font-weight:600; color:var(--ink) !important; }
+  .htp-subhead{ font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.02em; color:var(--ink) !important; margin-top:1rem !important; }
+  .htp-list{ list-style:none; padding:0; margin:0.4rem 0 0.8rem; }
+  .htp-list li{ font-size:0.85rem; color:var(--ink); padding:0.35rem 0 0.35rem 1.3rem; position:relative; border-bottom:1px solid var(--line); }
+  .htp-list li:last-child{ border-bottom:none; }
+  .htp-list li::before{ content:"⚽"; position:absolute; left:0; top:0.35rem; font-size:0.8rem; }
+  .htp-footnote{ font-size:0.72rem !important; color:var(--ink-soft); font-style:italic; line-height:1.5; border-top:1px solid var(--line); padding-top:0.7rem; margin-top:1rem !important; }
   .question-block{ margin-bottom:1rem; }
   .question-text{ font-size:0.85rem; font-weight:500; color:var(--ink-soft); line-height:1.5; margin-bottom:0.7rem; display:flex; flex-direction:column; gap:0.5rem; }
   .question-points{ font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--pitch); background:var(--chalk-dim); padding:0.25rem 0.6rem; border-radius:999px; white-space:nowrap; width:fit-content; font-weight:700; }
@@ -301,18 +310,45 @@
     </div>
 
     <!-- ============== SLOTS ROOM ============== -->
+    <!-- ============== HOW TO PLAY: SLOTS ============== -->
+    <div id="howToPlaySlotsStep" style="display:none;">
+      <div class="questions-panel htp-panel">
+        <h2>How To Play - Slots</h2>
+        <p class="htp-lead">All PL teams will have played each other once by early January. <a href="premiq19-fixture-grid.html" target="_blank" class="note-link">See fixtures here.</a></p>
+
+        <p>Your job is to decide the slot (finishing position) for 7 teams, at the point where all teams have played each other once.*</p>
+
+        <p class="htp-subhead">A team to finish in slot:</p>
+        <ul class="htp-list">
+          <li>1st</li>
+          <li>2nd</li>
+          <li>Within 3rd to 6th</li>
+          <li>Within 7th to 12th</li>
+          <li>Within 13th to 18th</li>
+          <li>19th</li>
+          <li>20th</li>
+        </ul>
+
+        <p class="htp-subhead">Scoring:</p>
+        <p>Team win = 3 points. Goal scored = 2 points.</p>
+
+        <p class="htp-subhead">Multiplier:</p>
+        <p>Each slot has a different multiplier attached to it, from x1.5 up to x5, meaning if your selected team finishes in the correct slot, points from wins and goals are multiplied.</p>
+        <p>If a selected team finishes outside the correct slot, all points from wins and goals scored are wiped, and your selected team will receive a flat 50 points with no multiplier.</p>
+
+        <p class="htp-footnote">*In 25/26 all teams had played each other once by Matchweek 20, early January. The reason that it wasn't 19 opponents in 19 games was due to some rescheduling in Matchweek 15 (due to European schedules, etc).</p>
+        <p class="htp-footnote">PREMiQ19's results and table will be decided as per points from each team playing opponents for the first time only, and should end around early Jan. The PREMiQ19 table will mirror the official PL table, until the possible eventuality that a rescheduling takes place, and at that point the table will only provide goals and results from first-time fixtures only.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="htpPlayBtn">▶ Play</button>
+        <button class="btn btn-ghost" id="htpBackBtn">← Back to hub</button>
+      </div>
+    </div>
+
     <div id="slotsStep" style="display:none;">
-      <ul class="rules-note">
-        <li>Select the finishing slots of 7 different clubs, after teams have played 19 opponents once.</li>
-        <li><strong>Scoring for your selected clubs:</strong> Goals For = 2 Points, Match wins = 3 Points</li>
-        <li>If a selected club falls outside of your selected slot, a flat 50 points is awarded.</li>
-        <li>Slot multipliers are applied if your selected club is in the correct slot.</li>
-        <li>The game ends after all teams have played 19 opponents once.</li>
-      </ul>
-      <p class="rules-footnote">PREM IQ19 involves teams playing their opponents for the first time only. In 25/26, each club faced 18 out of 19 clubs in its first 19 matches (there was one reverse fixture week in MatchWeek 15 due to some rescheduling). In 25/26, teams had all played each other once by MatchWeek 20, early January, the proposed end to PREM IQ19.<br><br>
-        PREM IQ19 will mirror the actual PL table up until a reverse fixture takes place, but will always reflect first meetings/fixtures only.<br><br>
-        <a href="premiq19-fixture-grid.html" target="_blank" class="note-link">Click here</a> for the latest fixture grid.
-      </p>
+      <div style="text-align:center; margin-bottom:0.7rem;">
+        <button class="btn btn-ghost" id="howToPlaySlotsRecallBtn" style="font-size:0.75rem; padding:0.45rem 0.9rem;">📖 How to Play</button>
+      </div>
       <div class="arena">
         <div class="col col-pool">
           <div class="col-title"><h2>Teams</h2><span class="count" id="poolCount">20/20</span></div>
@@ -424,7 +460,7 @@
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
-    ['landingStep','hubStep','slotsStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
+    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','blackjackStep','questionsStep','h2hStep','summaryStep'].forEach(s=>{
       document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
     });
     window.scrollTo({ top:0, behavior:'smooth' });
@@ -448,7 +484,10 @@
     showStep('hubStep');
   }
 
-  document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
+  document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
+  document.getElementById('htpPlayBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
+  document.getElementById('htpBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('howToPlaySlotsRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
   document.getElementById('slotsBackBtn').addEventListener('click', ()=>{
     if(cameFromQuizToSlots){
       cameFromQuizToSlots = false;
