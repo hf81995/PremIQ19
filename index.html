@@ -858,10 +858,15 @@
           const z=zoneElAtPoint(ev.clientX, ev.clientY); if(z) z.classList.add('droptarget');
         }
       };
-      const onUp=(ev)=>{
-        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+      const cleanup=()=>{
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onCancel);
         endGhost(); clearZoneHighlights();
         document.querySelectorAll('.ghosted').forEach(c=>c.classList.remove('ghosted'));
+      };
+      const onUp=(ev)=>{
+        cleanup();
         if(dragActive){
           const zoneEl=zoneElAtPoint(ev.clientX, ev.clientY);
           const zoneId = zoneEl ? zoneEl.getAttribute('data-zoneid') : null;
@@ -871,7 +876,15 @@
         }
         dragActive=false; dragTeamId=null; dragFromZone=null;
       };
-      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+      const onCancel=()=>{
+        // Browser took over the gesture (e.g. as a scroll) — just clean up,
+        // don't treat it as a completed drop or a tap.
+        cleanup();
+        dragActive=false; dragTeamId=null; dragFromZone=null;
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onCancel);
     });
   }
 
@@ -1317,11 +1330,16 @@
           if(z && z.dataset.category===categoryId) z.classList.add('droptarget');
         }
       };
-      const onUp=(ev)=>{
-        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+      const cleanup=()=>{
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onCancel);
         endGhost();
         document.querySelectorAll('.roulette-cat').forEach(z=>z.classList.remove('droptarget'));
         el.classList.remove('ghosted');
+      };
+      const onUp=(ev)=>{
+        cleanup();
         if(dragging){
           const z = chipElAtPoint(ev.clientX, ev.clientY);
           if(z && z.dataset.category===categoryId) placeChip(categoryId);
@@ -1331,7 +1349,14 @@
           else { selectedChipId=categoryId; }
         }
       };
-      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+      const onCancel=()=>{
+        // Browser took over the gesture (e.g. as a scroll) — just clean up,
+        // don't treat it as a completed drop or a tap-select.
+        cleanup();
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onCancel);
     });
     el.addEventListener('click', ()=>{
       // if a chip is selected via tap and this same chip tapped again, or used as quick-place, no-op here;
