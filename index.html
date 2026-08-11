@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PremIQ19</title>
+<title>PREMiQ19 Casino</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PremIQ19">
+<meta name="apple-mobile-web-app-title" content="PREMiQ19 Casino">
 <meta name="theme-color" content="#0F3D2C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -64,9 +64,9 @@
   .landing-leaderboard-link{ display:block; margin-top:0.9rem; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.75rem; text-decoration:underline; }
 
   /* --- Hub --- */
-  .hub-grid{ display:grid; grid-template-columns:1fr; gap:0.9rem; max-width:760px; margin:0 auto; }
+  .hub-grid{ display:grid; grid-template-columns:1fr; gap:0.9rem; max-width:760px; margin:0 auto; align-items:stretch; }
   @media (min-width:640px){ .hub-grid{ grid-template-columns:1fr 1fr; } }
-  .hub-room{ border-radius:18px; overflow:hidden; box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); position:relative; }
+  .hub-room{ border-radius:18px; overflow:hidden; box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); position:relative; display:flex; flex-direction:column; min-height:230px; }
   .hub-room-btn{
     width:100%; border:none; cursor:pointer; text-align:left; padding:1.1rem 1.1rem 0.9rem;
     font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.02em; color:#fff;
@@ -78,7 +78,7 @@
     background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); white-space:nowrap; flex-shrink:0;
   }
   .room-check.done{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
-  .hub-how-to{ background:var(--chalk); padding:0.8rem 1.1rem 1rem; font-size:0.74rem; color:var(--ink-soft); line-height:1.5; }
+  .hub-how-to{ background:var(--chalk); padding:0.8rem 1.1rem 1rem; font-size:0.74rem; color:var(--ink-soft); line-height:1.5; flex:1; display:flex; align-items:center; }
   .hub-room.slots .hub-room-btn{ background:linear-gradient(120deg,var(--z1-a),var(--z1-b)); }
   .hub-room.blackjack .hub-room-btn{ background:linear-gradient(120deg,var(--bj-a),var(--bj-b)); }
   .hub-room.quiz .hub-room-btn{ background:linear-gradient(120deg,var(--z2-a),var(--z2-b)); }
@@ -321,7 +321,7 @@
 <body>
 
   <div class="header">
-    <h1>PREM<span>IQ19</span></h1>
+    <h1>PREM<span>iQ19</span> CASINO</h1>
     <p class="subtitle" id="subtitleText">Enter your name to begin</p>
     <div class="status-pill" id="statusPill">Loading…</div>
     <p style="margin-top:0.5rem;"><a href="admin.html" style="color:#6E7C74; font-family:'Space Mono',monospace; font-size:0.62rem; text-decoration:underline;">Admin</a></p>
@@ -707,7 +707,7 @@
   async function enterHub(){
     const name = document.getElementById('playerName').value.trim();
     document.getElementById('playingAsHub').innerHTML = `Playing as <span>${name}</span>`;
-    setSubtitle('Pick a room to get started');
+    setSubtitle('');
     if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
     updateHubChecks();
     showStep('hubStep');
@@ -715,7 +715,7 @@
 
   document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
   document.getElementById('htpPlayBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
-  document.getElementById('htpBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('htpBackBtn').addEventListener('click', ()=>{ setSubtitle(''); updateHubChecks(); showStep('hubStep'); });
   document.getElementById('howToPlaySlotsRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
   document.getElementById('howToPlayBjRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
   document.getElementById('slotsBackBtn').addEventListener('click', ()=>{
@@ -739,18 +739,18 @@
   });
   document.getElementById('prevBtn').addEventListener('click', ()=>{
     if(currentQ > 1){ currentQ--; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
-    else { setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); }
+    else { setSubtitle(''); updateHubChecks(); showStep('hubStep'); }
   });
 
   document.getElementById('roomH2HBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Monthly Super Sunday Roulette'); showStep('howToPlayH2HStep'); });
   document.getElementById('htpH2HPlayBtn').addEventListener('click', enterH2H);
-  document.getElementById('htpH2HBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('htpH2HBackBtn').addEventListener('click', ()=>{ setSubtitle(''); updateHubChecks(); showStep('hubStep'); });
   document.getElementById('howToPlayH2HRecallBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Monthly Super Sunday Roulette'); showStep('howToPlayH2HStep'); });
   document.getElementById('h2hBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('roomBlackjackBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
   document.getElementById('htpBjPlayBtn').addEventListener('click', enterBlackjack);
-  document.getElementById('htpBjBackBtn').addEventListener('click', ()=>{ setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); });
+  document.getElementById('htpBjBackBtn').addEventListener('click', ()=>{ setSubtitle(''); updateHubChecks(); showStep('hubStep'); });
   document.getElementById('bjExample1Btn').addEventListener('click', ()=>{
     const box = document.getElementById('bjExample1Box');
     box.style.display = box.style.display==='none' ? 'block' : 'none';
@@ -953,7 +953,7 @@
       return;
     }
     const team = teamByTag(slotTeamId);
-    teamLine.innerHTML = `You selected <strong>${team.name}</strong> to be in 1st. Choose a minimum of 3 (max 5) players from ${team.name} to score ${BLACKJACK_TARGET} goals (Blackjack!) between them, in their first 19 fixtures — get as close to ${BLACKJACK_TARGET} combined without going bust.`;
+    teamLine.innerHTML = `Select a minimum of 3 players (max. of 5) from that side to score ${BLACKJACK_TARGET} goals between them in 19 fixtures. If you need any hints, the squad list is on the right hand side which tells you their total goals from the 25/26 season — and then type a name onto each playing card. Remember, 19 matches only!`;
     renderSquadRef(team);
     renderCards();
     showStep('blackjackStep');
@@ -1191,7 +1191,7 @@
 
   document.getElementById('nextBtn').addEventListener('click', ()=>{
     if(currentQ < TOTAL_QUESTIONS){ currentQ++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
-    else { setSubtitle('Pick a room to get started'); updateHubChecks(); showStep('hubStep'); }
+    else { setSubtitle(''); updateHubChecks(); showStep('hubStep'); }
   });
 
   // ============================================================
@@ -1203,8 +1203,8 @@
     { id:'btts',    name:'Both Teams To Score',     points:25, odds:'Evens', payout:50,  mandatory:true,  type:'yesno' },
     { id:'corners', name:'Most Corners',            points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
     { id:'shots',   name:'Most Shots on Target',    points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
-    { id:'redcard', name:'Red Card in the Match',   points:25, odds:'4/1',   payout:100, mandatory:false, type:'yesno' },
-    { id:'penalty', name:'Penalty in the Match',    points:25, odds:'Evens', payout:50,  mandatory:false, type:'yesno' },
+    { id:'redcard', name:'Red Card in the Match',   points:25, odds:'4/1',   payout:100, mandatory:false, type:'yesno', yesOnly:true },
+    { id:'penalty', name:'Penalty in the Match',    points:25, odds:'Evens', payout:50,  mandatory:false, type:'yesno', yesOnly:true },
   ];
   let chipState = {}; // categoryId -> { placed: bool, prediction: {...} }
   CHIP_CONFIG.forEach(c => chipState[c.id] = { placed:false, prediction:{} });
@@ -1383,7 +1383,7 @@
     } else if(c.type==='yesno'){
       html += `<div class="option-row" style="margin-top:0.4rem;">
         <button class="option-btn ${s.prediction.value==='yes'?'selected':''}" data-predict="${c.id}" data-value="yes">Yes</button>
-        <button class="option-btn ${s.prediction.value==='no'?'selected':''}" data-predict="${c.id}" data-value="no">No</button>
+        ${c.yesOnly ? '' : `<button class="option-btn ${s.prediction.value==='no'?'selected':''}" data-predict="${c.id}" data-value="no">No</button>`}
       </div>`;
     } else if(c.type==='scoreline'){
       html += `<div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.4rem;">
@@ -1497,7 +1497,7 @@
 
   async function saveAndReturnToHub(){
     const result = await saveProgress();
-    setSubtitle('Pick a room to get started');
+    setSubtitle('');
     updateHubChecks();
     showStep('hubStep');
     const feedback = document.getElementById('hubFeedback');
