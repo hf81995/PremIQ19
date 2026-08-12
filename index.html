@@ -15,7 +15,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="questions-data.js"></script>
-<script src="squads-data.js"></script>
 <style>
   :root{
     --pitch-dark:#0B2E22; --pitch:#0F3D2C; --chalk:#F6F5EF; --chalk-dim:#EAE7DB;
@@ -336,7 +335,7 @@
             <span>PREM IQ19: Blackjack<span class="room-sub">3–5 players, 21 goals</span></span>
             <span class="room-check" id="checkBlackjack">0/4</span>
           </button>
-          <div class="hub-how-to">Choose 3 to 5 players from the club you selected to finish 1st in slots — get as close to 21 goals combined without going bust!</div>
+          <div class="hub-how-to">Choose 3 to 5 players from any Premier League club — get as close to 21 goals combined without going bust!</div>
         </div>
         <div class="hub-room quiz">
           <button class="hub-room-btn" id="roomQuizBtn">
@@ -427,9 +426,9 @@
     <div id="howToPlayBlackjackStep" style="display:none;">
       <div class="questions-panel htp-panel">
         <h2>How To Play - Blackjack</h2>
-        <p class="htp-lead">Whichever team you selected in Slot 1st Place, you now have a big call to make at the Blackjack table.</p>
+        <p class="htp-lead">Time for a big call at the Blackjack table — completely free choice, any players from any Premier League club.</p>
 
-        <p>Select a minimum of 3 players (max. of 5) from that side to score 21 goals between them in 19 fixtures. Use the squad list on the right hand side — which also tells you their total goals from the 25/26 season — and type names onto the playing cards.</p>
+        <p>Select a minimum of 3 players (max. of 5) from any Premier League club to score 21 goals between them in 19 fixtures. Use the reference list on the right hand side — which shows goals scored after 20 Matchweeks last season — and type names onto the playing cards.</p>
 
         <p class="htp-subhead">Scoring:</p>
         <table class="bj-score-table">
@@ -445,47 +444,6 @@
         <p class="htp-footnote">The same applies where the 19 fixtures includes playing all opponents for the first time only.</p>
         <p class="htp-footnote">You can view the squad list, including their total goals from season 25/26, on the right hand side.</p>
 
-        <p class="htp-subhead">Examples from last season</p>
-        <div class="bj-example-btns">
-          <button class="btn btn-ghost" id="bjExample1Btn">25/26 Blackjack Example 1</button>
-          <button class="btn btn-ghost" id="bjExample2Btn">25/26 Blackjack Example 2</button>
-        </div>
-        <div class="bj-example-box" id="bjExample1Box" style="display:none;">
-          <p><strong>An example based on Manchester City in the 25/26 season:</strong></p>
-          <p>Man City goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
-          <ul class="htp-list">
-            <li>Haaland — 19</li>
-            <li>Foden — 7</li>
-            <li>Reijnders — 5</li>
-            <li>Cherki — 2</li>
-            <li>Dias — 2</li>
-            <li>Gvardiol — 2</li>
-            <li>Nunes — 1</li>
-            <li>O'Reilly — 1</li>
-            <li>González — 1</li>
-            <li>Doku — 1</li>
-          </ul>
-          <p>So say last year you opted for Haaland, you would have then probably wanted to go for two defenders (or even a GK…) to not go bust!</p>
-        </div>
-        <div class="bj-example-box" id="bjExample2Box" style="display:none;">
-          <p><strong>An example based on Arsenal in the 25/26 season:</strong></p>
-          <p>Arsenal goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
-          <ul class="htp-list">
-            <li>Viktor Gyökeres — 5</li>
-            <li>Bukayo Saka — 4</li>
-            <li>Leandro Trossard — 4</li>
-            <li>Declan Rice — 4</li>
-            <li>Eberechi Eze — 4</li>
-            <li>Mikel Merino — 3</li>
-            <li>Jurrien Timber — 2</li>
-            <li>Martin Zubimendi — 2</li>
-            <li>Gabriel Magalhães — 2</li>
-            <li>Riccardo Calafiori — 1</li>
-            <li>Gabriel Martinelli — 1</li>
-            <li>Martin Ødegaard — 1</li>
-          </ul>
-          <p>Arsenal in 25/26 had a much more spread out version of goalscorers compared to City, for example. You may have wanted to opt for 4 players, possibly 5!</p>
-        </div>
       </div>
       <div class="footer-actions">
         <button class="btn btn-primary" id="htpBjPlayBtn">▶ Play</button>
@@ -511,46 +469,6 @@
             <tr><td>Go bust (22+)</td><td>0 points</td></tr>
           </table>
           <div class="card-grid" id="cardGrid"></div>
-          <div class="bj-example-btns" style="justify-content:center; margin-top:1.2rem;">
-            <button class="btn btn-ghost" id="bjExample1BtnGame">25/26 Blackjack Example 1</button>
-            <button class="btn btn-ghost" id="bjExample2BtnGame">25/26 Blackjack Example 2</button>
-          </div>
-          <div class="bj-example-box" id="bjExample1BoxGame" style="display:none;">
-            <p><strong>An example based on Manchester City in the 25/26 season:</strong></p>
-            <p>Man City goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
-            <ul class="htp-list">
-              <li>Haaland — 19</li>
-              <li>Foden — 7</li>
-              <li>Reijnders — 5</li>
-              <li>Cherki — 2</li>
-              <li>Dias — 2</li>
-              <li>Gvardiol — 2</li>
-              <li>Nunes — 1</li>
-              <li>O'Reilly — 1</li>
-              <li>González — 1</li>
-              <li>Doku — 1</li>
-            </ul>
-            <p>So say last year you opted for Haaland, you would have then probably wanted to go for two defenders (or even a GK…) to not go bust!</p>
-          </div>
-          <div class="bj-example-box" id="bjExample2BoxGame" style="display:none;">
-            <p><strong>An example based on Arsenal in the 25/26 season:</strong></p>
-            <p>Arsenal goalscorers after 19 (first time opponent) fixtures between Aug and Jan 2026 were:</p>
-            <ul class="htp-list">
-              <li>Viktor Gyökeres — 5</li>
-              <li>Bukayo Saka — 4</li>
-              <li>Leandro Trossard — 4</li>
-              <li>Declan Rice — 4</li>
-              <li>Eberechi Eze — 4</li>
-              <li>Mikel Merino — 3</li>
-              <li>Jurrien Timber — 2</li>
-              <li>Martin Zubimendi — 2</li>
-              <li>Gabriel Magalhães — 2</li>
-              <li>Riccardo Calafiori — 1</li>
-              <li>Gabriel Martinelli — 1</li>
-              <li>Martin Ødegaard — 1</li>
-            </ul>
-            <p>Arsenal in 25/26 had a much more spread out version of goalscorers compared to City, for example. You may have wanted to opt for 4 players, possibly 5!</p>
-          </div>
         </div>
         <div class="squad-ref" id="squadRef"></div>
       </div>
@@ -667,7 +585,7 @@
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles
   let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
-  let slotSnapshotQ1 = null, slotSnapshotQ2 = null, slotSnapshotBJ = null;
+  let slotSnapshotQ1 = null, slotSnapshotQ2 = null;
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
@@ -732,22 +650,6 @@
   document.getElementById('roomBlackjackBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Blackjack'); showStep('howToPlayBlackjackStep'); });
   document.getElementById('htpBjPlayBtn').addEventListener('click', enterBlackjack);
   document.getElementById('htpBjBackBtn').addEventListener('click', ()=>{ setSubtitle(''); updateHubChecks(); showStep('hubStep'); });
-  document.getElementById('bjExample1Btn').addEventListener('click', ()=>{
-    const box = document.getElementById('bjExample1Box');
-    box.style.display = box.style.display==='none' ? 'block' : 'none';
-  });
-  document.getElementById('bjExample2Btn').addEventListener('click', ()=>{
-    const box = document.getElementById('bjExample2Box');
-    box.style.display = box.style.display==='none' ? 'block' : 'none';
-  });
-  document.getElementById('bjExample1BtnGame').addEventListener('click', ()=>{
-    const box = document.getElementById('bjExample1BoxGame');
-    box.style.display = box.style.display==='none' ? 'block' : 'none';
-  });
-  document.getElementById('bjExample2BtnGame').addEventListener('click', ()=>{
-    const box = document.getElementById('bjExample2BoxGame');
-    box.style.display = box.style.display==='none' ? 'block' : 'none';
-  });
   document.getElementById('bjBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('submitAllBtn').addEventListener('click', submitAll);
@@ -932,38 +834,39 @@
   }
 
   // ============================================================
-  // Blackjack — target 21, choose 3 to 5 players
+  // Blackjack — target 21, choose 3 to 5 players, any club, free choice
   // ============================================================
+  const GOALS_REFERENCE_LIST = [
+    { name:'Erling Haaland', goals:19 }, { name:'Igor Thiago', goals:14 },
+    { name:'Antoine Semenyo', goals:9 }, { name:'Dominic Calvert-Lewin', goals:8 },
+    { name:'Jean-Philippe Mateta', goals:8 }, { name:'Danny Welbeck', goals:8 },
+    { name:'Hugo Ekitike', goals:8 }, { name:'Nick Woltemade', goals:7 },
+    { name:'Phil Foden', goals:7 }, { name:'Morgan Rogers', goals:7 },
+    { name:'Ollie Watkins', goals:7 }, { name:'Richarlison', goals:7 },
+    { name:'Bruno Guimarães', goals:7 }, { name:'Bryan Mbeumo', goals:6 },
+    { name:'João Pedro', goals:6 }, { name:'Kevin Schade', goals:6 },
+    { name:'Enzo Fernández', goals:6 }, { name:'Harry Wilson', goals:6 },
+    { name:'Jarrod Bowen', goals:6 }, { name:'Eli Junior Kroupi', goals:6 },
+    { name:'Leandro Trossard', goals:5 }, { name:'Bruno Fernandes', goals:5 },
+    { name:'Pedro Neto', goals:5 }, { name:'Viktor Gyökeres', goals:5 },
+    { name:'Tijjani Reijnders', goals:5 },
+  ];
+
   function enterBlackjack(){
-    slotSnapshotBJ = assignments['1st'];
-    const slotTeamId = assignments['1st'];
     const teamLine = document.getElementById('bjTeamLine');
-    if(!slotTeamId){
-      teamLine.innerHTML = `You need to pick a Slot 1st club first — <a href="#" id="bjGoToSlots" style="color:var(--gold); text-decoration:underline;">go to Slots</a>.`;
-      document.getElementById('cardGrid').innerHTML = '';
-      document.getElementById('squadRef').innerHTML = '';
-      showStep('blackjackStep');
-      document.getElementById('bjGoToSlots').addEventListener('click', (e)=>{ e.preventDefault(); setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); document.getElementById('slotsBackBtn').textContent='Submit and back to hub'; });
-      return;
-    }
-    const team = teamByTag(slotTeamId);
-    teamLine.innerHTML = `Select a minimum of 3 players (max. of 5) from that side to score ${BLACKJACK_TARGET} goals between them in 19 fixtures. If you need any hints, the squad list is on the right hand side which tells you their total goals from the 25/26 season — and then type a name onto each playing card. Remember, 19 matches only!`;
-    renderSquadRef(team);
+    teamLine.innerHTML = `Select a minimum of 3 players (max. of 5) from any Premier League club to score ${BLACKJACK_TARGET} goals between them in 19 fixtures. If you need any hints, the reference list is on the right hand side — and then type a name onto each playing card. Remember, 19 matches only!`;
+    renderGoalsReference();
     renderCards();
     showStep('blackjackStep');
   }
 
-  function renderSquadRef(team){
+  function renderGoalsReference(){
     const panel = document.getElementById('squadRef');
-    const posOrder = { FWD:0, MID:1, DEF:2, GK:3 };
-    const players = (SQUADS[team.tag] || []).slice().sort((a,b)=>
-      (posOrder[a.pos]??9) - (posOrder[b.pos]??9) || (b.goals??-1) - (a.goals??-1)
-    );
-    const rows = players.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.pos}${p.goals!=null ? ` · ${p.goals}g 25/26` : ''}</span></div>`).join('');
+    const rows = GOALS_REFERENCE_LIST.map(p => `<div class="squad-ref-row"><span class="sq-name">${p.name}</span><span class="sq-pos">${p.goals}g</span></div>`).join('');
     panel.innerHTML = `
-      <h3>${team.name} Squad</h3>
-      ${rows || '<p style="font-size:0.8rem; color:var(--ink-soft);">Squad list not available for this club yet.</p>'}
-      <p class="squad-ref-note">Goals shown are 2025/26 Premier League totals for reference only — not a prediction.</p>
+      <h3>Goals After 20 Matchweeks — 25/26 Season</h3>
+      ${rows}
+      <p class="squad-ref-note">Good luck with your research. This list may be helpful when selecting, based on the 25/26 season (goals after 20 Matchweeks). Reference only — not a prediction, and not limited to these names.</p>
     `;
   }
 
