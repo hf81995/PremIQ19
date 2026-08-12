@@ -194,7 +194,7 @@
   .roulette-fixture-teams{ font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:#fff; letter-spacing:0.02em; line-height:1.2; }
   .roulette-fixture-vs{ color:var(--gold); font-size:1.1rem; padding:0 0.3rem; }
   @media (min-width:480px){ .roulette-fixture-teams{ font-size:1.9rem; } }
-  .roulette-spend{ text-align:center; font-family:'Space Mono',monospace; font-size:0.72rem; color:#B9C4BB; margin-bottom:1rem; }
+  .roulette-spend{ text-align:center; font-family:'Space Mono',monospace; font-size:0.72rem; color:#B9C4BB; margin-bottom:1rem; line-height:1.6; }
   .roulette-categories{ display:grid; grid-template-columns:1fr; gap:0.6rem; margin-bottom:1rem; }
   @media (min-width:560px){ .roulette-categories{ grid-template-columns:1fr 1fr; } }
   .roulette-optional-rail{
@@ -1248,8 +1248,11 @@
       <div class="roulette-fixture-month">${currentFixture.month} — Super Sunday</div>
       <div class="roulette-fixture-teams">${teamA.name} <span class="roulette-fixture-vs">V</span> ${teamB.name}</div>
     `;
-    const totalStake = CHIP_CONFIG.reduce((sum,c)=>sum+c.points, 0);
-    spendEl.textContent = `Total in play: up to ${totalStake} points across all 7 bets`;
+    const mandatoryStake = CHIP_CONFIG.filter(c=>c.mandatory).reduce((sum,c)=>sum+c.points, 0);
+    const optionalStake = CHIP_CONFIG.filter(c=>!c.mandatory).reduce((sum,c)=>sum+c.points, 0);
+    const mandatoryWin = CHIP_CONFIG.filter(c=>c.mandatory).reduce((sum,c)=>sum+c.payout, 0);
+    const totalWin = CHIP_CONFIG.reduce((sum,c)=>sum+c.payout, 0);
+    spendEl.innerHTML = `Spend ${mandatoryStake} mandatory points, plus ${optionalStake} optional.<br>Max available win: ${mandatoryWin} points from mandatory bets (${totalWin} points including optional).`;
 
     function catBoxHtml(c){
       const s = chipState[c.id];
