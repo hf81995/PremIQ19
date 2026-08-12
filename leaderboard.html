@@ -91,16 +91,16 @@
 
   async function loadAll(){
     if(!sb) return null;
-    const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2hFixtures},{data:h2hPredictions}] = await Promise.all([
+    const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2hFixtures},{data:roulettePreds}] = await Promise.all([
       sb.from('players').select('*'),
       sb.from('picks').select('*'),
       sb.from('answers').select('*'),
       sb.from('questions').select('*'),
       sb.from('team_stats').select('*'),
       sb.from('h2h_fixtures').select('*'),
-      sb.from('h2h_predictions').select('*'),
+      sb.from('roulette_predictions').select('*'),
     ]);
-    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:sortByMonth(h2hFixtures||[]), h2hPredictions:h2hPredictions||[] };
+    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:sortByMonth(h2hFixtures||[]), roulettePredictions:roulettePreds||[] };
   }
 
   function statsFor(teamStats, tag){ return teamStats.find(s=>s.team_tag===tag); }
@@ -135,11 +135,14 @@
     return total;
   }
 
-  function computeH2HPoints(playerId, h2hPredictions, h2hFixtures){
+  function computeH2HPoints(playerId, roulettePredictions, h2hFixtures){
     let total = 0;
-    h2hPredictions.filter(p=>p.player_id===playerId).forEach(pred=>{
-      const fixture = h2hFixtures.find(f=>f.month===pred.month);
-      total += scoreH2H(pred, fixture).points;
+    const myRows = roulettePredictions.filter(r=>r.player_id===playerId);
+    const months = [...new Set(myRows.map(r=>r.month))];
+    months.forEach(month=>{
+      const fixture = h2hFixtures.find(f=>f.month===month);
+      const rowsForMonth = myRows.filter(r=>r.month===month);
+      total += scoreRoulette(rowsForMonth, fixture).points;
     });
     return total;
   }
@@ -148,13 +151,13 @@
     const panel = document.getElementById('leaderboardPanel');
     const data = await loadAll();
     if(!data){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see live standings.</div></div>'; return; }
-    const { players, picks, answers, questions, teamStats, h2hFixtures, h2hPredictions } = data;
+    const { players, picks, answers, questions, teamStats, h2hFixtures, roulettePredictions } = data;
     if(players.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No entries yet — be the first to submit picks!</div></div>'; return; }
 
     const scored = players.map(p => {
       const slotsPts = computeSlotsPoints(p.id, picks, teamStats);
       const questionsPts = computeQuestionsPoints(p.id, answers, questions);
-      const h2hPts = computeH2HPoints(p.id, h2hPredictions, h2hFixtures);
+      const h2hPts = computeH2HPoints(p.id, roulettePredictions, h2hFixtures);
       return { name:p.name, slotsPts, questionsPts, h2hPts, total: slotsPts+questionsPts+h2hPts };
     });
     scored.sort((a,b)=>b.total-a.total);
@@ -219,34 +222,55 @@
   async function renderH2HTab(){
     const panel = document.getElementById('h2hPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
-    const [{data:h2hFixturesRaw},{data:h2hPredictions},{data:players}] = await Promise.all([
+    const [{data:h2hFixturesRaw},{data:roulettePredictions},{data:players}] = await Promise.all([
       sb.from('h2h_fixtures').select('*'),
-      sb.from('h2h_predictions').select('*'),
+      sb.from('roulette_predictions').select('*'),
       sb.from('players').select('*'),
     ]);
     const h2hFixtures = sortByMonth(h2hFixturesRaw || []);
     const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'—'; };
+
+    function fmtPrediction(cat, pred, fixture){
+      const teamA = fixture.team_a ? teamByTag(fixture.team_a) : null;
+      const teamB = fixture.team_b ? teamByTag(fixture.team_b) : null;
+      if(cat.type==='threeway') return pred.value==='A' ? `${teamA?.name} win` : pred.value==='D' ? 'Draw' : pred.value==='B' ? `${teamB?.name} win` : '—';
+      if(cat.type==='twoway') return pred.value==='A' ? (teamA?.name||'Team A') : pred.value==='B' ? (teamB?.name||'Team B') : '—';
+      if(cat.type==='yesno') return pred.value==='yes' ? 'Yes' : pred.value==='no' ? 'No' : '—';
+      if(cat.type==='scoreline') return (pred.scoreA!=null && pred.scoreB!=null) ? `${pred.scoreA}-${pred.scoreB}` : '—';
+      return '—';
+    }
 
     const monthBlocks = (h2hFixtures||[]).map(f=>{
       if(!f.team_a || !f.team_b){
         return `<div class="board" style="margin-bottom:1rem;"><div class="legend-row"><span>${f.month}: fixture not added yet — organiser sets this closer to the time.</span></div></div>`;
       }
       const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
-      const resolved = f.result != null;
-      const preds = (h2hPredictions||[]).filter(p=>p.month===f.month);
-      const rows = preds.map(pred=>{
-        const pts = scoreH2H(pred, f).points;
-        const resultLabel = pred.result==='A' ? `${teamA.name} win` : pred.result==='D' ? 'Draw' : `${teamB.name} win`;
-        return `<tr><td class="pname">${playerName(pred.player_id)}</td><td class="psub">${resultLabel}</td><td class="psub">${pred.score_a}-${pred.score_b}</td><td class="num ptotal">${resolved?pts:'—'}</td></tr>`;
+      const predsThisMonth = (roulettePredictions||[]).filter(p=>p.month===f.month);
+      const playerIds = [...new Set(predsThisMonth.map(p=>p.player_id))];
+
+      const rows = playerIds.map(pid => {
+        const myRows = predsThisMonth.filter(p=>p.player_id===pid);
+        const result = scoreRoulette(myRows, f);
+        const tierSummary = result.resolved ? `${result.breakdown.tierCorrectCount}/${result.breakdown.tierEligible}` : `${myRows.filter(r=>rouletteCategoryById(r.category)?.group==='tier').length}/6 answered`;
+        const scorelineRow = myRows.find(r=>r.category==='scoreline');
+        const scorelineLabel = scorelineRow ? fmtPrediction(rouletteCategoryById('scoreline'), scorelineRow.prediction, f) : '—';
+        return `<tr>
+          <td class="pname">${playerName(pid)}</td>
+          <td class="psub">${tierSummary}</td>
+          <td class="psub">${scorelineLabel}</td>
+          <td class="num ptotal">${result.resolved ? result.points : '—'}</td>
+        </tr>`;
       }).join('');
+
+      const resolved = f.result != null;
       return `
         <div class="board" style="margin-bottom:1rem;">
           <div class="legend-row">
             <span><b>${f.month}: ${teamA.name} v ${teamB.name}</b></span>
-            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet — points will show once entered'}</span>
+            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet — points will show once all outcomes are entered'}</span>
           </div>
           <table>
-            <tr><th>Player</th><th>Result picked</th><th>Scoreline picked</th><th class="num">Points</th></tr>
+            <tr><th>Player</th><th>Tier correct</th><th>Scoreline picked</th><th class="num">Points</th></tr>
             ${rows || '<tr><td colspan="4" class="psub" style="text-align:center; padding:1rem;">No predictions yet</td></tr>'}
           </table>
         </div>`;
@@ -254,7 +278,7 @@
 
     panel.innerHTML = `
       <div class="legend-row" style="margin-bottom:1rem; background:#FCE9B8; border:1px solid #C9A227; border-radius:12px; border-bottom:none; color:#6E5A10;">
-        <span>ℹ️ Result correct = 25 points. Exact scoreline correct = 50 points. Up to 75 points available each month.</span>
+        <span>ℹ️ 6 tiered bets: 0/1=0, 2=10, 3=15, 4=25, 5=40, 6=75 points. Exact Scoreline = +50 on top. Optional Red Card (lose 25/win 100) and Penalty (lose 15/win 30) apply if used.</span>
       </div>
       ${monthBlocks || '<div class="board"><div class="empty">No Super Sunday fixtures yet.</div></div>'}`;
   }

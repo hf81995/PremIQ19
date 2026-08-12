@@ -45,6 +45,11 @@
   .status-line.error{ color:#B3242B; }
   .status-line.ok{ color:#1F6740; }
   .q-row{ display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem; font-size:0.8rem; }
+  .h2h-month-card{ border:1.5px solid var(--line); border-radius:10px; padding:0.8rem; margin-bottom:1rem; }
+  .h2h-actuals-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0.5rem 0.8rem; }
+  .h2h-actuals-grid label{ font-size:0.72rem; font-weight:600; display:flex; flex-direction:column; gap:0.2rem; }
+  .h2h-actuals-grid select{ margin:0; padding:0.3rem; font-size:0.75rem; }
+  @media (min-width:600px){ .h2h-actuals-grid{ grid-template-columns:1fr 1fr 1fr; } }
   .q-row input[type=text]{ margin:0; }
 </style>
 </head>
@@ -351,17 +356,35 @@
     const data = sortByMonth(raw || []);
     const wrap = document.getElementById('h2hWrap');
     const teamOptions = TEAMS.map(t => `<option value="${t.tag}">${t.name}</option>`).join('');
-    wrap.innerHTML = (data||[]).map(f => `
-      <div class="q-row" data-month="${f.month}" style="flex-wrap:wrap;">
-        <strong style="width:90px;">${f.month}</strong>
-        <select class="h2h-a"><option value="">— Team A —</option>${teamOptions}</select>
-        <span>vs</span>
-        <select class="h2h-b"><option value="">— Team B —</option>${teamOptions}</select>
-        <input type="text" class="h2h-scorea" placeholder="Score A" style="width:60px;">
-        <input type="text" class="h2h-scoreb" placeholder="Score B" style="width:60px;">
-        <button class="btn btn-secondary h2h-save">Save</button>
+    const yn = (cls) => `<select class="${cls}"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>`;
+    const ab = (cls, teamAName, teamBName, extraValue, extraLabel) => `<select class="${cls}"><option value="">—</option><option value="A">${teamAName||'Team A'}</option><option value="B">${teamBName||'Team B'}</option><option value="${extraValue}">${extraLabel}</option></select>`;
+
+    wrap.innerHTML = (data||[]).map(f => {
+      const teamAName = f.team_a ? (teamByTag(f.team_a)?.name || f.team_a) : null;
+      const teamBName = f.team_b ? (teamByTag(f.team_b)?.name || f.team_b) : null;
+      return `
+      <div class="h2h-month-card" data-month="${f.month}">
+        <strong>${f.month}</strong>
+        <div class="q-row" style="flex-wrap:wrap; margin-top:0.4rem;">
+          <select class="h2h-a"><option value="">— Team A —</option>${teamOptions}</select>
+          <span>vs</span>
+          <select class="h2h-b"><option value="">— Team B —</option>${teamOptions}</select>
+          <input type="text" class="h2h-scorea" placeholder="Score A" style="width:60px;">
+          <input type="text" class="h2h-scoreb" placeholder="Score B" style="width:60px;">
+        </div>
+        <p class="note" style="margin:0.6rem 0 0.3rem;">Once the match has been played, fill in the actual outcome for each bet:</p>
+        <div class="h2h-actuals-grid">
+          <label>BTTS ${yn('h2h-btts')}</label>
+          <label>Corners ${ab('h2h-corners', teamAName, teamBName, 'tie', 'Tied')}</label>
+          <label>Shots on Target ${ab('h2h-shots', teamAName, teamBName, 'tie', 'Tied')}</label>
+          <label>First Yellow Card ${ab('h2h-yellowcard', teamAName, teamBName, 'neither', 'Neither')}</label>
+          <label>Goal From Outside Box ${yn('h2h-outsidebox')}</label>
+          <label>Red Card in Match ${yn('h2h-redcard')}</label>
+          <label>Penalty in Match ${yn('h2h-penalty')}</label>
+        </div>
+        <button class="btn btn-secondary h2h-save" style="margin-top:0.6rem;">Save ${f.month}</button>
       </div>
-    `).join('');
+    `; }).join('');
 
     (data||[]).forEach(f => {
       const row = wrap.querySelector(`[data-month="${f.month}"]`);
@@ -369,11 +392,18 @@
       if(f.team_b) row.querySelector('.h2h-b').value = f.team_b;
       if(f.score_a != null) row.querySelector('.h2h-scorea').value = f.score_a;
       if(f.score_b != null) row.querySelector('.h2h-scoreb').value = f.score_b;
+      if(f.btts_actual != null) row.querySelector('.h2h-btts').value = f.btts_actual ? 'yes' : 'no';
+      if(f.corners_actual != null) row.querySelector('.h2h-corners').value = f.corners_actual;
+      if(f.shots_actual != null) row.querySelector('.h2h-shots').value = f.shots_actual;
+      if(f.yellowcard_actual != null) row.querySelector('.h2h-yellowcard').value = f.yellowcard_actual;
+      if(f.outsidebox_actual != null) row.querySelector('.h2h-outsidebox').value = f.outsidebox_actual ? 'yes' : 'no';
+      if(f.redcard_actual != null) row.querySelector('.h2h-redcard').value = f.redcard_actual ? 'yes' : 'no';
+      if(f.penalty_actual != null) row.querySelector('.h2h-penalty').value = f.penalty_actual ? 'yes' : 'no';
     });
 
     wrap.querySelectorAll('.h2h-save').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const row = btn.closest('.q-row');
+        const row = btn.closest('.h2h-month-card');
         const month = row.dataset.month;
         const teamA = row.querySelector('.h2h-a').value || null;
         const teamB = row.querySelector('.h2h-b').value || null;
@@ -383,8 +413,28 @@
         const scoreB = scoreBraw==='' ? null : parseInt(scoreBraw);
         let result = null;
         if(scoreA!=null && scoreB!=null){ result = scoreA>scoreB ? 'A' : scoreA<scoreB ? 'B' : 'D'; }
+
+        const ynVal = (sel) => sel==='' ? null : (sel==='yes');
+        const btts = row.querySelector('.h2h-btts').value;
+        const corners = row.querySelector('.h2h-corners').value || null;
+        const shots = row.querySelector('.h2h-shots').value || null;
+        const yellowcard = row.querySelector('.h2h-yellowcard').value || null;
+        const outsidebox = row.querySelector('.h2h-outsidebox').value;
+        const redcard = row.querySelector('.h2h-redcard').value;
+        const penalty = row.querySelector('.h2h-penalty').value;
+
         const { error } = await supabaseAdmin.from('h2h_fixtures')
-          .update({ team_a:teamA, team_b:teamB, score_a:scoreA, score_b:scoreB, result, updated_at:new Date().toISOString() })
+          .update({
+            team_a:teamA, team_b:teamB, score_a:scoreA, score_b:scoreB, result,
+            btts_actual: ynVal(btts),
+            corners_actual: corners,
+            shots_actual: shots,
+            yellowcard_actual: yellowcard,
+            outsidebox_actual: ynVal(outsidebox),
+            redcard_actual: ynVal(redcard),
+            penalty_actual: ynVal(penalty),
+            updated_at:new Date().toISOString(),
+          })
           .eq('month', month);
         const status = document.getElementById('h2hStatus');
         if(error){ status.textContent = 'Error: '+error.message; status.className='status-line error'; }

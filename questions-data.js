@@ -190,10 +190,108 @@ function scoreAnswer(q, playerAnswer, correctAnswer, allAnswers){
 }
 
 // Monthly Super Sunday scoring — 25 for correct Result, 50 for exact Scoreline.
-function scoreH2H(prediction, fixture){
-  if(!fixture || fixture.result == null) return { points: 0, resolved: false };
-  let pts = 0;
-  if(prediction.result === fixture.result) pts += 25;
-  if(prediction.score_a === fixture.score_a && prediction.score_b === fixture.score_b) pts += 50;
-  return { points: pts, resolved: true };
+// ============================================================
+// Monthly Super Sunday Roulette — shared category definitions and scoring.
+// Used by index.html (player entry), admin.html (result entry), and
+// leaderboard.html (scoring).
+// ============================================================
+const ROULETTE_CATEGORIES = [
+  { id:'result',     name:'Result',                              group:'tier', type:'threeway' },
+  { id:'btts',       name:'Both Teams To Score',                  group:'tier', type:'yesno' },
+  { id:'corners',    name:'Most Corners',                         group:'tier', type:'twoway', tieNote:'Points handed back if tied' },
+  { id:'shots',      name:'Most Shots on Target',                 group:'tier', type:'twoway', tieNote:'Points handed back if tied' },
+  { id:'yellowcard', name:'First Team to Receive a Yellow Card',  group:'tier', type:'twoway', tieNote:'Points handed back if neither' },
+  { id:'outsidebox', name:'Goal Scored From Outside the Box',     group:'tier', type:'yesno' },
+  { id:'scoreline',  name:'Scoreline',                            group:'standalone', type:'scoreline', points:50 },
+  { id:'redcard',    name:'Red Card in the Match',                group:'optional', type:'yesno', yesOnly:true, winPoints:100, lossPoints:25 },
+  { id:'penalty',    name:'Penalty in the Match',                 group:'optional', type:'yesno', yesOnly:true, winPoints:30,  lossPoints:15 },
+];
+const ROULETTE_TIER_POINTS = { 0:0, 1:0, 2:10, 3:15, 4:25, 5:40, 6:75 };
+
+function rouletteCategoryById(id){ return ROULETTE_CATEGORIES.find(c => c.id === id); }
+
+// Was this category's ACTUAL outcome recorded by the organiser yet?
+function rouletteCategoryResolved(catId, fixture){
+  if(!fixture) return false;
+  if(catId==='result') return fixture.result != null;
+  if(catId==='scoreline') return fixture.score_a != null && fixture.score_b != null;
+  if(catId==='btts') return fixture.btts_actual != null;
+  if(catId==='corners') return fixture.corners_actual != null;
+  if(catId==='shots') return fixture.shots_actual != null;
+  if(catId==='yellowcard') return fixture.yellowcard_actual !== undefined && fixture.yellowcard_actual !== null;
+  if(catId==='outsidebox') return fixture.outsidebox_actual != null;
+  if(catId==='redcard') return fixture.redcard_actual != null;
+  if(catId==='penalty') return fixture.penalty_actual != null;
+  return false;
+}
+
+// Was this category's prediction CORRECT, given the fixture's actual result?
+// (Only meaningful once rouletteCategoryResolved() is true. "Handed back"
+// categories — tied corners/shots, neither team carded — count as neither
+// right nor wrong; caller should treat that as excluded from the /6 tally.)
+function rouletteCategoryOutcome(catId, prediction, fixture){
+  if(catId==='result') return prediction.value === fixture.result;
+  if(catId==='btts') return prediction.value === (fixture.btts_actual ? 'yes' : 'no');
+  if(catId==='corners'){
+    if(fixture.corners_actual === 'tie') return 'handedback';
+    return prediction.value === fixture.corners_actual;
+  }
+  if(catId==='shots'){
+    if(fixture.shots_actual === 'tie') return 'handedback';
+    return prediction.value === fixture.shots_actual;
+  }
+  if(catId==='yellowcard'){
+    if(fixture.yellowcard_actual === 'neither') return 'handedback';
+    return prediction.value === fixture.yellowcard_actual;
+  }
+  if(catId==='outsidebox') return prediction.value === (fixture.outsidebox_actual ? 'yes' : 'no');
+  return false;
+}
+
+// Scores one player's full set of roulette_predictions rows for one month's
+// fixture. Returns { points, resolved, breakdown } — breakdown is useful for
+// showing "why" on the leaderboard/summary.
+function scoreRoulette(predictionRows, fixture){
+  if(!fixture) return { points: 0, resolved: false };
+  const byId = {};
+  predictionRows.forEach(r => byId[r.category] = r.prediction);
+
+  const tierCats = ROULETTE_CATEGORIES.filter(c => c.group==='tier');
+  const tierResolvedAll = tierCats.every(c => rouletteCategoryResolved(c.id, fixture));
+  let tierPoints = 0, tierCorrectCount = 0, tierEligible = 0;
+  if(tierResolvedAll){
+    tierCats.forEach(c => {
+      const pred = byId[c.id];
+      if(!pred) return; // player didn't answer this one — doesn't count for or against
+      const outcome = rouletteCategoryOutcome(c.id, pred, fixture);
+      if(outcome === 'handedback') return; // excluded from tally entirely
+      tierEligible++;
+      if(outcome === true) tierCorrectCount++;
+    });
+    tierPoints = ROULETTE_TIER_POINTS[tierCorrectCount] ?? 0;
+  }
+
+  let scorelinePoints = 0;
+  const scorelineResolved = rouletteCategoryResolved('scoreline', fixture);
+  if(scorelineResolved && byId.scoreline){
+    if(byId.scoreline.scoreA == fixture.score_a && byId.scoreline.scoreB == fixture.score_b){
+      scorelinePoints = 50;
+    }
+  }
+
+  let optionalPoints = 0;
+  ROULETTE_CATEGORIES.filter(c=>c.group==='optional').forEach(c => {
+    if(!byId[c.id]) return; // didn't use this optional bet
+    if(!rouletteCategoryResolved(c.id, fixture)) return;
+    const actual = c.id==='redcard' ? fixture.redcard_actual : fixture.penalty_actual;
+    const correct = byId[c.id].value === (actual ? 'yes' : 'no');
+    optionalPoints += correct ? c.winPoints : -c.lossPoints;
+  });
+
+  const allResolved = tierResolvedAll && scorelineResolved;
+  return {
+    points: tierPoints + scorelinePoints + optionalPoints,
+    resolved: allResolved,
+    breakdown: { tierPoints, tierCorrectCount, tierEligible, scorelinePoints, optionalPoints },
+  };
 }

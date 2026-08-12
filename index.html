@@ -194,6 +194,10 @@
   .roulette-fixture-vs{ color:var(--gold); font-size:1.1rem; padding:0 0.3rem; }
   @media (min-width:480px){ .roulette-fixture-teams{ font-size:1.9rem; } }
   .roulette-spend{ text-align:center; font-family:'Space Mono',monospace; font-size:0.72rem; color:#B9C4BB; margin-bottom:1rem; line-height:1.6; }
+  .roulette-tier-label{ text-align:center; font-size:0.78rem; color:#EAE7DB; font-weight:700; margin:0 0 0.5rem; }
+  .roulette-tier-table{ width:100%; max-width:480px; margin:0 auto 1rem; border-collapse:collapse; font-size:0.68rem; }
+  .roulette-tier-table td{ padding:0.35rem 0.3rem; text-align:center; color:#D8E0DA; border:1px solid rgba(255,255,255,0.14); }
+  .roulette-tier-table td:nth-child(even){ font-weight:800; color:var(--gold); }
   .roulette-categories{ display:grid; grid-template-columns:1fr; gap:0.6rem; margin-bottom:1rem; }
   @media (min-width:560px){ .roulette-categories{ grid-template-columns:1fr 1fr; } }
   .roulette-optional-rail{
@@ -211,6 +215,8 @@
     padding:0.7rem 0.8rem; transition:all .15s ease; position:relative;
   }
   .roulette-cat.filled{ border-color:var(--gold); background:rgba(255,255,255,0.11); }
+  #rouletteScorelineBox{ display:block; margin-bottom:1.2rem; }
+  #rouletteScorelineBox .roulette-cat{ border:1.5px solid var(--gold); background:rgba(203,166,51,0.1); max-width:360px; margin:0 auto; }
   .roulette-cat-head{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
   .roulette-cat-name{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:#fff; letter-spacing:0.02em; }
   .roulette-cat-odds{
@@ -349,7 +355,7 @@
             <span>PREM IQ19: Monthly Roulette<span class="room-sub">One fixture, every month</span></span>
             <span class="room-check" id="checkH2H">0/0</span>
           </button>
-          <div class="hub-how-to">One Super Sunday fixture is added each month. Make your call on 6 mandatory bets (Result, Scoreline, Both Teams To Score, Corners, Shots on Target, First Yellow Card) plus 2 optional high-risk ones — up to 150 points at stake.</div>
+          <div class="hub-how-to">One Super Sunday fixture is added each month. Answer 6 questions — more correct, more points — plus a Scoreline bonus and 2 optional high-risk bets. Up to 255 points on offer.</div>
         </div>
       </div>
       <div class="hub-footer">
@@ -498,25 +504,39 @@
     <div id="howToPlayH2HStep" style="display:none;">
       <div class="questions-panel htp-panel">
         <h2>How To Play - Monthly Super Sunday Roulette</h2>
-        <p class="htp-lead">Every month, one fixture is chosen for all players. You'll head to the roulette table to risk 100 points (an optional 150!), and turn that into either more, or less…</p>
+        <p class="htp-lead">Every month, one fixture is chosen for all players. Answer 6 quick questions about it, nail the exact Scoreline for a bonus, and take on 2 optional high-risk bets if you're feeling brave.</p>
 
-        <p class="htp-subhead">6 bets are mandatory — you must answer these:</p>
+        <p class="htp-subhead">Answer these 6 — your points depend on how many you get right, not which ones:</p>
         <table class="bj-score-table">
-          <tr><td>Result</td><td>Spend 20 to win 40</td></tr>
-          <tr><td>Scoreline</td><td>Spend 10 to win 100</td></tr>
-          <tr><td>Both Teams To Score</td><td>Spend 20 to win 40</td></tr>
-          <tr><td>Most Corners</td><td>Spend 20 to win 40 (points handed back if tied)</td></tr>
-          <tr><td>Most Shots on Target</td><td>Spend 20 to win 40 (points handed back if tied)</td></tr>
-          <tr><td>First Team to Receive a Yellow Card</td><td>Spend 10 to win 10 (points handed back if neither)</td></tr>
+          <tr><td>Result</td><td></td></tr>
+          <tr><td>Both Teams To Score</td><td></td></tr>
+          <tr><td>Most Corners</td><td>(points handed back if tied)</td></tr>
+          <tr><td>Most Shots on Target</td><td>(points handed back if tied)</td></tr>
+          <tr><td>First Team to Receive a Yellow Card</td><td>(points handed back if neither)</td></tr>
+          <tr><td>Goal Scored From Outside the Box</td><td></td></tr>
+        </table>
+        <table class="bj-score-table">
+          <tr><td>0 or 1 correct</td><td>0 points</td></tr>
+          <tr><td>2 correct</td><td>10 points</td></tr>
+          <tr><td>3 correct</td><td>15 points</td></tr>
+          <tr><td>4 correct</td><td>25 points</td></tr>
+          <tr><td>5 correct</td><td>40 points</td></tr>
+          <tr><td>6 correct</td><td>75 points</td></tr>
+        </table>
+
+        <p class="htp-subhead">Scoreline stands on its own:</p>
+        <table class="bj-score-table">
+          <tr><td>Exact Scoreline correct</td><td>+50 points, on top of the above</td></tr>
         </table>
 
         <p class="htp-subhead">2 bets are optional — higher risk, your choice:</p>
         <table class="bj-score-table">
-          <tr><td>Red Card in the Match</td><td>Spend 25 to win 100</td></tr>
-          <tr><td>Penalty in the Match</td><td>Spend 25 to win 50</td></tr>
+          <tr><td>Red Card in the Match</td><td>Lose 25 / Win 100</td></tr>
+          <tr><td>Penalty in the Match</td><td>Lose 15 / Win 30</td></tr>
         </table>
 
-        <p>All 8 bets are already laid out on the table for you — just make your prediction for each one. The 6 mandatory bets need an answer to complete this room; the 2 optional ones are there if you fancy the extra risk. Tap a selection again to unselect it if you change your mind.</p>
+        <p>All bets are already laid out on the table for you — just make your prediction for each one. The 6 tiered questions plus Scoreline need an answer to complete this room; the 2 optional ones are there if you fancy the extra risk. Tap a selection again to unselect it if you change your mind.</p>
+        <p class="htp-footnote">Best possible month: nail all 6 (75) + exact Scoreline (50) + both optional bets landing (100 + 30) = 255 points.</p>
         <p class="htp-footnote">This is a single-game prediction, resolved once that month's fixture is played.</p>
       </div>
       <div class="footer-actions">
@@ -533,7 +553,14 @@
         <h2>Monthly Super Sunday Roulette</h2>
         <p class="roulette-fixture-line" id="rouletteFixtureLine"></p>
         <p class="roulette-spend" id="rouletteSpend">Points spent: 0 / 150</p>
+        <p class="roulette-tier-label">Answer all 6 below — points depend on how many you get right:</p>
+        <table class="roulette-tier-table">
+          <tr><td>0–1 correct</td><td>0 pts</td><td>2 correct</td><td>10 pts</td><td>3 correct</td><td>15 pts</td></tr>
+          <tr><td>4 correct</td><td>25 pts</td><td>5 correct</td><td>40 pts</td><td>6 correct</td><td>75 pts</td></tr>
+        </table>
         <div class="roulette-categories" id="rouletteCategories"></div>
+        <p class="roulette-tier-label" style="margin-top:1.1rem;">Scoreline stands alone — get it exactly right for a flat bonus:</p>
+        <div class="roulette-categories" id="rouletteScorelineBox"></div>
         <div class="roulette-optional-rail">
           <p class="roulette-optional-label">⚠ High Risk / Optional Bets</p>
           <div class="roulette-optional-cats" id="rouletteOptionalCategories"></div>
@@ -674,8 +701,8 @@
   function blackjackCompleteCount(){ return blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').length; }
   function quizCompleteCount(){ return QUESTIONS.filter(q=>isAnswered(q)).length; }
   function rouletteHasFixture(){ return h2hFixtures.some(f=>f.team_a && f.team_b); }
-  function rouletteMandatoryDone(){ return CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c)); }
-  function rouletteMandatoryCount(){ return CHIP_CONFIG.filter(c=>c.mandatory && isChipComplete(c)).length; }
+  function rouletteMandatoryDone(){ return CHIP_CONFIG.filter(c=>c.group!=='optional').every(c=>isChipComplete(c)); }
+  function rouletteMandatoryCount(){ return CHIP_CONFIG.filter(c=>c.group!=='optional' && isChipComplete(c)).length; }
 
   function updateHubChecks(){
     const sCount = slotsCompleteCount();
@@ -688,7 +715,7 @@
     setCheck('checkSlots', sCount, 7);
     setCheck('checkBlackjack', bCount, numCards);
     setCheck('checkQuiz', qCount, 19);
-    document.getElementById('checkH2H').textContent = !hasFixture ? 'No fixture yet' : `${hMandatoryCount}/5`;
+    document.getElementById('checkH2H').textContent = !hasFixture ? 'No fixture yet' : `${hMandatoryCount}/7`;
     document.getElementById('checkH2H').classList.toggle('done', hDone);
 
     const allDone = sCount===7 && bCount===numCards && qCount===19 && (!hasFixture || hDone);
@@ -1097,16 +1124,7 @@
   // ============================================================
   // Monthly Super Sunday Roulette
   // ============================================================
-  const CHIP_CONFIG = [
-    { id:'result',  name:'Result',                 points:20, payout:40,  mandatory:true,  type:'threeway' },
-    { id:'scoreline', name:'Scoreline',             points:10, payout:100, mandatory:true,  type:'scoreline' },
-    { id:'btts',    name:'Both Teams To Score',     points:20, payout:40,  mandatory:true,  type:'yesno' },
-    { id:'corners', name:'Most Corners',            points:20, payout:40,  mandatory:true,  type:'twoway', tieNote:'Points handed back if tied' },
-    { id:'shots',   name:'Most Shots on Target',    points:20, payout:40,  mandatory:true,  type:'twoway', tieNote:'Points handed back if tied' },
-    { id:'yellowcard', name:'First Team to Receive a Yellow Card', points:10, payout:10, mandatory:true, type:'twoway', tieNote:'Points handed back if neither' },
-    { id:'redcard', name:'Red Card in the Match',   points:25, payout:100, mandatory:false, type:'yesno', yesOnly:true },
-    { id:'penalty', name:'Penalty in the Match',    points:25, payout:50,  mandatory:false, type:'yesno', yesOnly:true },
-  ];
+  const CHIP_CONFIG = ROULETTE_CATEGORIES; // shared definition from questions-data.js
   let chipState = {}; // categoryId -> { prediction: {...} }
   CHIP_CONFIG.forEach(c => chipState[c.id] = { prediction:{} });
   let currentFixture = null; // the month's fixture object being bet on
@@ -1154,11 +1172,9 @@
       <div class="roulette-fixture-month">${currentFixture.month} — Super Sunday</div>
       <div class="roulette-fixture-teams">${teamA.name} <span class="roulette-fixture-vs">V</span> ${teamB.name}</div>
     `;
-    const mandatoryStake = CHIP_CONFIG.filter(c=>c.mandatory).reduce((sum,c)=>sum+c.points, 0);
-    const optionalStake = CHIP_CONFIG.filter(c=>!c.mandatory).reduce((sum,c)=>sum+c.points, 0);
-    const mandatoryWin = CHIP_CONFIG.filter(c=>c.mandatory).reduce((sum,c)=>sum+c.payout, 0);
-    const totalWin = CHIP_CONFIG.reduce((sum,c)=>sum+c.payout, 0);
-    spendEl.innerHTML = `Spend ${mandatoryStake} mandatory points, plus ${optionalStake} optional.<br>Max available win: ${mandatoryWin} points from mandatory bets (${totalWin} points including optional).`;
+    const optionalMax = CHIP_CONFIG.filter(c=>c.group==='optional').reduce((sum,c)=>sum+c.winPoints, 0);
+    const guaranteedMax = ROULETTE_TIER_POINTS[6] + 50; // perfect 6/6 + exact scoreline
+    spendEl.innerHTML = `Nail all 6 = 75 points, plus an exact Scoreline = 50 more.<br>Optional bets can add up to ${optionalMax} more on top (${guaranteedMax + optionalMax} points max this month).`;
 
     function catBoxHtml(c){
       const s = chipState[c.id];
@@ -1190,19 +1206,23 @@
           <span style="font-size:0.72rem; color:#D8E0DA;">${teamB.tag}</span>
         </div>`;
       }
+      let badge = '';
+      if(c.group==='standalone') badge = `Worth ${c.points} points if exact`;
+      else if(c.group==='optional') badge = `Lose ${c.lossPoints} / Win ${c.winPoints}`;
       return `
         <div class="roulette-cat ${isChipComplete(c)?'filled':''}" data-category="${c.id}">
           <div class="roulette-cat-head">
-            <span class="roulette-cat-name">${c.name}${c.mandatory?'':' ⚠'}</span>
-            <span class="roulette-cat-odds">Spend ${c.points} to win ${c.payout}</span>
+            <span class="roulette-cat-name">${c.name}${c.group==='optional'?' ⚠':''}</span>
+            ${badge ? `<span class="roulette-cat-odds">${badge}</span>` : ''}
           </div>
           ${c.tieNote ? `<div class="roulette-tie-note">${c.tieNote}</div>` : ''}
           <div class="roulette-cat-predict">${predictHtml}</div>
         </div>
       `;
     }
-    catsEl.innerHTML = CHIP_CONFIG.filter(c=>c.mandatory).map(catBoxHtml).join('');
-    document.getElementById('rouletteOptionalCategories').innerHTML = CHIP_CONFIG.filter(c=>!c.mandatory).map(catBoxHtml).join('');
+    catsEl.innerHTML = CHIP_CONFIG.filter(c=>c.group==='tier').map(catBoxHtml).join('');
+    document.getElementById('rouletteScorelineBox').innerHTML = CHIP_CONFIG.filter(c=>c.group==='standalone').map(catBoxHtml).join('');
+    document.getElementById('rouletteOptionalCategories').innerHTML = CHIP_CONFIG.filter(c=>c.group==='optional').map(catBoxHtml).join('');
 
     document.querySelectorAll('[data-predict]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -1213,7 +1233,7 @@
         if(alreadySelected){
           chipState[catId].prediction.value = undefined; // click again to unselect
         } else {
-          if(!chip.mandatory && !optionalWarned[catId]){
+          if(chip.group==='optional' && !optionalWarned[catId]){
             optionalWarned[catId] = true;
             alert('This is not a mandatory bet, therefore do so at your own risk of winning or losing more!');
           }
@@ -1227,7 +1247,7 @@
       inp.addEventListener('input', e=>{
         const catId = e.target.dataset.cat;
         const chip = CHIP_CONFIG.find(c=>c.id===catId);
-        if(!chip.mandatory && !optionalWarned[catId]){
+        if(chip.group==='optional' && !optionalWarned[catId]){
           optionalWarned[catId] = true;
           alert('This is not a mandatory bet, therefore do so at your own risk of winning or losing more!');
         }
@@ -1243,7 +1263,7 @@
   }
 
   function updateRouletteCompleteBanner(){
-    const mandatoryDone = CHIP_CONFIG.filter(c=>c.mandatory).every(c=>isChipComplete(c));
+    const mandatoryDone = CHIP_CONFIG.filter(c=>c.group!=='optional').every(c=>isChipComplete(c));
     document.getElementById('h2hCompleteBanner').style.display = (currentFixture && mandatoryDone) ? 'block' : 'none';
   }
 
@@ -1283,7 +1303,7 @@
         player_id: player.id,
         month: currentFixture.month,
         category: c.id,
-        chip_points: c.points,
+        chip_points: c.points ?? c.winPoints ?? 0,
         prediction: chipState[c.id].prediction,
       })) : [];
       if(rouletteRows.length){
@@ -1399,7 +1419,7 @@
       else if(c.type==='twoway') valueLabel = p.value==='A' ? teamA.name : p.value==='B' ? teamB.name : '—';
       else if(c.type==='yesno') valueLabel = p.value==='yes' ? 'Yes' : p.value==='no' ? 'No' : '—';
       else if(c.type==='scoreline') valueLabel = (p.scoreA!=null && p.scoreB!=null) ? `${p.scoreA}-${p.scoreB}` : '—';
-      return `<div class="summary-row"><span class="s-label">${c.name} (${c.points}pt chip)</span><span class="s-value">${valueLabel}</span></div>`;
+      return `<div class="summary-row"><span class="s-label">${c.name}</span><span class="s-value">${valueLabel}</span></div>`;
     }).join('');
     panel.innerHTML = `<div class="summary-row"><span class="s-label"><strong>${currentFixture.month}</strong></span><span class="s-value">${teamA.name} v ${teamB.name}</span></div>`
       + (rows || `<div class="summary-row"><span class="s-label">No chips placed</span><span class="s-value">—</span></div>`);
