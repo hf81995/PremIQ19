@@ -50,6 +50,12 @@
   .h2h-actuals-grid label{ font-size:0.72rem; font-weight:600; display:flex; flex-direction:column; gap:0.2rem; }
   .h2h-actuals-grid select{ margin:0; padding:0.3rem; font-size:0.75rem; }
   @media (min-width:600px){ .h2h-actuals-grid{ grid-template-columns:1fr 1fr 1fr; } }
+  .bj-player-card{ border:1.5px solid var(--line); border-radius:10px; padding:0.8rem; margin-bottom:1rem; }
+  .bj-player-card .bj-player-name{ font-family:'Bebas Neue',sans-serif; font-size:1.1rem; }
+  .bj-card-row{ display:flex; align-items:center; gap:0.6rem; margin:0.4rem 0; font-size:0.8rem; }
+  .bj-card-row .bj-card-label{ flex:1; }
+  .bj-card-row input{ width:60px; margin:0; padding:0.3rem; font-size:0.8rem; }
+  .bj-total-line{ display:flex; justify-content:space-between; font-weight:700; margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid var(--line); font-size:0.85rem; }
   .q-row input[type=text]{ margin:0; }
 </style>
 </head>
@@ -102,7 +108,14 @@
     </div>
 
     <div class="panel">
-      <h2>6. Question Answers</h2>
+      <h2>6. Blackjack</h2>
+      <p class="note">For each player, type in how many goals each of their picked players has actually scored so far. The total updates live as you type, and only saves when you hit that player's Save button.</p>
+      <div id="blackjackWrap"></div>
+      <div class="status-line" id="blackjackStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h2>7. Question Answers</h2>
       <p class="note">Fill in the correct answer for each question once it's known. Leaderboard points for that question apply immediately once saved.</p>
       <div id="questionsWrap"></div>
       <button class="btn" id="saveQuestionsBtn">Save all question answers</button>
@@ -128,6 +141,7 @@
     document.getElementById('loadTableBtn').disabled = false;
     populateMwSelect();
     loadH2HPanel();
+    loadBlackjackPanel();
     loadQuestionsPanel();
     loadOverridePanel();
     loadAlerts();
@@ -372,6 +386,9 @@
           <input type="text" class="h2h-scorea" placeholder="Score A" style="width:60px;">
           <input type="text" class="h2h-scoreb" placeholder="Score B" style="width:60px;">
         </div>
+        <div class="q-row" style="margin-top:0.4rem;">
+          <input type="text" class="h2h-date" placeholder="e.g. Sunday 23rd August" style="flex:1; min-width:180px;">
+        </div>
         <p class="note" style="margin:0.6rem 0 0.3rem;">Once the match has been played, fill in the actual outcome for each bet:</p>
         <div class="h2h-actuals-grid">
           <label>BTTS ${yn('h2h-btts')}</label>
@@ -391,6 +408,7 @@
       if(f.team_a) row.querySelector('.h2h-a').value = f.team_a;
       if(f.team_b) row.querySelector('.h2h-b').value = f.team_b;
       if(f.score_a != null) row.querySelector('.h2h-scorea').value = f.score_a;
+      if(f.fixture_date) row.querySelector('.h2h-date').value = f.fixture_date;
       if(f.score_b != null) row.querySelector('.h2h-scoreb').value = f.score_b;
       if(f.btts_actual != null) row.querySelector('.h2h-btts').value = f.btts_actual ? 'yes' : 'no';
       if(f.corners_actual != null) row.querySelector('.h2h-corners').value = f.corners_actual;
@@ -426,6 +444,7 @@
         const { error } = await supabaseAdmin.from('h2h_fixtures')
           .update({
             team_a:teamA, team_b:teamB, score_a:scoreA, score_b:scoreB, result,
+            fixture_date: row.querySelector('.h2h-date').value.trim() || null,
             btts_actual: ynVal(btts),
             corners_actual: corners,
             shots_actual: shots,
@@ -439,6 +458,73 @@
         const status = document.getElementById('h2hStatus');
         if(error){ status.textContent = 'Error: '+error.message; status.className='status-line error'; }
         else { status.textContent = `${month} saved.`; status.className='status-line ok'; }
+      });
+    });
+  }
+
+  // --- Blackjack panel ---
+  async function loadBlackjackPanel(){
+    const [{data: picks}, {data: players}] = await Promise.all([
+      supabaseAdmin.from('blackjack_picks').select('*'),
+      supabaseAdmin.from('players').select('*'),
+    ]);
+    const wrap = document.getElementById('blackjackWrap');
+    if(!picks || picks.length===0){
+      wrap.innerHTML = '<p class="note">No Blackjack submissions yet.</p>';
+      return;
+    }
+    const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'Unknown player'; };
+    const byPlayer = {};
+    picks.forEach(p => { (byPlayer[p.player_id] = byPlayer[p.player_id] || []).push(p); });
+
+    wrap.innerHTML = Object.entries(byPlayer).map(([playerId, cards]) => {
+      cards.sort((a,b) => a.card_index - b.card_index);
+      const rows = cards.map(c => `
+        <div class="bj-card-row" data-cardid="${c.id}">
+          <span class="bj-card-label">${c.player_name}</span>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="bj-goals-input" value="${c.actual_goals || 0}">
+        </div>
+      `).join('');
+      const total = cards.reduce((sum,c) => sum + (c.actual_goals||0), 0);
+      return `
+        <div class="bj-player-card" data-playerid="${playerId}">
+          <span class="bj-player-name">${playerName(playerId)}</span>
+          ${rows}
+          <div class="bj-total-line"><span>Total</span><span class="bj-total-value">${total}</span></div>
+          <button class="btn btn-secondary bj-save" style="margin-top:0.5rem;">Save</button>
+        </div>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('.bj-player-card').forEach(card => {
+      const updateTotal = () => {
+        let sum = 0;
+        card.querySelectorAll('.bj-goals-input').forEach(inp => sum += parseInt(inp.value)||0);
+        card.querySelector('.bj-total-value').textContent = sum;
+      };
+      card.querySelectorAll('.bj-goals-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const digitsOnly = e.target.value.replace(/[^0-9]/g,'');
+          e.target.value = digitsOnly;
+          updateTotal();
+        });
+      });
+      card.querySelector('.bj-save').addEventListener('click', async () => {
+        const status = document.getElementById('blackjackStatus');
+        const updates = [];
+        card.querySelectorAll('.bj-card-row').forEach(row => {
+          const cardId = row.dataset.cardid;
+          const goals = parseInt(row.querySelector('.bj-goals-input').value) || 0;
+          updates.push(supabaseAdmin.from('blackjack_picks').update({ actual_goals: goals }).eq('id', cardId));
+        });
+        try{
+          await Promise.all(updates);
+          status.textContent = `Saved for ${card.querySelector('.bj-player-name').textContent}.`;
+          status.className = 'status-line ok';
+        } catch(err){
+          status.textContent = 'Error: ' + err.message;
+          status.className = 'status-line error';
+        }
       });
     });
   }

@@ -1169,7 +1169,7 @@
 
     const teamA = teamByTag(currentFixture.team_a), teamB = teamByTag(currentFixture.team_b);
     fixtureLine.innerHTML = `
-      <div class="roulette-fixture-month">${currentFixture.month} — Super Sunday</div>
+      <div class="roulette-fixture-month">${currentFixture.month} — Super Sunday${currentFixture.fixture_date ? ` · ${currentFixture.fixture_date}` : ''}</div>
       <div class="roulette-fixture-teams">${teamA.name} <span class="roulette-fixture-vs">V</span> ${teamB.name}</div>
     `;
     const optionalMax = CHIP_CONFIG.filter(c=>c.group==='optional').reduce((sum,c)=>sum+c.winPoints, 0);
