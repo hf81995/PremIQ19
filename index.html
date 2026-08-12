@@ -428,7 +428,8 @@
         <h2>How To Play - Blackjack</h2>
         <p class="htp-lead">Time for a big call at the Blackjack table — completely free choice, any players from any Premier League club.</p>
 
-        <p>Select a minimum of 3 players (max. of 5) from any Premier League club to score 21 goals between them in 19 fixtures. Use the reference list on the right hand side — which shows goals scored after 20 Matchweeks last season — and type names onto the playing cards.</p>
+        <p>Select a minimum of 3 players (max. of 5) from across the Premier League to score 21 goals between them in 19 fixtures. Any selected player must score a minimum of 1 goal in order to receive points from this game.</p>
+        <p>Good luck with your research. The reference list on the right hand side may help — it gives an indication from the 25/26 season of the top 25 scorers (from August to early Jan). Then type names onto the playing cards.</p>
 
         <p class="htp-subhead">Scoring:</p>
         <table class="bj-score-table">
@@ -458,7 +459,7 @@
       <div class="bj-layout">
         <div class="felt">
           <h2>PremIQ19: Blackjack</h2>
-          <p class="bj-team-line" id="bjTeamLine"></p>
+          <div class="bj-team-line" id="bjTeamLine"></div>
           <table class="bj-score-table bj-score-table-dark">
             <tr><td>Score 21</td><td>400 points</td></tr>
             <tr><td>20</td><td>250 points</td></tr>
@@ -854,7 +855,10 @@
 
   function enterBlackjack(){
     const teamLine = document.getElementById('bjTeamLine');
-    teamLine.innerHTML = `Select a minimum of 3 players (max. of 5) from any Premier League club to score ${BLACKJACK_TARGET} goals between them in 19 fixtures. If you need any hints, the reference list is on the right hand side — and then type a name onto each playing card. Remember, 19 matches only!`;
+    teamLine.innerHTML = `
+      <p>Select a minimum of 3 players (max. of 5) from across the Premier League to score ${BLACKJACK_TARGET} goals between them in 19 fixtures. Any selected player must score a minimum of 1 goal in order to receive points from this game.</p>
+      <p>Good luck with your research. The list on the right may help — it gives an indication from the 25/26 season of the top 25 scorers (from August to early Jan).</p>
+    `;
     renderGoalsReference();
     renderCards();
     showStep('blackjackStep');
@@ -866,7 +870,6 @@
     panel.innerHTML = `
       <h3>Goals After 20 Matchweeks — 25/26 Season</h3>
       ${rows}
-      <p class="squad-ref-note">Good luck with your research. This list may be helpful when selecting, based on the 25/26 season (goals after 20 Matchweeks). Reference only — not a prediction, and not limited to these names.</p>
     `;
   }
 
