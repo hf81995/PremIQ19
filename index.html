@@ -212,16 +212,13 @@
     padding:0.7rem 0.8rem; transition:all .15s ease; position:relative;
   }
   .roulette-cat.filled{ border-color:var(--gold); background:rgba(255,255,255,0.11); }
-  .roulette-win-lose-badge{
-    font-family:'Space Mono',monospace; font-size:0.6rem; font-weight:800; color:var(--gold);
-    text-transform:uppercase; letter-spacing:0.03em; margin-bottom:0.35rem;
-  }
   .roulette-cat-head{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
   .roulette-cat-name{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:#fff; letter-spacing:0.02em; }
   .roulette-cat-odds{
-    font-family:'Space Mono',monospace; font-size:0.7rem; font-weight:700; color:#EAE7DB;
-    background:rgba(255,255,255,0.12); padding:0.15rem 0.5rem; border-radius:999px; white-space:nowrap;
+    font-family:'Space Mono',monospace; font-size:0.68rem; font-weight:800; color:var(--ink);
+    background:var(--gold); padding:0.2rem 0.55rem; border-radius:999px; white-space:nowrap;
   }
+  .roulette-tie-note{ font-size:0.68rem; color:#B9C4BB; font-style:italic; margin-top:0.3rem; }
   .roulette-cat-predict{ margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; }
   .felt h2{ font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); margin:0 0 0.3rem; text-align:center; }
   .bj-team-line{ text-align:center; color:#D8E0DA; font-size:0.85rem; margin-bottom:1rem; }
@@ -353,7 +350,7 @@
             <span>PREM IQ19: Monthly Roulette<span class="room-sub">One fixture, every month</span></span>
             <span class="room-check" id="checkH2H">0/0</span>
           </button>
-          <div class="hub-how-to">One Super Sunday fixture is added each month. Make your call on 5 mandatory bets (Result, Scoreline, Both Teams To Score, Corners, Shots on Target) plus 2 optional high-risk ones — up to 150 points at stake, 400+ up for grabs.</div>
+          <div class="hub-how-to">One Super Sunday fixture is added each month. Make your call on 6 mandatory bets (Result, Scoreline, Both Teams To Score, Corners, Shots on Target, First Yellow Card) plus 2 optional high-risk ones — up to 150 points at stake.</div>
         </div>
       </div>
       <div class="hub-footer">
@@ -584,22 +581,23 @@
         <h2>How To Play - Monthly Super Sunday Roulette</h2>
         <p class="htp-lead">Every month, one fixture is chosen for all players. You'll head to the roulette table to risk 100 points (an optional 150!), and turn that into either more, or less…</p>
 
-        <p class="htp-subhead">5 chips are mandatory — you must use these:</p>
+        <p class="htp-subhead">6 bets are mandatory — you must answer these:</p>
         <table class="bj-score-table">
-          <tr><td>25pt chip — Result</td><td>Evens, win 50</td></tr>
-          <tr><td>10pt chip — Scoreline</td><td>10/1, win 100</td></tr>
-          <tr><td>25pt chip — Both Teams To Score</td><td>Evens, win 50</td></tr>
-          <tr><td>20pt chip — Most Corners</td><td>Evens, win 40</td></tr>
-          <tr><td>20pt chip — Most Shots on Target</td><td>Evens, win 40</td></tr>
+          <tr><td>Result</td><td>Spend 20 to win 40</td></tr>
+          <tr><td>Scoreline</td><td>Spend 10 to win 100</td></tr>
+          <tr><td>Both Teams To Score</td><td>Spend 20 to win 40</td></tr>
+          <tr><td>Most Corners</td><td>Spend 20 to win 40 (points handed back if tied)</td></tr>
+          <tr><td>Most Shots on Target</td><td>Spend 20 to win 40 (points handed back if tied)</td></tr>
+          <tr><td>First Team to Receive a Yellow Card</td><td>Spend 10 to win 10 (points handed back if neither)</td></tr>
         </table>
 
-        <p class="htp-subhead">2 chips are optional — higher risk, your choice:</p>
+        <p class="htp-subhead">2 bets are optional — higher risk, your choice:</p>
         <table class="bj-score-table">
-          <tr><td>25pt chip — Red Card in the Match</td><td>4/1, win 100</td></tr>
-          <tr><td>25pt chip — Penalty in the Match</td><td>Evens, win 50</td></tr>
+          <tr><td>Red Card in the Match</td><td>Spend 25 to win 100</td></tr>
+          <tr><td>Penalty in the Match</td><td>Spend 25 to win 50</td></tr>
         </table>
 
-        <p>All 7 bets are already laid out on the table for you — just make your prediction for each one. The 5 mandatory bets need an answer to complete this room; the 2 optional ones are there if you fancy the extra risk.</p>
+        <p>All 8 bets are already laid out on the table for you — just make your prediction for each one. The 6 mandatory bets need an answer to complete this room; the 2 optional ones are there if you fancy the extra risk. Tap a selection again to unselect it if you change your mind.</p>
         <p class="htp-footnote">This is a single-game prediction, resolved once that month's fixture is played.</p>
       </div>
       <div class="footer-actions">
@@ -1194,13 +1192,14 @@
   // Monthly Super Sunday Roulette
   // ============================================================
   const CHIP_CONFIG = [
-    { id:'result',  name:'Result',                 points:25, odds:'Evens', payout:50,  mandatory:true,  type:'threeway' },
-    { id:'scoreline', name:'Scoreline',             points:10, odds:'10/1',  payout:100, mandatory:true,  type:'scoreline' },
-    { id:'btts',    name:'Both Teams To Score',     points:25, odds:'Evens', payout:50,  mandatory:true,  type:'yesno' },
-    { id:'corners', name:'Most Corners',            points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
-    { id:'shots',   name:'Most Shots on Target',    points:20, odds:'Evens', payout:40,  mandatory:true,  type:'twoway' },
-    { id:'redcard', name:'Red Card in the Match',   points:25, odds:'4/1',   payout:100, mandatory:false, type:'yesno', yesOnly:true },
-    { id:'penalty', name:'Penalty in the Match',    points:25, odds:'Evens', payout:50,  mandatory:false, type:'yesno', yesOnly:true },
+    { id:'result',  name:'Result',                 points:20, payout:40,  mandatory:true,  type:'threeway' },
+    { id:'scoreline', name:'Scoreline',             points:10, payout:100, mandatory:true,  type:'scoreline' },
+    { id:'btts',    name:'Both Teams To Score',     points:20, payout:40,  mandatory:true,  type:'yesno' },
+    { id:'corners', name:'Most Corners',            points:20, payout:40,  mandatory:true,  type:'twoway', tieNote:'Points handed back if tied' },
+    { id:'shots',   name:'Most Shots on Target',    points:20, payout:40,  mandatory:true,  type:'twoway', tieNote:'Points handed back if tied' },
+    { id:'yellowcard', name:'First Team to Receive a Yellow Card', points:10, payout:10, mandatory:true, type:'twoway', tieNote:'Points handed back if neither' },
+    { id:'redcard', name:'Red Card in the Match',   points:25, payout:100, mandatory:false, type:'yesno', yesOnly:true },
+    { id:'penalty', name:'Penalty in the Match',    points:25, payout:50,  mandatory:false, type:'yesno', yesOnly:true },
   ];
   let chipState = {}; // categoryId -> { prediction: {...} }
   CHIP_CONFIG.forEach(c => chipState[c.id] = { prediction:{} });
@@ -1284,11 +1283,11 @@
       }
       return `
         <div class="roulette-cat ${isChipComplete(c)?'filled':''}" data-category="${c.id}">
-          <div class="roulette-win-lose-badge">Win Or Lose ${c.points} Points</div>
           <div class="roulette-cat-head">
             <span class="roulette-cat-name">${c.name}${c.mandatory?'':' ⚠'}</span>
-            <span class="roulette-cat-odds">${c.odds}</span>
+            <span class="roulette-cat-odds">Spend ${c.points} to win ${c.payout}</span>
           </div>
+          ${c.tieNote ? `<div class="roulette-tie-note">${c.tieNote}</div>` : ''}
           <div class="roulette-cat-predict">${predictHtml}</div>
         </div>
       `;
@@ -1299,12 +1298,18 @@
     document.querySelectorAll('[data-predict]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const catId = btn.dataset.predict;
+        const value = btn.dataset.value;
         const chip = CHIP_CONFIG.find(c=>c.id===catId);
-        if(!chip.mandatory && !optionalWarned[catId]){
-          optionalWarned[catId] = true;
-          alert('This is not a mandatory bet, therefore do so at your own risk of winning or losing more!');
+        const alreadySelected = chipState[catId].prediction.value === value;
+        if(alreadySelected){
+          chipState[catId].prediction.value = undefined; // click again to unselect
+        } else {
+          if(!chip.mandatory && !optionalWarned[catId]){
+            optionalWarned[catId] = true;
+            alert('This is not a mandatory bet, therefore do so at your own risk of winning or losing more!');
+          }
+          chipState[catId].prediction.value = value;
         }
-        chipState[catId].prediction.value = btn.dataset.value;
         renderRoulette();
         updateHubChecks();
       });
