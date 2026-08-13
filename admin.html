@@ -78,6 +78,15 @@
       <div class="status-line" id="connectStatus"></div>
     </div>
 
+    <div class="panel" style="border:2px solid #A32638;">
+      <h2 style="color:#A32638;">🔒 Master Game Lock</h2>
+      <p class="note">This is the one that matters — while OPEN, every player can log in and freely edit their Slots, Blackjack and Quiz picks at any time. Once you switch it to LOCKED, nobody can change any of those three games again, for anyone, until you reopen it. (Monthly Super Sundays has its own separate open/closed switch below — this doesn't affect it.)</p>
+      <div class="q-row" style="margin-top:0.6rem;">
+        <button class="btn" id="gameLockToggleBtn">Loading…</button>
+        <span id="gameLockToggleStatus" style="font-size:0.78rem; color:var(--ink-soft);"></span>
+      </div>
+    </div>
+
     <div class="panel">
       <h2>2. Enter Matchweek Results</h2>
       <label for="mwSelect">Matchweek</label>
@@ -147,6 +156,7 @@
     populateMwSelect();
     loadH2HPanel();
     loadRouletteToggle();
+    loadGameLockToggle();
     loadBlackjackPanel();
     loadQuestionsPanel();
     loadPlayersPanel();
@@ -321,6 +331,24 @@
       renderTable(data);
     }
   });
+
+  // --- Master game lock (Slots/Blackjack/Quiz, all players at once) ---
+  async function loadGameLockToggle(){
+    const { data } = await supabaseAdmin.from('settings').select('*').eq('key','game_locked').maybeSingle();
+    const isLocked = data ? data.value === 'true' : false;
+    renderGameLockToggle(isLocked);
+  }
+  function renderGameLockToggle(isLocked){
+    const btn = document.getElementById('gameLockToggleBtn');
+    const status = document.getElementById('gameLockToggleStatus');
+    btn.textContent = isLocked ? '🔒 LOCKED — click to reopen for everyone' : '🔓 OPEN — click to lock for everyone';
+    btn.className = isLocked ? 'btn btn-secondary' : 'btn';
+    status.textContent = isLocked ? 'Nobody can edit Slots, Blackjack or Quiz right now.' : 'Everyone can still freely edit Slots, Blackjack and Quiz.';
+    btn.onclick = async () => {
+      const { error } = await supabaseAdmin.from('settings').upsert({ key:'game_locked', value: isLocked ? 'false' : 'true' }, { onConflict:'key' });
+      if(!error) renderGameLockToggle(!isLocked);
+    };
+  }
 
   // --- Monthly Super Sundays open/closed toggle ---
   async function loadRouletteToggle(){
@@ -512,7 +540,7 @@
     if(!players || players.length===0){ wrap.innerHTML = '<p class="note">No players yet.</p>'; return; }
     wrap.innerHTML = players.map(p => `
       <div class="q-row" data-playerid="${p.id}">
-        <span style="flex:1;">${p.name}${p.locked ? ' 🔒 locked' : ''}${p.pin_hash ? '' : ' <em>(no PIN set yet)</em>'}</span>
+        <span style="flex:1;">${p.name}${p.pin_hash ? '' : ' <em>(no PIN set yet)</em>'}</span>
         <button class="btn btn-secondary players-reset" ${p.pin_hash ? '' : 'disabled'}>Reset PIN</button>
       </div>
     `).join('');

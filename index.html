@@ -436,7 +436,7 @@
       </div>
       <div class="hub-footer">
         <button class="btn btn-primary" id="submitAllBtn" disabled>Submit My Picks</button>
-        <p id="accountLockedNotice" style="display:none; text-align:center; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.78rem; font-weight:700;">🔒 Your Slots, Blackjack and Quiz picks are locked in. Monthly Super Sundays is still open separately whenever it's live.</p>
+        <p id="accountLockedNotice" style="display:none; text-align:center; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.78rem; font-weight:700;">🔒 The organiser has locked Slots, Blackjack and Quiz for everyone — no more changes possible. Monthly Super Sundays is controlled separately.</p>
         <div class="feedback" id="hubFeedback" style="margin-top:0.6rem;"></div>
       </div>
       <div class="hub-links">
@@ -770,7 +770,6 @@
       await sb.from('players').update({ pin_hash: pinHash }).eq('id', existing.id);
     }
 
-    isAccountLocked = existing.locked;
     await loadExistingProgress(existing.id);
     await enterHub();
   }
@@ -809,14 +808,18 @@
     const board = document.getElementById('registeredPlayersBoard');
     const list = document.getElementById('registeredPlayersList');
     if(!sb) return;
-    const { data: players } = await sb.from('players').select('*');
+    const [{data:players},{data:lockData}] = await Promise.all([
+      sb.from('players').select('*'),
+      sb.from('settings').select('*').eq('key','game_locked').maybeSingle(),
+    ]);
     if(!players || players.length===0){ board.style.display='none'; return; }
+    const gameLocked = lockData ? lockData.value === 'true' : false;
 
-    const rows = players.map(p => ({ name: p.name, locked: p.locked })).sort((a,b) => a.name.localeCompare(b.name));
+    const rows = players.map(p => ({ name: p.name })).sort((a,b) => a.name.localeCompare(b.name));
 
-    list.innerHTML = rows.map(r => `
+    list.innerHTML = (gameLocked ? `<p style="text-align:center; font-size:0.7rem; color:var(--gold); margin:0 0 0.6rem;">🔒 The organiser has locked the game for everyone</p>` : '') + rows.map(r => `
       <div class="registered-row">
-        <span class="rr-name">${r.name}${r.locked ? ' 🔒' : ''}</span>
+        <span class="rr-name">${r.name}</span>
       </div>
     `).join('');
     board.style.display = 'block';
@@ -837,8 +840,12 @@
     setSubtitle('');
     if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
     if(sb){
-      const { data } = await sb.from('settings').select('*').eq('key','roulette_open').maybeSingle();
-      rouletteOpen = data ? data.value === 'true' : false;
+      const [{data:rouletteData},{data:lockData}] = await Promise.all([
+        sb.from('settings').select('*').eq('key','roulette_open').maybeSingle(),
+        sb.from('settings').select('*').eq('key','game_locked').maybeSingle(),
+      ]);
+      rouletteOpen = rouletteData ? rouletteData.value === 'true' : false;
+      isAccountLocked = lockData ? lockData.value === 'true' : false;
     }
     applyLockStates();
     updateHubChecks();
@@ -1730,12 +1737,8 @@
     const result = await saveProgress();
     btn.disabled = false;
     if(result.ok){
-      if(sb){
-        const name = document.getElementById('playerName').value.trim();
-        await sb.from('players').update({ locked: true }).eq('name', name);
-      }
       showSummary();
-      feedback.textContent = `Submitted and locked in! Good luck, ${document.getElementById('playerName').value.trim()}.`; feedback.className = 'feedback';
+      feedback.textContent = `Submitted! You can still come back and change things any time until the organiser locks the game. Good luck, ${document.getElementById('playerName').value.trim()}.`; feedback.className = 'feedback';
     } else {
       if(!sb) showSummary();
       feedback.textContent = result.ok===false ? ('Something went wrong — try again. (' + result.error + ')') : '';
