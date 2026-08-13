@@ -55,6 +55,11 @@
     width:100%; padding:0.6rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;
     margin-bottom:0.8rem; font-family:'Inter',sans-serif; background:#fff;
   }
+  .btn-results-toggle{
+    font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.02em; color:var(--pitch-dark);
+    background:var(--gold); border:none; padding:0.65rem 1.4rem; border-radius:999px; cursor:pointer;
+    box-shadow:0 8px 18px -8px rgba(0,0,0,0.4);
+  }
 
   .slot-pick-correct{ background:rgba(203,166,51,0.22) !important; }
   .slot-pick-correct td{ font-weight:700; }
@@ -260,12 +265,13 @@
   async function renderSlotsTab(){
     const panel = document.getElementById('slotsPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
-    const [{data:teamStats},{data:players},{data:picks}] = await Promise.all([
+    const [{data:teamStats},{data:players},{data:picks},{data:matchResults}] = await Promise.all([
       sb.from('team_stats').select('*'),
       sb.from('players').select('*'),
       sb.from('picks').select('*'),
+      sb.from('match_results').select('*'),
     ]);
-    slotsTabData = { teamStats: teamStats||[], players: players||[], picks: picks||[] };
+    slotsTabData = { teamStats: teamStats||[], players: players||[], picks: picks||[], matchResults: matchResults||[] };
 
     const list = slotsTabData.teamStats.map(t => ({ ...t, gd: t.goals_for-t.goals_against, pts: t.wins*3+t.draws }));
     list.sort((a,b)=>{
@@ -287,10 +293,67 @@
         <div class="legend-row"><span>Full PL table (first-time-fixtures only). Select a player to see their 7 picks — gold + ✅ if currently on track for that slot, red + ❌ if not. Points include the multiplier once a pick is confirmed correct; flat 50 if it finishes wrong.</span></div>
         <div id="slotsUnifiedTableWrap"></div>
       </div>
+      <div style="text-align:center; margin:1rem 0;">
+        <button class="btn-results-toggle" id="matchResultsToggleBtn">📋 View Match Results</button>
+      </div>
+      <div class="board" id="matchResultsBoard" style="display:none;">
+        <div class="legend-row">
+          <span>See exactly which results have gone into the table above.</span>
+        </div>
+        <div style="padding:0.9rem 1rem;">
+          <select class="player-select" id="matchweekSelect" style="margin-bottom:0.8rem;"></select>
+          <div id="matchweekResultsWrap"></div>
+        </div>
+      </div>
     `;
 
     document.getElementById('slotsPlayerSelect').addEventListener('change', renderSlotsUnifiedTable);
     renderSlotsUnifiedTable();
+
+    document.getElementById('matchResultsToggleBtn').addEventListener('click', ()=>{
+      const board = document.getElementById('matchResultsBoard');
+      const showing = board.style.display !== 'none';
+      board.style.display = showing ? 'none' : 'block';
+      if(!showing) renderMatchweekSelector();
+    });
+  }
+
+  function renderMatchweekSelector(){
+    const { matchResults } = slotsTabData;
+    const weeks = [...new Set(matchResults.map(m=>m.matchweek))].sort((a,b)=>a-b);
+    const select = document.getElementById('matchweekSelect');
+    if(weeks.length===0){
+      select.style.display = 'none';
+      document.getElementById('matchweekResultsWrap').innerHTML = '<p class="psub" style="text-align:center; padding:1rem;">No results entered yet.</p>';
+      return;
+    }
+    select.style.display = 'block';
+    select.innerHTML = weeks.map(w => `<option value="${w}">Matchweek ${w}</option>`).join('');
+    select.value = weeks[weeks.length-1];
+    select.onchange = () => renderMatchweekResults(parseInt(select.value));
+    renderMatchweekResults(parseInt(select.value));
+  }
+
+  function renderMatchweekResults(mw){
+    const { matchResults } = slotsTabData;
+    const games = matchResults.filter(m=>m.matchweek===mw);
+    const rows = games.map(g => {
+      const home = teamByTag(g.home_tag), away = teamByTag(g.away_tag);
+      const played = g.home_score!=null && g.away_score!=null;
+      return `<tr>
+        <td class="pname">${home ? home.name : g.home_tag}</td>
+        <td class="num ptotal">${played ? g.home_score : '—'}</td>
+        <td class="psub" style="text-align:center;">v</td>
+        <td class="num ptotal">${played ? g.away_score : '—'}</td>
+        <td class="pname">${away ? away.name : g.away_tag}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('matchweekResultsWrap').innerHTML = `
+      <table>
+        <tr><th>Home</th><th class="num">Score</th><th></th><th class="num">Score</th><th>Away</th></tr>
+        ${rows || '<tr><td colspan="5" class="psub" style="text-align:center; padding:1rem;">No fixtures entered for this matchweek.</td></tr>'}
+      </table>
+    `;
   }
 
   function renderSlotsUnifiedTable(){
