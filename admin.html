@@ -122,6 +122,13 @@
       <div class="status-line" id="questionsStatus"></div>
     </div>
 
+    <div class="panel">
+      <h2>8. Player Accounts</h2>
+      <p class="note">If someone forgets their PIN, hit Reset next to their name — they can then log in with any new 4-digit PIN, and it'll be adopted automatically. Their existing picks aren't affected.</p>
+      <div id="playersWrap"></div>
+      <div class="status-line" id="playersStatus"></div>
+    </div>
+
   </div>
 
 <script>
@@ -144,6 +151,7 @@
     loadBlackjackPanel();
     loadQuestionsPanel();
     loadOverridePanel();
+    loadPlayersPanel();
     loadAlerts();
   });
 
@@ -525,6 +533,29 @@
           status.textContent = 'Error: ' + err.message;
           status.className = 'status-line error';
         }
+      });
+    });
+  }
+
+  // --- Player accounts panel (PIN resets) ---
+  async function loadPlayersPanel(){
+    const { data: players } = await supabaseAdmin.from('players').select('*').order('name');
+    const wrap = document.getElementById('playersWrap');
+    if(!players || players.length===0){ wrap.innerHTML = '<p class="note">No players yet.</p>'; return; }
+    wrap.innerHTML = players.map(p => `
+      <div class="q-row" data-playerid="${p.id}">
+        <span style="flex:1;">${p.name}${p.locked ? ' 🔒 locked' : ''}${p.pin_hash ? '' : ' <em>(no PIN set yet)</em>'}</span>
+        <button class="btn btn-secondary players-reset" ${p.pin_hash ? '' : 'disabled'}>Reset PIN</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.players-reset').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('[data-playerid]');
+        const playerId = row.dataset.playerid;
+        const status = document.getElementById('playersStatus');
+        const { error } = await supabaseAdmin.from('players').update({ pin_hash: null }).eq('id', playerId);
+        if(error){ status.textContent = 'Error: '+error.message; status.className='status-line error'; }
+        else { status.textContent = 'PIN reset — they can log in with a new one next time.'; status.className='status-line ok'; loadPlayersPanel(); }
       });
     });
   }

@@ -61,6 +61,14 @@
   #landingStep{ max-width:420px; margin:0 auto; text-align:center; }
   #enterGameBtn{ width:100%; font-size:1rem; padding:0.9rem 1.1rem; margin-top:0.4rem; }
   .landing-leaderboard-link{ display:block; margin-top:0.9rem; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.75rem; text-decoration:underline; }
+  .registered-board{ max-width:420px; margin:0 auto 1rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); border-radius:14px; padding:0.8rem 1rem; }
+  .registered-board h3{ font-family:'Bebas Neue',sans-serif; font-size:1rem; color:var(--gold); margin:0 0 0.5rem; text-align:center; letter-spacing:0.02em; }
+  .registered-row{ display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.78rem; }
+  .registered-row:last-child{ border-bottom:none; }
+  .registered-row .rr-name{ color:#EAE7DB; font-weight:600; }
+  .registered-row .rr-progress{ font-family:'Space Mono',monospace; font-size:0.68rem; color:#B9C4BB; }
+  .registered-row .rr-progress.done{ color:var(--gold); font-weight:700; }
+  .pin-hint{ max-width:420px; margin:0 auto 0.7rem; text-align:center; font-size:0.68rem; color:#B9C4BB; }
 
   /* --- Hub --- */
   .hub-grid{ display:grid; grid-template-columns:1fr; gap:0.9rem; max-width:760px; margin:0 auto; align-items:stretch; }
@@ -317,12 +325,35 @@
 
     <!-- ============== LANDING ============== -->
     <div id="landingStep">
+      <div id="registeredPlayersBoard" class="registered-board" style="display:none;">
+        <h3>Who's Playing</h3>
+        <div id="registeredPlayersList"></div>
+      </div>
       <div class="name-box" id="nameBox">
         <label for="playerName">Name:</label>
         <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
       </div>
-      <button class="btn btn-primary" id="enterGameBtn" disabled>Enter the Game →</button>
+      <div class="name-box" id="pinBox">
+        <label for="playerPin">PIN:</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="playerPin" placeholder="4 digits" maxlength="4" autocomplete="off">
+      </div>
+      <p class="pin-hint" id="pinHint">New here? Just pick any 4-digit PIN — you'll use the same one to come back later.</p>
+      <button class="btn btn-primary" id="enterGameBtn" disabled>Continue →</button>
+      <p class="feedback error" id="loginFeedback" style="text-align:center;"></p>
       <a class="landing-leaderboard-link" href="leaderboard.html" target="_blank">View Leaderboard →</a>
+    </div>
+
+    <!-- ============== LOCKED ============== -->
+    <div id="lockedStep" style="display:none;">
+      <div class="questions-panel htp-panel" style="text-align:center;">
+        <h2>🔒 Your Picks Are Locked In</h2>
+        <p>You submitted your final picks — nice one! Everything's locked in exactly as you left it, so there's nothing more to do here except sit back and watch the leaderboard.</p>
+        <p style="font-size:0.75rem; color:var(--ink-soft); font-style:italic;">If you think this is a mistake, message the organiser.</p>
+      </div>
+      <div class="footer-actions">
+        <a class="btn btn-primary" href="leaderboard.html" target="_blank" style="text-decoration:none; display:inline-block;">View leaderboard →</a>
+        <button class="btn btn-ghost" id="lockedBackBtn">← Back</button>
+      </div>
     </div>
 
     <!-- ============== HUB ============== -->
@@ -617,19 +648,152 @@
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
-    ['landingStep','hubStep','howToPlaySlotsStep','slotsStep','howToPlayBlackjackStep','blackjackStep','questionsStep','howToPlayH2HStep','h2hStep','summaryStep'].forEach(s=>{
+    ['landingStep','lockedStep','hubStep','howToPlaySlotsStep','slotsStep','howToPlayBlackjackStep','blackjackStep','questionsStep','howToPlayH2HStep','h2hStep','summaryStep'].forEach(s=>{
       document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
     });
     window.scrollTo({ top:0, behavior:'smooth' });
   }
 
   // ============================================================
-  // Landing
+  // Landing — name + PIN login/signup, registered players list
   // ============================================================
-  document.getElementById('playerName').addEventListener('input', ()=>{
-    document.getElementById('enterGameBtn').disabled = document.getElementById('playerName').value.trim().length===0;
+  async function hashPin(pin){
+    const enc = new TextEncoder().encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function checkLandingReady(){
+    const name = document.getElementById('playerName').value.trim();
+    const pin = document.getElementById('playerPin').value.trim();
+    document.getElementById('enterGameBtn').disabled = !(name.length>0 && /^\d{4}$/.test(pin));
+  }
+  document.getElementById('playerName').addEventListener('input', checkLandingReady);
+  document.getElementById('playerPin').addEventListener('input', (e)=>{
+    e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4);
+    checkLandingReady();
   });
-  document.getElementById('enterGameBtn').addEventListener('click', enterHub);
+
+  document.getElementById('enterGameBtn').addEventListener('click', handleLogin);
+
+  async function handleLogin(){
+    const feedback = document.getElementById('loginFeedback');
+    feedback.textContent = '';
+    const name = document.getElementById('playerName').value.trim();
+    const pin = document.getElementById('playerPin').value.trim();
+
+    if(!sb){ enterHub(); return; } // preview mode, skip auth entirely
+
+    const pinHash = await hashPin(pin);
+    const { data: existing } = await sb.from('players').select('*').eq('name', name).maybeSingle();
+
+    if(!existing){
+      // Fresh signup
+      const { error: insertErr } = await sb.from('players').insert({ name, pin_hash: pinHash });
+      if(insertErr){
+        feedback.textContent = 'Something went wrong signing up — try again. (' + insertErr.message + ')';
+        return;
+      }
+      await enterHub();
+      return;
+    }
+
+    if(existing.locked){
+      showStep('lockedStep');
+      return;
+    }
+
+    if(existing.pin_hash && existing.pin_hash !== pinHash){
+      feedback.textContent = 'That PIN doesn\u2019t match what you set last time — try again, or message the organiser if you\u2019re stuck.';
+      return;
+    }
+
+    if(!existing.pin_hash){
+      // Older account from before PINs existed — adopt this PIN now.
+      await sb.from('players').update({ pin_hash: pinHash }).eq('id', existing.id);
+    }
+
+    await loadExistingProgress(existing.id);
+    await enterHub();
+  }
+
+  async function loadExistingProgress(playerId){
+    const [{data:myPicks},{data:myAnswers},{data:myRoulette},{data:myBlackjack}] = await Promise.all([
+      sb.from('picks').select('*').eq('player_id', playerId),
+      sb.from('answers').select('*').eq('player_id', playerId),
+      sb.from('roulette_predictions').select('*').eq('player_id', playerId),
+      sb.from('blackjack_picks').select('*').eq('player_id', playerId),
+    ]);
+
+    (myPicks||[]).forEach(p => { assignments[p.slot] = p.team_tag; });
+
+    (myAnswers||[]).forEach(a => {
+      const q = questionById(a.question_id);
+      if(q) answersState[a.question_id] = a.answer;
+    });
+
+    if((myBlackjack||[]).length){
+      const sorted = [...myBlackjack].sort((a,b)=>a.card_index-b.card_index);
+      numCards = sorted.length;
+      sorted.forEach((c,i) => { blackjackCards[i] = { player: c.player_name, goals: '' }; });
+    }
+
+    if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
+    const fixture = h2hFixtures.find(f => f.team_a && f.team_b);
+    if(fixture){
+      (myRoulette||[]).filter(r=>r.month===fixture.month).forEach(r => {
+        if(chipState[r.category]) chipState[r.category].prediction = r.prediction;
+      });
+    }
+  }
+
+  async function loadRegisteredPlayers(){
+    const board = document.getElementById('registeredPlayersBoard');
+    const list = document.getElementById('registeredPlayersList');
+    if(!sb) return;
+    const [{data:players},{data:picks},{data:answers},{data:roulettePreds},{data:blackjackPicks}] = await Promise.all([
+      sb.from('players').select('*'),
+      sb.from('picks').select('*'),
+      sb.from('answers').select('*'),
+      sb.from('roulette_predictions').select('*'),
+      sb.from('blackjack_picks').select('*'),
+    ]);
+    if(!players || players.length===0){ board.style.display='none'; return; }
+
+    const fixtures = await loadH2HFixtures();
+    const currentFix = fixtures.find(f=>f.team_a && f.team_b);
+
+    const rows = players.map(p => {
+      const slotsDone = (picks||[]).filter(x=>x.player_id===p.id).length === 7;
+      const quizDone = (answers||[]).filter(x=>x.player_id===p.id).length === 19;
+      const bjDone = (blackjackPicks||[]).filter(x=>x.player_id===p.id).length >= 3;
+      let rouletteDone = true;
+      if(currentFix){
+        const mine = (roulettePreds||[]).filter(x=>x.player_id===p.id && x.month===currentFix.month);
+        const mandatoryIds = ROULETTE_CATEGORIES.filter(c=>c.group==='tier' || c.id==='scoreline').map(c=>c.id);
+        rouletteDone = mandatoryIds.every(id => mine.some(m=>m.category===id));
+      }
+      const doneCount = [slotsDone, quizDone, bjDone, rouletteDone].filter(Boolean).length;
+      return { name: p.name, doneCount, locked: p.locked };
+    }).sort((a,b) => a.name.localeCompare(b.name));
+
+    list.innerHTML = rows.map(r => `
+      <div class="registered-row">
+        <span class="rr-name">${r.name}${r.locked ? ' 🔒' : ''}</span>
+        <span class="rr-progress ${r.doneCount===4?'done':''}">${r.doneCount}/4 games done</span>
+      </div>
+    `).join('');
+    board.style.display = 'block';
+  }
+
+  document.getElementById('lockedBackBtn').addEventListener('click', ()=>{
+    document.getElementById('playerName').value = '';
+    document.getElementById('playerPin').value = '';
+    document.getElementById('loginFeedback').textContent = '';
+    checkLandingReady();
+    showStep('landingStep');
+    loadRegisteredPlayers();
+  });
 
   async function enterHub(){
     const name = document.getElementById('playerName').value.trim();
@@ -1284,21 +1448,25 @@
         .select().single();
       if(playerErr) throw playerErr;
 
-      await sb.from('picks').delete().eq('player_id', player.id);
+      // Build each game's rows first, and only touch that game's saved
+      // data if this session actually has something for it — this stops
+      // revisiting one room from wiping out other games left untouched
+      // in a fresh session (e.g. re-typing your name later and only
+      // checking the Quiz shouldn't erase your Slots/Blackjack/Roulette).
       const pickRows = SLOTS.map(s => ({ player_id: player.id, player_name: name, slot: s.id, team_tag: assignments[s.id] })).filter(p=>p.team_tag);
       if(pickRows.length){
+        await sb.from('picks').delete().eq('player_id', player.id);
         const { error: picksErr } = await sb.from('picks').insert(pickRows);
         if(picksErr) throw picksErr;
       }
 
-      await sb.from('answers').delete().eq('player_id', player.id);
       const answerRows = QUESTIONS.filter(q=>isAnswered(q)).map(q => ({ player_id: player.id, player_name: name, question_id: q.id, answer: answersState[q.id] }));
       if(answerRows.length){
+        await sb.from('answers').delete().eq('player_id', player.id);
         const { error: ansErr } = await sb.from('answers').insert(answerRows);
         if(ansErr) throw ansErr;
       }
 
-      await sb.from('roulette_predictions').delete().eq('player_id', player.id);
       const rouletteRows = currentFixture ? CHIP_CONFIG.filter(c => isChipComplete(c)).map(c => ({
         player_id: player.id,
         player_name: name,
@@ -1308,13 +1476,14 @@
         prediction: chipState[c.id].prediction,
       })) : [];
       if(rouletteRows.length){
+        await sb.from('roulette_predictions').delete().eq('player_id', player.id).eq('month', currentFixture.month);
         const { error: rouletteErr } = await sb.from('roulette_predictions').insert(rouletteRows);
         if(rouletteErr) throw rouletteErr;
       }
 
-      await sb.from('blackjack_picks').delete().eq('player_id', player.id);
       const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').map((c,i) => ({ player_id: player.id, entrant_name: name, card_index: i+1, player_name: c.player.trim(), predicted_goals: 0 }));
       if(bjRows.length){
+        await sb.from('blackjack_picks').delete().eq('player_id', player.id);
         const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
         if(bjErr) throw bjErr;
       }
@@ -1330,8 +1499,12 @@
     feedback.textContent = 'Submitting…'; feedback.className = 'feedback';
     const result = await saveProgress();
     if(result.ok){
+      if(sb){
+        const name = document.getElementById('playerName').value.trim();
+        await sb.from('players').update({ locked: true }).eq('name', name);
+      }
       showSummary();
-      feedback.textContent = `Submitted! Good luck, ${document.getElementById('playerName').value.trim()}.`; feedback.className = 'feedback';
+      feedback.textContent = `Submitted and locked in! Good luck, ${document.getElementById('playerName').value.trim()}.`; feedback.className = 'feedback';
     } else {
       if(!sb) showSummary();
       feedback.textContent = result.ok===false ? ('Something went wrong — try again. (' + result.error + ')') : '';
@@ -1434,6 +1607,7 @@
   }
 
   loadStatus();
+  loadRegisteredPlayers();
 </script>
 
 </body>
