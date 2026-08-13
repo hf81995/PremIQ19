@@ -71,21 +71,29 @@
   .pin-hint{ max-width:420px; margin:0 auto 0.7rem; text-align:center; font-size:0.68rem; color:#B9C4BB; }
 
   /* --- Hub --- */
-  .hub-grid{ display:grid; grid-template-columns:1fr; gap:0.9rem; max-width:760px; margin:0 auto; align-items:stretch; }
-  @media (min-width:640px){ .hub-grid{ grid-template-columns:1fr 1fr; } }
-  .hub-room{ border-radius:18px; overflow:hidden; box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); position:relative; display:flex; flex-direction:column; min-height:230px; }
+  .hub-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; max-width:760px; margin:0 auto; align-items:stretch; }
+  @media (min-width:640px){ .hub-grid{ gap:0.9rem; } }
+  .hub-room{ border-radius:16px; overflow:hidden; box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); position:relative; display:flex; flex-direction:column; min-height:190px; cursor:pointer; transition:opacity .15s ease; }
+  .hub-room.room-disabled{ opacity:0.5; cursor:not-allowed; pointer-events:none; }
   .hub-room-btn{
-    width:100%; border:none; cursor:pointer; text-align:left; padding:1.1rem 1.1rem 0.9rem;
-    font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.02em; color:#fff;
-    display:flex; align-items:center; justify-content:space-between; gap:0.6rem;
+    width:100%; border:none; cursor:pointer; text-align:left; padding:0.8rem 0.8rem 0.6rem;
+    font-family:'Bebas Neue',sans-serif; font-size:1.15rem; letter-spacing:0.02em; color:#fff;
+    display:flex; flex-direction:column; align-items:flex-start; gap:0.4rem;
   }
-  .hub-room-btn .room-sub{ font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; display:block; margin-top:0.2rem; }
+  .hub-room-btn .room-sub{ font-family:'Space Mono',monospace; font-size:0.56rem; text-transform:uppercase; letter-spacing:0.05em; opacity:0.85; display:block; margin-top:0.15rem; }
   .room-check{
-    font-family:'Space Mono',monospace; font-size:0.62rem; font-weight:700; padding:0.25rem 0.55rem; border-radius:999px;
+    font-family:'Space Mono',monospace; font-size:0.58rem; font-weight:700; padding:0.2rem 0.5rem; border-radius:999px;
     background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); white-space:nowrap; flex-shrink:0;
   }
+  .hub-how-to{ background:var(--chalk); padding:0.6rem 0.8rem 0.8rem; font-size:0.66rem; color:var(--ink-soft); line-height:1.45; flex:1; display:flex; align-items:center; }
+  @media (min-width:480px){
+    .hub-room{ min-height:230px; }
+    .hub-room-btn{ padding:1.1rem 1.1rem 0.9rem; font-size:1.5rem; flex-direction:row; align-items:center; justify-content:space-between; gap:0.6rem; }
+    .hub-room-btn .room-sub{ font-size:0.6rem; }
+    .room-check{ font-size:0.62rem; padding:0.25rem 0.55rem; }
+    .hub-how-to{ padding:0.8rem 1.1rem 1rem; font-size:0.74rem; }
+  }
   .room-check.done{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
-  .hub-how-to{ background:var(--chalk); padding:0.8rem 1.1rem 1rem; font-size:0.74rem; color:var(--ink-soft); line-height:1.5; flex:1; display:flex; align-items:center; }
   .hub-room.slots .hub-room-btn{ background:linear-gradient(120deg,var(--z1-a),var(--z1-b)); }
   .hub-room.blackjack .hub-room-btn{ background:linear-gradient(120deg,var(--bj-a),var(--bj-b)); }
   .hub-room.quiz .hub-room-btn{ background:linear-gradient(120deg,var(--z2-a),var(--z2-b)); }
@@ -114,34 +122,38 @@
   .note-link{ color:#CBA633; font-weight:700; text-decoration:underline; text-underline-offset:2px; }
   @media (min-width:640px){ .rules-note{ font-size:0.7rem; padding:0.65rem 1rem; } .rules-footnote{ font-size:0.8rem; } }
 
-  .arena{ display:flex; gap:0.6rem; align-items:flex-start; }
+  .arena{ display:flex; flex-direction:column; gap:0.9rem; align-items:stretch; }
   .col{ flex:1 1 0; min-width:0; background:var(--chalk); border-radius:16px; padding:0.7rem; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
   .col-pool{ flex:0.92 1 0; } .col-zones{ flex:1.08 1 0; }
   .col-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:0.55rem; gap:0.4rem; }
   .col-title h2{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; margin:0; }
   .col-title .count{ font-family:'Space Mono',monospace; font-size:0.6rem; color:var(--ink-soft); background:var(--chalk-dim); padding:0.22rem 0.45rem; border-radius:999px; }
-  .arrow-hint{ display:flex; align-items:center; justify-content:center; color:#8FA398; font-size:0.85rem; width:14px; padding-top:2.2rem; flex:0 0 auto; }
+  .arrow-hint{ display:none; }
+  @media (min-width:700px){
+    .arena{ flex-direction:row; align-items:flex-start; gap:0.6rem; }
+    .arrow-hint{ display:flex; align-items:center; justify-content:center; color:#8FA398; font-size:0.85rem; width:14px; padding-top:2.2rem; flex:0 0 auto; }
+  }
 
   #pool{ display:flex; flex-direction:column; gap:0.4rem; max-height:72vh; overflow-y:auto; }
-  .chip{ display:flex; align-items:center; gap:0.5rem; background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:0.42rem 0.5rem; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:grab; min-width:0; }
+  .chip{ display:flex; align-items:center; gap:0.6rem; background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:0.6rem 0.7rem; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:grab; min-width:0; }
   .chip.ghosted{ opacity:0.35; }
-  .chip .badge{ width:24px; height:24px; border-radius:7px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.6rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .chip .name{ font-size:0.72rem; font-weight:700; min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chip .badge{ width:30px; height:30px; border-radius:8px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.7rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .chip .name{ font-size:0.82rem; font-weight:700; min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pool-empty{ text-align:center; padding:1.4rem 0.6rem; color:var(--ink-soft); font-size:0.76rem; border:2px dashed var(--line); border-radius:11px; }
 
   #zones{ display:flex; flex-direction:column; gap:0.4rem; }
-  .zone{ border-radius:12px; padding:0.5rem 0.55rem; color:#fff; position:relative; overflow:hidden; }
+  .zone{ border-radius:12px; padding:0.65rem 0.75rem; color:#fff; position:relative; overflow:hidden; }
   .zone.droptarget{ transform:scale(1.03); box-shadow:0 0 0 3px rgba(255,255,255,0.7); }
   .zone-inner{ display:flex; align-items:center; gap:0.45rem; position:relative; z-index:1; }
-  .zone-label{ width:52px; flex-shrink:0; }
-  .zone-label .pos{ font-family:'Bebas Neue',sans-serif; font-size:0.98rem; line-height:1; }
-  .mult-chip{ font-family:'Space Mono',monospace; font-weight:700; font-size:0.66rem; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding:0.2rem 0.4rem; border-radius:999px; flex-shrink:0; }
-  .zone-slot{ flex:1; min-width:0; min-height:38px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.14); border:1.5px dashed rgba(255,255,255,0.45); border-radius:8px; padding:0.2rem 0.4rem; gap:0.25rem; }
+  .zone-label{ width:66px; flex-shrink:0; }
+  .zone-label .pos{ font-family:'Bebas Neue',sans-serif; font-size:1.15rem; line-height:1; }
+  .mult-chip{ font-family:'Space Mono',monospace; font-weight:700; font-size:0.74rem; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding:0.25rem 0.5rem; border-radius:999px; flex-shrink:0; }
+  .zone-slot{ flex:1; min-width:0; min-height:46px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.14); border:1.5px dashed rgba(255,255,255,0.45); border-radius:8px; padding:0.3rem 0.5rem; gap:0.3rem; }
   .zone-slot.filled{ background:rgba(255,255,255,0.95); border:1.5px solid rgba(255,255,255,0.9); color:var(--ink); }
-  .zone-slot .placeholder{ opacity:0.8; font-size:0.64rem; }
-  .zone-slot .placed-team{ display:flex; align-items:center; gap:0.35rem; font-weight:800; font-size:0.72rem; min-width:0; cursor:grab; touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .zone-slot .placeholder{ opacity:0.8; font-size:0.72rem; }
+  .zone-slot .placed-team{ display:flex; align-items:center; gap:0.4rem; font-weight:800; font-size:0.85rem; min-width:0; cursor:grab; touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .zone-slot .placed-name{ white-space:normal; line-height:1.15; word-break:break-word; min-width:0; flex:1 1 auto; }
-  .zone-slot .placed-badge{ width:20px; height:20px; border-radius:6px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.55rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .zone-slot .placed-badge{ width:24px; height:24px; border-radius:6px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.62rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .remove-btn{ background:none; border:none; color:var(--ink-soft); font-size:0.85rem; cursor:pointer; padding:0.1rem 0.25rem; border-radius:6px; flex-shrink:0; }
   .z1{background:linear-gradient(120deg,var(--z1-a),var(--z1-b));} .z2{background:linear-gradient(120deg,var(--z2-a),var(--z2-b));}
   .z3{background:linear-gradient(120deg,var(--z3-a),var(--z3-b));} .z4{background:linear-gradient(120deg,var(--z4-a),var(--z4-b));}
@@ -303,7 +315,7 @@
   #ghost .badge{ width:28px; height:28px; border-radius:8px; background:var(--pitch); color:var(--chalk); font-family:'Bebas Neue',sans-serif; font-size:0.68rem; display:flex; align-items:center; justify-content:center; }
   #ghost .name{ font-size:0.75rem; font-weight:800; white-space:nowrap; }
 
-  @media (min-width:640px){
+  @media (min-width:700px){
     .wrap{ padding:2rem 1.5rem 4rem; } .arena{ gap:1.6rem; } .col{ padding:1.3rem; }
     .col-title h2{ font-size:1.4rem; } #pool{ max-height:640px; }
     .chip{ padding:0.55rem 0.7rem; gap:0.6rem; } .chip .badge{ width:34px; height:34px; font-size:0.85rem; } .chip .name{ font-size:0.85rem; }
@@ -359,33 +371,33 @@
     <!-- ============== HUB ============== -->
     <div id="hubStep" style="display:none;">
       <div class="playing-as" id="playingAsHub"></div>
-      <div class="hub-grid">
-        <div class="hub-room slots">
-          <button class="hub-room-btn" id="roomSlotsBtn">
-            <span>PREM IQ19: Slots<span class="room-sub">Pick 7 clubs, 7 slots</span></span>
+      <div class="hub-grid" id="hubGrid">
+        <div class="hub-room slots" data-room="slots">
+          <div class="hub-room-btn" id="roomSlotsBtn">
+            <span>Slots<span class="room-sub">Pick 7 clubs, 7 slots</span></span>
             <span class="room-check" id="checkSlots">0/7</span>
-          </button>
+          </div>
           <div class="hub-how-to">Drag a club into where you think they'll finish after 19 first-time fixtures. Correct slot = big multiplier. Wrong slot = flat 50 points.</div>
         </div>
-        <div class="hub-room blackjack">
-          <button class="hub-room-btn" id="roomBlackjackBtn">
-            <span>PREM IQ19: Blackjack<span class="room-sub">3–5 players, 21 goals</span></span>
+        <div class="hub-room blackjack" data-room="blackjack">
+          <div class="hub-room-btn" id="roomBlackjackBtn">
+            <span>Blackjack<span class="room-sub">3–5 players, 21 goals</span></span>
             <span class="room-check" id="checkBlackjack">0/4</span>
-          </button>
+          </div>
           <div class="hub-how-to">Choose any 3 to 5 players from across the premier league — get as close to 21 goals combined without going bust, from 19 matches. All players must score at least once!</div>
         </div>
-        <div class="hub-room quiz">
-          <button class="hub-room-btn" id="roomQuizBtn">
-            <span>PREM IQ19: Quiz<span class="room-sub">19 questions</span></span>
+        <div class="hub-room quiz" data-room="quiz">
+          <div class="hub-room-btn" id="roomQuizBtn">
+            <span>Quiz<span class="room-sub">19 questions</span></span>
             <span class="room-check" id="checkQuiz">0/19</span>
-          </button>
+          </div>
           <div class="hub-how-to">19 questions covering fixtures, form, and Prem trivia — from Yes/No calls to numeric guesses. Points vary by question.</div>
         </div>
-        <div class="hub-room supersunday">
-          <button class="hub-room-btn" id="roomH2HBtn">
-            <span>PREM IQ19: Monthly Super Sundays<span class="room-sub">One fixture, every month</span></span>
+        <div class="hub-room supersunday" data-room="supersunday">
+          <div class="hub-room-btn" id="roomH2HBtn">
+            <span>Monthly Super Sundays<span class="room-sub">One fixture, every month</span></span>
             <span class="room-check" id="checkH2H">0/0</span>
-          </button>
+          </div>
           <div class="hub-how-to">One Super Sunday fixture is added each month. Answer 6 questions — more correct, more points — plus a Scoreline bonus and 2 optional high-risk bets. Up to 255 points on offer.</div>
         </div>
       </div>
@@ -790,26 +802,31 @@
   }
 
   function applyLockStates(){
-    ['roomSlotsBtn','roomBlackjackBtn','roomQuizBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      btn.disabled = isAccountLocked;
-      btn.style.opacity = isAccountLocked ? '0.55' : '1';
-      btn.style.cursor = isAccountLocked ? 'not-allowed' : 'pointer';
-    });
     document.getElementById('checkSlots').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkSlots').textContent;
     document.getElementById('checkBlackjack').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkBlackjack').textContent;
     document.getElementById('checkQuiz').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkQuiz').textContent;
-
-    const rouletteBtn = document.getElementById('roomH2HBtn');
-    rouletteBtn.disabled = !rouletteOpen;
-    rouletteBtn.style.opacity = rouletteOpen ? '1' : '0.55';
-    rouletteBtn.style.cursor = rouletteOpen ? 'pointer' : 'not-allowed';
     document.getElementById('checkH2H').textContent = rouletteOpen ? document.getElementById('checkH2H').textContent : '🔒 Not open yet';
 
     document.getElementById('submitAllBtn').style.display = isAccountLocked ? 'none' : 'inline-block';
     const lockedNotice = document.getElementById('accountLockedNotice');
     if(lockedNotice) lockedNotice.style.display = isAccountLocked ? 'block' : 'none';
+
+    document.querySelectorAll('.hub-room').forEach(room => {
+      const key = room.dataset.room;
+      const disabled = (key==='supersunday') ? !rouletteOpen : isAccountLocked;
+      room.classList.toggle('room-disabled', disabled);
+    });
   }
+
+  // Make the WHOLE card clickable, not just the coloured strip — this
+  // just re-triggers a click on the same inner element the room already
+  // listens to, so all the existing per-room logic still applies.
+  document.getElementById('hubGrid').addEventListener('click', (e)=>{
+    const room = e.target.closest('.hub-room');
+    if(!room || room.classList.contains('room-disabled')) return;
+    const inner = room.querySelector('.hub-room-btn');
+    if(inner && e.target !== inner && !inner.contains(e.target)) inner.click();
+  });
 
   document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
   document.getElementById('htpPlayBtn').addEventListener('click', ()=>{ setSubtitle('Slots: Select 7 clubs to finish in the slots'); render(); showStep('slotsStep'); });
