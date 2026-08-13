@@ -1285,14 +1285,14 @@
       if(playerErr) throw playerErr;
 
       await sb.from('picks').delete().eq('player_id', player.id);
-      const pickRows = SLOTS.map(s => ({ player_id: player.id, slot: s.id, team_tag: assignments[s.id] })).filter(p=>p.team_tag);
+      const pickRows = SLOTS.map(s => ({ player_id: player.id, player_name: name, slot: s.id, team_tag: assignments[s.id] })).filter(p=>p.team_tag);
       if(pickRows.length){
         const { error: picksErr } = await sb.from('picks').insert(pickRows);
         if(picksErr) throw picksErr;
       }
 
       await sb.from('answers').delete().eq('player_id', player.id);
-      const answerRows = QUESTIONS.filter(q=>isAnswered(q)).map(q => ({ player_id: player.id, question_id: q.id, answer: answersState[q.id] }));
+      const answerRows = QUESTIONS.filter(q=>isAnswered(q)).map(q => ({ player_id: player.id, player_name: name, question_id: q.id, answer: answersState[q.id] }));
       if(answerRows.length){
         const { error: ansErr } = await sb.from('answers').insert(answerRows);
         if(ansErr) throw ansErr;
@@ -1301,6 +1301,7 @@
       await sb.from('roulette_predictions').delete().eq('player_id', player.id);
       const rouletteRows = currentFixture ? CHIP_CONFIG.filter(c => isChipComplete(c)).map(c => ({
         player_id: player.id,
+        player_name: name,
         month: currentFixture.month,
         category: c.id,
         chip_points: c.points ?? c.winPoints ?? 0,
@@ -1312,7 +1313,7 @@
       }
 
       await sb.from('blackjack_picks').delete().eq('player_id', player.id);
-      const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').map((c,i) => ({ player_id: player.id, card_index: i+1, player_name: c.player.trim(), predicted_goals: 0 }));
+      const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').map((c,i) => ({ player_id: player.id, entrant_name: name, card_index: i+1, player_name: c.player.trim(), predicted_goals: 0 }));
       if(bjRows.length){
         const { error: bjErr } = await sb.from('blackjack_picks').insert(bjRows);
         if(bjErr) throw bjErr;
