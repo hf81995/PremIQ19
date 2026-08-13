@@ -137,12 +137,29 @@
   function statsFor(teamStats, tag){ return teamStats.find(s=>s.team_tag===tag); }
   function slotOrder(slotId){ return SLOTS.findIndex(s=>s.id===slotId); }
 
+  function buildRankedTable(teamStats){
+    const list = teamStats.map(t => ({ ...t, gd: t.goals_for-t.goals_against, pts: t.wins*3+t.draws }));
+    list.sort((a,b)=>{
+      if(b.pts!==a.pts) return b.pts-a.pts;
+      if(b.gd!==a.gd) return b.gd-a.gd;
+      if(b.goals_for!==a.goals_for) return b.goals_for-a.goals_for;
+      return a.team_name.localeCompare(b.team_name);
+    });
+    return list;
+  }
+  function currentPositionFor(rankedTable, tag){
+    const idx = rankedTable.findIndex(t=>t.team_tag===tag);
+    return idx===-1 ? null : idx+1;
+  }
+
   function computeSlotsPoints(playerId, picks, teamStats){
     const myPicks = picks.filter(p=>p.player_id===playerId);
+    const rankedTable = buildRankedTable(teamStats);
     let total = 0;
     myPicks.forEach(p=>{
       const stats = statsFor(teamStats, p.team_tag);
-      total += pickScore(p, stats).points;
+      const position = currentPositionFor(rankedTable, p.team_tag);
+      total += pickScore(p, stats, position).points;
     });
     return total;
   }
@@ -240,17 +257,6 @@
   // ============================================================
   let slotsTabData = null;
 
-  function positionInSlot(position, slotId){
-    if(slotId==='1st') return position===1;
-    if(slotId==='2nd') return position===2;
-    if(slotId==='3-6') return position>=3 && position<=6;
-    if(slotId==='7-12') return position>=7 && position<=12;
-    if(slotId==='13-18') return position>=13 && position<=18;
-    if(slotId==='19') return position===19;
-    if(slotId==='20') return position===20;
-    return false;
-  }
-
   async function renderSlotsTab(){
     const panel = document.getElementById('slotsPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
@@ -303,7 +309,7 @@
       if(pick){
         const slot = SLOTS.find(s=>s.id===pick.slot);
         const correct = positionInSlot(position, pick.slot);
-        const result = pickScore(pick, t);
+        const result = pickScore(pick, t, position);
         rowClass = correct ? 'slot-pick-correct' : 'slot-pick-wrong';
         slotCell = `<td class="pname">${slot?slot.label:pick.slot}</td>`;
         resultCell = `<td>${correct ? '✅' : '❌'}</td>`;

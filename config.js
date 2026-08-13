@@ -48,12 +48,31 @@ function baseScore(stats){
 }
 
 // Score for a single pick, given the team's current/final stats and slot.
-function pickScore(pick, stats){
+function positionInSlot(position, slotId){
+  if(slotId==='1st') return position===1;
+  if(slotId==='2nd') return position===2;
+  if(slotId==='3-6') return position>=3 && position<=6;
+  if(slotId==='7-12') return position>=7 && position<=12;
+  if(slotId==='13-18') return position>=13 && position<=18;
+  if(slotId==='19') return position===19;
+  if(slotId==='20') return position===20;
+  return false;
+}
+
+// currentPosition: the team's live rank (1-20) in the current standings —
+// required to know if a pick is genuinely on track before the season ends.
+function pickScore(pick, stats, currentPosition){
   const base = baseScore(stats);
   const slot = slotById(pick.slot);
   if(!stats || !stats.finishing_slot){
-    // Season/phase not finished yet — show provisional base score only.
-    return { points: base, status: 'provisional', base };
+    // Season ongoing — only award points if CURRENTLY on track for this
+    // slot. If the team's current position isn't even in range, that's
+    // zero for now, not a consolation base score — the flat 50 only
+    // applies once the season actually ends and the pick is confirmed wrong.
+    if(currentPosition!=null && positionInSlot(currentPosition, pick.slot)){
+      return { points: base * slot.mult, status: 'provisional-correct', base };
+    }
+    return { points: 0, status: 'provisional-wrong', base };
   }
   if(stats.finishing_slot === pick.slot){
     return { points: base * slot.mult, status: 'correct', base };
