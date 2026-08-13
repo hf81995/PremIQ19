@@ -583,6 +583,7 @@
         <button class="btn btn-primary" id="nextBtn" disabled>Move onto Q2 →</button>
         <button class="btn btn-ghost" id="prevBtn">← Back</button>
         <button class="btn btn-ghost" id="viewSlotsBtn">View/change slots</button>
+        <button class="btn btn-primary" id="quizSummaryDoneBtn" style="display:none;">Submit and back to hub</button>
       </div>
     </div>
 
@@ -897,7 +898,7 @@
   });
   document.getElementById('prevBtn').addEventListener('click', ()=>{
     if(currentQ > 1){ currentQ--; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
-    else { setSubtitle(''); updateHubChecks(); showStep('hubStep'); }
+    else { saveAndReturnToHub(); }
   });
 
   document.getElementById('roomH2HBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Monthly Super Sunday Roulette'); showStep('howToPlayH2HStep'); });
@@ -1266,13 +1267,48 @@
   const TOTAL_QUESTIONS = 19;
   let currentQ = 1;
 
+  let quizSummaryMode = false;
+  let cameFromSummary = false;
+
   function enterQuiz(){
     slotSnapshotQ1 = slotSnapshotQ1 ?? assignments['1st'];
     slotSnapshotQ2 = slotSnapshotQ2 ?? assignments['20'];
     setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
-    renderQuestion();
+    if(quizCompleteCount()===19){
+      renderQuizSummary();
+    } else {
+      quizSummaryMode = false;
+      renderQuestion();
+    }
     showStep('questionsStep');
   }
+
+  function renderQuizSummary(){
+    quizSummaryMode = true;
+    cameFromSummary = false;
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('prevBtn').style.display = 'none';
+    document.getElementById('quizSummaryDoneBtn').style.display = 'inline-block';
+    const list = document.getElementById('questionsList');
+    const rows = QUESTIONS.map(q => `
+      <div class="question-block" data-jumpq="${q.id}" style="cursor:pointer; border-bottom:1px solid var(--line); padding-bottom:0.6rem;">
+        <div class="question-text" style="margin-bottom:0.2rem;"><span>Q${q.id}: ${q.short}</span></div>
+        <div style="font-size:0.85rem; color:var(--pitch); font-weight:700;">${fmtAnswer(q)} <span style="color:var(--ink-soft); font-weight:400; font-size:0.72rem;">— tap to edit</span></div>
+      </div>
+    `).join('');
+    list.innerHTML = `<p style="text-align:center; color:var(--ink-soft); font-size:0.82rem; margin-bottom:1rem;">You've answered all 19 — here's your summary. Tap any question to change your answer.</p>${rows}`;
+    list.querySelectorAll('[data-jumpq]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        currentQ = parseInt(el.dataset.jumpq);
+        quizSummaryMode = false;
+        cameFromSummary = true;
+        renderQuestion();
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+  }
+
+  document.getElementById('quizSummaryDoneBtn').addEventListener('click', saveAndReturnToHub);
 
   function isAnswered(q){
     const a = answersState[q.id];
@@ -1286,6 +1322,9 @@
   }
 
   function renderQuestion(){
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    document.getElementById('prevBtn').style.display = 'inline-block';
+    document.getElementById('quizSummaryDoneBtn').style.display = 'none';
     const q = questionById(currentQ);
     const list = document.getElementById('questionsList');
     const label = typeof q.label === 'function' ? null : q.label;
@@ -1419,15 +1458,25 @@
   function updateQNav(){
     const q = questionById(currentQ);
     const nextBtn = document.getElementById('nextBtn');
-    nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Finish quiz →';
+    if(cameFromSummary){
+      nextBtn.textContent = '✅ Save & back to summary';
+    } else {
+      nextBtn.textContent = currentQ < TOTAL_QUESTIONS ? `Move onto Q${currentQ+1} →` : 'Finish quiz →';
+    }
     nextBtn.disabled = !isAnswered(q);
     updateHubChecks();
-    document.getElementById('quizCompleteBanner').style.display = (quizCompleteCount()===19) ? 'block' : 'none';
+    document.getElementById('quizCompleteBanner').style.display = (quizCompleteCount()===19 && !cameFromSummary) ? 'block' : 'none';
   }
 
-  document.getElementById('nextBtn').addEventListener('click', ()=>{
+  document.getElementById('nextBtn').addEventListener('click', async ()=>{
+    if(cameFromSummary){
+      await saveProgress();
+      renderQuizSummary();
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
     if(currentQ < TOTAL_QUESTIONS){ currentQ++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
-    else { setSubtitle(''); updateHubChecks(); showStep('hubStep'); }
+    else { saveAndReturnToHub(); }
   });
 
   // ============================================================
@@ -1695,7 +1744,7 @@
   }
 
   async function saveAndReturnToHub(){
-    const saveBtns = ['slotsBackBtn','bjBackBtn','h2hBackBtn'].map(id=>document.getElementById(id)).filter(Boolean);
+    const saveBtns = ['slotsBackBtn','bjBackBtn','h2hBackBtn','nextBtn','prevBtn'].map(id=>document.getElementById(id)).filter(Boolean);
     saveBtns.forEach(b => { b.disabled = true; b.dataset.origText = b.dataset.origText || b.textContent; b.textContent = 'Saving…'; });
     const result = await saveProgress();
     saveBtns.forEach(b => { b.disabled = false; b.textContent = b.dataset.origText; });
