@@ -1448,10 +1448,13 @@
   // Core save routine — writes whatever's currently filled in to Supabase.
   // Used both by the room "Submit and back to hub" buttons (partial saves
   // as you go) and the hub's final "Submit My Picks" button.
+  let isSaving = false;
   async function saveProgress(){
+    if(isSaving) return { ok:false, error:'Already saving — please wait a moment and try again.' };
     if(!sb) return { ok:false, error:'Preview mode — connect Supabase in config.js before this can actually submit.' };
     const name = document.getElementById('playerName').value.trim();
     if(!name) return { ok:false, error:'Enter your name before submitting.' };
+    isSaving = true;
     try{
       const { data: player, error: playerErr } = await sb
         .from('players')
@@ -1502,13 +1505,18 @@
       return { ok:true };
     } catch(err){
       return { ok:false, error: err.message || String(err) };
+    } finally {
+      isSaving = false;
     }
   }
 
   async function submitAll(){
     const feedback = document.getElementById('hubFeedback');
+    const btn = document.getElementById('submitAllBtn');
+    btn.disabled = true;
     feedback.textContent = 'Submitting…'; feedback.className = 'feedback';
     const result = await saveProgress();
+    btn.disabled = false;
     if(result.ok){
       if(sb){
         const name = document.getElementById('playerName').value.trim();
@@ -1524,7 +1532,10 @@
   }
 
   async function saveAndReturnToHub(){
+    const saveBtns = ['slotsBackBtn','bjBackBtn','h2hBackBtn'].map(id=>document.getElementById(id)).filter(Boolean);
+    saveBtns.forEach(b => { b.disabled = true; b.dataset.origText = b.dataset.origText || b.textContent; b.textContent = 'Saving…'; });
     const result = await saveProgress();
+    saveBtns.forEach(b => { b.disabled = false; b.textContent = b.dataset.origText; });
     setSubtitle('');
     updateHubChecks();
     showStep('hubStep');
