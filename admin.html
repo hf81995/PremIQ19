@@ -103,6 +103,10 @@
     <div class="panel">
       <h2>5. Monthly Super Sunday</h2>
       <p class="note">Set each month's head-to-head fixture (Team A vs Team B). Once it's been played, come back and enter the final score.</p>
+      <div class="q-row" style="margin-bottom:0.8rem;">
+        <button class="btn" id="rouletteToggleBtn">Loading…</button>
+        <span id="rouletteToggleStatus" style="font-size:0.78rem; color:var(--ink-soft);"></span>
+      </div>
       <div id="h2hWrap"></div>
       <div class="status-line" id="h2hStatus"></div>
     </div>
@@ -148,6 +152,7 @@
     document.getElementById('loadTableBtn').disabled = false;
     populateMwSelect();
     loadH2HPanel();
+    loadRouletteToggle();
     loadBlackjackPanel();
     loadQuestionsPanel();
     loadOverridePanel();
@@ -370,6 +375,24 @@
         setTimeout(()=>btn.textContent='Save', 1500);
       });
     });
+  }
+
+  // --- Roulette open/closed toggle ---
+  async function loadRouletteToggle(){
+    const { data } = await supabaseAdmin.from('settings').select('*').eq('key','roulette_open').maybeSingle();
+    const isOpen = data ? data.value === 'true' : false;
+    renderRouletteToggle(isOpen);
+  }
+  function renderRouletteToggle(isOpen){
+    const btn = document.getElementById('rouletteToggleBtn');
+    const status = document.getElementById('rouletteToggleStatus');
+    btn.textContent = isOpen ? '🔓 Roulette is OPEN — click to close' : '🔒 Roulette is CLOSED — click to open';
+    btn.className = isOpen ? 'btn' : 'btn btn-secondary';
+    status.textContent = isOpen ? 'Players can enter the Roulette room right now.' : 'Players see a locked padlock on the Roulette tile until you open it.';
+    btn.onclick = async () => {
+      const { error } = await supabaseAdmin.from('settings').upsert({ key:'roulette_open', value: isOpen ? 'false' : 'true' }, { onConflict:'key' });
+      if(!error) renderRouletteToggle(!isOpen);
+    };
   }
 
   // --- Monthly Super Sunday panel ---

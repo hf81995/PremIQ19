@@ -391,6 +391,7 @@
       </div>
       <div class="hub-footer">
         <button class="btn btn-primary" id="submitAllBtn" disabled>Submit My Picks</button>
+        <p id="accountLockedNotice" style="display:none; text-align:center; color:var(--gold); font-family:'Space Mono',monospace; font-size:0.78rem; font-weight:700;">🔒 Your Slots, Blackjack and Quiz picks are locked in. Super Sunday Roulette is still open separately whenever it's live.</p>
         <div class="feedback" id="hubFeedback" style="margin-top:0.6rem;"></div>
       </div>
       <div class="hub-links">
@@ -641,6 +642,8 @@
   let answersState = {};
   QUESTIONS.forEach(q => answersState[q.id] = q.type==='multi3' ? [] : q.type==='single1' ? [] : '');
   let h2hFixtures = [];
+  let isAccountLocked = false;
+  let rouletteOpen = false;
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles
   let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
@@ -698,11 +701,6 @@
       return;
     }
 
-    if(existing.locked){
-      showStep('lockedStep');
-      return;
-    }
-
     if(existing.pin_hash && existing.pin_hash !== pinHash){
       feedback.textContent = 'That PIN doesn\u2019t match what you set last time — try again, or message the organiser if you\u2019re stuck.';
       return;
@@ -713,6 +711,7 @@
       await sb.from('players').update({ pin_hash: pinHash }).eq('id', existing.id);
     }
 
+    isAccountLocked = existing.locked;
     await loadExistingProgress(existing.id);
     await enterHub();
   }
@@ -751,36 +750,14 @@
     const board = document.getElementById('registeredPlayersBoard');
     const list = document.getElementById('registeredPlayersList');
     if(!sb) return;
-    const [{data:players},{data:picks},{data:answers},{data:roulettePreds},{data:blackjackPicks}] = await Promise.all([
-      sb.from('players').select('*'),
-      sb.from('picks').select('*'),
-      sb.from('answers').select('*'),
-      sb.from('roulette_predictions').select('*'),
-      sb.from('blackjack_picks').select('*'),
-    ]);
+    const { data: players } = await sb.from('players').select('*');
     if(!players || players.length===0){ board.style.display='none'; return; }
 
-    const fixtures = await loadH2HFixtures();
-    const currentFix = fixtures.find(f=>f.team_a && f.team_b);
-
-    const rows = players.map(p => {
-      const slotsDone = (picks||[]).filter(x=>x.player_id===p.id).length === 7;
-      const quizDone = (answers||[]).filter(x=>x.player_id===p.id).length === 19;
-      const bjDone = (blackjackPicks||[]).filter(x=>x.player_id===p.id).length >= 3;
-      let rouletteDone = true;
-      if(currentFix){
-        const mine = (roulettePreds||[]).filter(x=>x.player_id===p.id && x.month===currentFix.month);
-        const mandatoryIds = ROULETTE_CATEGORIES.filter(c=>c.group==='tier' || c.id==='scoreline').map(c=>c.id);
-        rouletteDone = mandatoryIds.every(id => mine.some(m=>m.category===id));
-      }
-      const doneCount = [slotsDone, quizDone, bjDone, rouletteDone].filter(Boolean).length;
-      return { name: p.name, doneCount, locked: p.locked };
-    }).sort((a,b) => a.name.localeCompare(b.name));
+    const rows = players.map(p => ({ name: p.name, locked: p.locked })).sort((a,b) => a.name.localeCompare(b.name));
 
     list.innerHTML = rows.map(r => `
       <div class="registered-row">
         <span class="rr-name">${r.name}${r.locked ? ' 🔒' : ''}</span>
-        <span class="rr-progress ${r.doneCount===4?'done':''}">${r.doneCount}/4 games done</span>
       </div>
     `).join('');
     board.style.display = 'block';
@@ -800,8 +777,35 @@
     document.getElementById('playingAsHub').innerHTML = `Playing as <span>${name}</span>`;
     setSubtitle('');
     if(h2hFixtures.length===0) h2hFixtures = await loadH2HFixtures();
+    if(sb){
+      const { data } = await sb.from('settings').select('*').eq('key','roulette_open').maybeSingle();
+      rouletteOpen = data ? data.value === 'true' : false;
+    }
+    applyLockStates();
     updateHubChecks();
     showStep('hubStep');
+  }
+
+  function applyLockStates(){
+    ['roomSlotsBtn','roomBlackjackBtn','roomQuizBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      btn.disabled = isAccountLocked;
+      btn.style.opacity = isAccountLocked ? '0.55' : '1';
+      btn.style.cursor = isAccountLocked ? 'not-allowed' : 'pointer';
+    });
+    document.getElementById('checkSlots').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkSlots').textContent;
+    document.getElementById('checkBlackjack').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkBlackjack').textContent;
+    document.getElementById('checkQuiz').textContent = isAccountLocked ? '🔒 Locked' : document.getElementById('checkQuiz').textContent;
+
+    const rouletteBtn = document.getElementById('roomH2HBtn');
+    rouletteBtn.disabled = !rouletteOpen;
+    rouletteBtn.style.opacity = rouletteOpen ? '1' : '0.55';
+    rouletteBtn.style.cursor = rouletteOpen ? 'pointer' : 'not-allowed';
+    document.getElementById('checkH2H').textContent = rouletteOpen ? document.getElementById('checkH2H').textContent : '🔒 Not open yet';
+
+    document.getElementById('submitAllBtn').style.display = isAccountLocked ? 'none' : 'inline-block';
+    const lockedNotice = document.getElementById('accountLockedNotice');
+    if(lockedNotice) lockedNotice.style.display = isAccountLocked ? 'block' : 'none';
   }
 
   document.getElementById('roomSlotsBtn').addEventListener('click', ()=>{ setSubtitle('How to play: Slots'); showStep('howToPlaySlotsStep'); });
@@ -882,8 +886,12 @@
     document.getElementById('checkH2H').textContent = !hasFixture ? 'No fixture yet' : `${hMandatoryCount}/7`;
     document.getElementById('checkH2H').classList.toggle('done', hDone);
 
-    const allDone = sCount===7 && bCount===numCards && qCount===19 && (!hasFixture || hDone);
+    // Roulette is a standalone, recurring game — it never blocks the
+    // final "Submit My Picks" lock for Slots/Blackjack/Quiz.
+    const allDone = sCount===7 && bCount===numCards && qCount===19;
     document.getElementById('submitAllBtn').disabled = !allDone;
+
+    applyLockStates();
   }
   function setCheck(id, count, total){
     const el = document.getElementById(id);
