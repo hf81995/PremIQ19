@@ -331,7 +331,7 @@
       </div>
       <div class="name-box" id="nameBox">
         <label for="playerName">Name:</label>
-        <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off">
+        <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;">
       </div>
       <div class="name-box" id="pinBox">
         <label for="playerPin">PIN:</label>
@@ -671,7 +671,10 @@
     const pin = document.getElementById('playerPin').value.trim();
     document.getElementById('enterGameBtn').disabled = !(name.length>0 && /^\d{4}$/.test(pin));
   }
-  document.getElementById('playerName').addEventListener('input', checkLandingReady);
+  document.getElementById('playerName').addEventListener('input', (e)=>{
+    e.target.value = e.target.value.toUpperCase();
+    checkLandingReady();
+  });
   document.getElementById('playerPin').addEventListener('input', (e)=>{
     e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,4);
     checkLandingReady();
