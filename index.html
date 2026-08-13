@@ -1602,22 +1602,34 @@
       // in a fresh session (e.g. re-typing your name later and only
       // checking the Quiz shouldn't erase your Slots/Blackjack/Roulette).
       // These four are independent of each other, so run them in
-      // parallel rather than one-by-one — meaningfully faster on a
-      // slower connection.
+      // parallel rather than one-by-one. Within each one, we upsert
+      // (write-in-place) instead of delete-then-insert, and only run a
+      // small cleanup delete for anything genuinely removed (e.g. going
+      // from 5 Blackjack cards down to 3) — that cleanup runs alongside
+      // the upsert, not before it, since on a slow connection two
+      // sequential round-trips per game was the real cause of a slow save.
       const savePicks = async () => {
         const pickRows = SLOTS.map(s => ({ player_id: player.id, player_name: name, slot: s.id, team_tag: assignments[s.id] })).filter(p=>p.team_tag);
         if(!pickRows.length) return;
-        await sb.from('picks').delete().eq('player_id', player.id);
-        const { error } = await sb.from('picks').insert(pickRows);
-        if(error) throw error;
+        const usedSlots = pickRows.map(p=>p.slot);
+        const [upsertRes, delRes] = await Promise.all([
+          sb.from('picks').upsert(pickRows, { onConflict: 'player_id,slot' }),
+          sb.from('picks').delete().eq('player_id', player.id).not('slot', 'in', `(${usedSlots.join(',')})`),
+        ]);
+        if(upsertRes.error) throw upsertRes.error;
+        if(delRes.error) throw delRes.error;
       };
 
       const saveAnswers = async () => {
         const answerRows = QUESTIONS.filter(q=>isAnswered(q)).map(q => ({ player_id: player.id, player_name: name, question_id: q.id, answer: answersState[q.id] }));
         if(!answerRows.length) return;
-        await sb.from('answers').delete().eq('player_id', player.id);
-        const { error } = await sb.from('answers').insert(answerRows);
-        if(error) throw error;
+        const usedIds = answerRows.map(a=>a.question_id);
+        const [upsertRes, delRes] = await Promise.all([
+          sb.from('answers').upsert(answerRows, { onConflict: 'player_id,question_id' }),
+          sb.from('answers').delete().eq('player_id', player.id).not('question_id', 'in', `(${usedIds.join(',')})`),
+        ]);
+        if(upsertRes.error) throw upsertRes.error;
+        if(delRes.error) throw delRes.error;
       };
 
       const saveRoulette = async () => {
@@ -1630,17 +1642,25 @@
           prediction: chipState[c.id].prediction,
         })) : [];
         if(!rouletteRows.length) return;
-        await sb.from('roulette_predictions').delete().eq('player_id', player.id).eq('month', currentFixture.month);
-        const { error } = await sb.from('roulette_predictions').insert(rouletteRows);
-        if(error) throw error;
+        const usedCats = rouletteRows.map(r=>r.category);
+        const [upsertRes, delRes] = await Promise.all([
+          sb.from('roulette_predictions').upsert(rouletteRows, { onConflict: 'player_id,month,category' }),
+          sb.from('roulette_predictions').delete().eq('player_id', player.id).eq('month', currentFixture.month).not('category', 'in', `(${usedCats.join(',')})`),
+        ]);
+        if(upsertRes.error) throw upsertRes.error;
+        if(delRes.error) throw delRes.error;
       };
 
       const saveBlackjack = async () => {
         const bjRows = blackjackCards.slice(0,numCards).filter(c=>c.player.trim()!=='').map((c,i) => ({ player_id: player.id, entrant_name: name, card_index: i+1, player_name: c.player.trim(), predicted_goals: 0 }));
         if(!bjRows.length) return;
-        await sb.from('blackjack_picks').delete().eq('player_id', player.id);
-        const { error } = await sb.from('blackjack_picks').insert(bjRows);
-        if(error) throw error;
+        const usedIndexes = bjRows.map(r=>r.card_index);
+        const [upsertRes, delRes] = await Promise.all([
+          sb.from('blackjack_picks').upsert(bjRows, { onConflict: 'player_id,card_index' }),
+          sb.from('blackjack_picks').delete().eq('player_id', player.id).not('card_index', 'in', `(${usedIndexes.join(',')})`),
+        ]);
+        if(upsertRes.error) throw upsertRes.error;
+        if(delRes.error) throw delRes.error;
       };
 
       await Promise.all([savePicks(), saveAnswers(), saveRoulette(), saveBlackjack()]);
