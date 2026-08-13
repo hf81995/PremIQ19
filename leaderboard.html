@@ -304,15 +304,24 @@
       const pick = myPicks.find(p=>p.team_tag===t.team_tag);
       let slotCell = '<td class="psub">—</td>';
       let resultCell = '<td class="psub">—</td>';
+      let winPtsCell = '<td class="num psub">—</td>';
+      let goalPtsCell = '<td class="num psub">—</td>';
+      let baseTotalCell = '<td class="num psub">—</td>';
+      let multCell = '<td class="psub">—</td>';
       let pointsCell = '<td class="num psub">—</td>';
       let rowClass = '';
       if(pick){
         const slot = SLOTS.find(s=>s.id===pick.slot);
         const correct = positionInSlot(position, pick.slot);
         const result = pickScore(pick, t, position);
+        const winPts = t.wins*3, goalPts = t.goals_for*2;
         rowClass = correct ? 'slot-pick-correct' : 'slot-pick-wrong';
         slotCell = `<td class="pname">${slot?slot.label:pick.slot}</td>`;
         resultCell = `<td>${correct ? '✅' : '❌'}</td>`;
+        winPtsCell = `<td class="num psub">${winPts}</td>`;
+        goalPtsCell = `<td class="num psub">${goalPts}</td>`;
+        baseTotalCell = `<td class="num psub">${winPts+goalPts}</td>`;
+        multCell = `<td class="psub">${slot ? slot.mult+'x' : '—'}</td>`;
         pointsCell = `<td class="num ptotal">${Math.round(result.points*100)/100}</td>`;
       }
       return `<tr class="${rowClass}">
@@ -325,14 +334,18 @@
         <td class="num psub">${t.pts}</td>
         ${slotCell}
         ${resultCell}
+        ${winPtsCell}
+        ${goalPtsCell}
+        ${baseTotalCell}
+        ${multCell}
         ${pointsCell}
       </tr>`;
     }).join('');
 
     document.getElementById('slotsUnifiedTableWrap').innerHTML = `
       <table>
-        <tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">GF</th><th class="num">GD</th><th class="num">Pts</th><th>Your Slot</th><th>On Track?</th><th class="num">Points</th></tr>
-        ${rows || '<tr><td colspan="10" class="psub" style="text-align:center; padding:1rem;">No results entered yet.</td></tr>'}
+        <tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">GF</th><th class="num">GD</th><th class="num">Pts</th><th>Your Slot</th><th>On Track?</th><th class="num">Win Pts</th><th class="num">Goal Pts</th><th class="num">Base Total</th><th>Mult.</th><th class="num">Points</th></tr>
+        ${rows || '<tr><td colspan="13" class="psub" style="text-align:center; padding:1rem;">No results entered yet.</td></tr>'}
       </table>
     `;
   }

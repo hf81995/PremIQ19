@@ -95,13 +95,7 @@
     </div>
 
     <div class="panel">
-      <h2>4. Manual override</h2>
-      <p class="note">Only needed if you want to hand-edit a team's totals directly, bypassing the matchweek grid — e.g. to fix a one-off mistake.</p>
-      <div id="overrideWrap"></div>
-    </div>
-
-    <div class="panel">
-      <h2>5. Monthly Super Sunday</h2>
+      <h2>4. Monthly Super Sunday</h2>
       <p class="note">Set each month's head-to-head fixture (Team A vs Team B). Once it's been played, come back and enter the final score.</p>
       <div class="q-row" style="margin-bottom:0.8rem;">
         <button class="btn" id="rouletteToggleBtn">Loading…</button>
@@ -112,14 +106,14 @@
     </div>
 
     <div class="panel">
-      <h2>6. Blackjack</h2>
+      <h2>5. Blackjack</h2>
       <p class="note">For each player, type in how many goals each of their picked players has actually scored so far. The total updates live as you type, and only saves when you hit that player's Save button.</p>
       <div id="blackjackWrap"></div>
       <div class="status-line" id="blackjackStatus"></div>
     </div>
 
     <div class="panel">
-      <h2>7. Question Answers</h2>
+      <h2>6. Question Answers</h2>
       <p class="note">Fill in the correct answer for each question once it's known. Leaderboard points for that question apply immediately once saved.</p>
       <div id="questionsWrap"></div>
       <button class="btn" id="saveQuestionsBtn">Save all question answers</button>
@@ -127,7 +121,7 @@
     </div>
 
     <div class="panel">
-      <h2>8. Player Accounts</h2>
+      <h2>7. Player Accounts</h2>
       <p class="note">If someone forgets their PIN, hit Reset next to their name — they can then log in with any new 4-digit PIN, and it'll be adopted automatically. Their existing picks aren't affected.</p>
       <div id="playersWrap"></div>
       <div class="status-line" id="playersStatus"></div>
@@ -155,7 +149,6 @@
     loadRouletteToggle();
     loadBlackjackPanel();
     loadQuestionsPanel();
-    loadOverridePanel();
     loadPlayersPanel();
     loadAlerts();
   });
@@ -328,54 +321,6 @@
       renderTable(data);
     }
   });
-
-  // --- Manual override panel ---
-  async function loadOverridePanel(){
-    const { data } = await supabaseAdmin.from('team_stats').select('*');
-    const wrap = document.getElementById('overrideWrap');
-    const stats = {}; TEAMS.forEach(t => stats[t.tag] = { team_tag:t.tag, team_name:t.name, matches_played:0, wins:0, draws:0, losses:0, goals_for:0, goals_against:0, finishing_slot:null });
-    (data||[]).forEach(s => stats[s.team_tag] = s);
-
-    const slotOptions = ['','1st','2nd','3-6','7-12','13-18','19','20'];
-    const rows = TEAMS.map(t => {
-      const s = stats[t.tag];
-      const opts = slotOptions.map(o => `<option value="${o}" ${s.finishing_slot===o?'selected':''}>${o||'—'}</option>`).join('');
-      return `<tr data-tag="${t.tag}">
-        <td>${t.name}</td>
-        <td><input type="text" class="f-mp" value="${s.matches_played}"></td>
-        <td><input type="text" class="f-w" value="${s.wins}"></td>
-        <td><input type="text" class="f-d" value="${s.draws}"></td>
-        <td><input type="text" class="f-l" value="${s.losses}"></td>
-        <td><input type="text" class="f-gf" value="${s.goals_for}"></td>
-        <td><input type="text" class="f-ga" value="${s.goals_against}"></td>
-        <td><select class="f-slot">${opts}</select></td>
-        <td><button class="btn btn-secondary save-row">Save</button></td>
-      </tr>`;
-    }).join('');
-    wrap.innerHTML = `<table><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Slot</th><th></th></tr>${rows}</table>`;
-
-    wrap.querySelectorAll('.save-row').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const tr = e.target.closest('tr');
-        const tag = tr.dataset.tag;
-        const t = teamByTag(tag);
-        const row = {
-          team_tag: tag, team_name: t.name,
-          matches_played: parseInt(tr.querySelector('.f-mp').value)||0,
-          wins: parseInt(tr.querySelector('.f-w').value)||0,
-          draws: parseInt(tr.querySelector('.f-d').value)||0,
-          losses: parseInt(tr.querySelector('.f-l').value)||0,
-          goals_for: parseInt(tr.querySelector('.f-gf').value)||0,
-          goals_against: parseInt(tr.querySelector('.f-ga').value)||0,
-          finishing_slot: tr.querySelector('.f-slot').value || null,
-          updated_at: new Date().toISOString(),
-        };
-        await supabaseAdmin.from('team_stats').upsert(row, { onConflict:'team_tag' });
-        btn.textContent = 'Saved ✓';
-        setTimeout(()=>btn.textContent='Save', 1500);
-      });
-    });
-  }
 
   // --- Monthly Super Sundays open/closed toggle ---
   async function loadRouletteToggle(){
