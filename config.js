@@ -60,3 +60,16 @@ function pickScore(pick, stats){
   }
   return { points: WRONG_SLOT_FLAT_SCORE, status: 'wrong', base };
 }
+
+// Blackjack scoring: every selected player must have scored at least
+// 1 goal, or the whole entry is worth 0. Otherwise, the combined total
+// maps to a fixed tier — 22+ (bust) is also 0.
+const BLACKJACK_TIER_POINTS = { 16:50, 17:100, 18:150, 19:200, 20:250, 21:400 };
+function scoreBlackjack(cards){
+  if(!cards || cards.length===0) return { points:0, total:0, valid:false, bust:false };
+  const allScored = cards.every(c => (c.actual_goals||0) >= 1);
+  const total = cards.reduce((sum,c)=>sum+(c.actual_goals||0), 0);
+  if(!allScored) return { points:0, total, valid:false, bust:false };
+  if(total > 21) return { points:0, total, valid:true, bust:true };
+  return { points: BLACKJACK_TIER_POINTS[total] || 0, total, valid:true, bust:false };
+}

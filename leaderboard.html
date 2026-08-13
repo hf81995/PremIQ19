@@ -24,10 +24,10 @@
   .header h1 span{ color:var(--gold); }
   .header p{ color:#B9C4BB; font-size:0.78rem; margin:0.5rem 0 0; }
   a.back-link{ color:var(--gold); font-family:'Space Mono',monospace; font-size:0.7rem; text-decoration:underline; }
-  .wrap{ max-width:820px; margin:0 auto; padding:1.2rem 0.8rem 3rem; }
+  .wrap{ max-width:1100px; margin:0 auto; padding:1.2rem 0.8rem 3rem; }
 
   .tab-bar{ display:flex; gap:1.2rem; margin-bottom:1rem; border-bottom:1.5px solid rgba(255,255,255,0.18); padding:0 0.2rem; flex-wrap:wrap; }
-  .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:#B9C4BB; padding:0.5rem 0.1rem; cursor:pointer; }
+  .tab-btn{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; letter-spacing:0.02em; background:none; border:none; border-bottom:3px solid transparent; color:#B9C4BB; padding:0.5rem 0.1rem; cursor:pointer; }
   .tab-btn.active{ color:var(--chalk); border-bottom-color:var(--gold); }
 
   .board{ background:var(--chalk); border-radius:16px; overflow:hidden; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4); }
@@ -37,6 +37,7 @@
   th, td{ text-align:left; padding:0.55rem 0.5rem; border-bottom:1px solid var(--line); }
   th{ font-family:'Space Mono',monospace; font-size:0.62rem; text-transform:uppercase; color:var(--ink-soft); }
   th.num, td.num{ text-align:right; }
+  th .th-sub{ display:block; text-transform:none; font-size:0.6rem; color:var(--ink-soft); font-weight:400; margin-top:0.15rem; }
 
   .rank{ font-family:'Bebas Neue',sans-serif; font-size:1.15rem; color:var(--ink-soft); width:1.6rem; }
   tr:nth-child(1) .rank{ color:#CBA633; } tr:nth-child(2) .rank{ color:#8C9199; } tr:nth-child(3) .rank{ color:#B08050; }
@@ -46,6 +47,22 @@
 
   .legend-row{ display:flex; gap:1rem; padding:0.7rem 1rem; font-size:0.68rem; color:var(--ink-soft); border-bottom:1px solid var(--line); flex-wrap:wrap; }
   .legend-row span b{ color:var(--ink); }
+
+  .player-select{
+    width:100%; padding:0.6rem 0.7rem; border:1.5px solid var(--line); border-radius:9px; font-size:0.85rem;
+    margin-bottom:0.8rem; font-family:'Inter',sans-serif; background:#fff;
+  }
+
+  .slots-layout{ display:flex; flex-direction:column; gap:1rem; }
+  @media (min-width:900px){ .slots-layout{ flex-direction:row; align-items:flex-start; } .slots-layout > div{ flex:1; min-width:0; } }
+  .slot-pick-row{ display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.7rem; border-bottom:1px solid var(--line); font-size:0.78rem; gap:0.5rem; }
+  .slot-pick-row:last-child{ border-bottom:none; }
+  .slot-pick-row .spr-label{ font-family:'Bebas Neue',sans-serif; font-size:0.95rem; color:var(--ink-soft); width:80px; flex-shrink:0; }
+  .slot-pick-row .spr-team{ font-weight:700; flex:1; min-width:0; }
+  .slot-pick-row .spr-stats{ font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--ink-soft); white-space:nowrap; }
+  .slot-pick-row .spr-points{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); white-space:nowrap; }
+  .actual-pos-row{ display:flex; align-items:center; padding:0.5rem 0.7rem; border-bottom:1px solid var(--line); font-size:0.78rem; min-height:2.4em; }
+  .actual-pos-row:last-child{ border-bottom:none; }
 </style>
 </head>
 <body>
@@ -59,13 +76,17 @@
   <div class="wrap">
     <div class="tab-bar">
       <button class="tab-btn active" id="tabLeaderboard">Leaderboard</button>
-      <button class="tab-btn" id="tabPLTable">PL Table</button>
-      <button class="tab-btn" id="tabH2H">Monthly Super Sunday</button>
+      <button class="tab-btn" id="tabSlots">Slots</button>
+      <button class="tab-btn" id="tabRecap">Super Sunday Recap</button>
+      <button class="tab-btn" id="tabBlackjack">Blackjack</button>
+      <button class="tab-btn" id="tabQuestions">Questions</button>
     </div>
 
     <div id="leaderboardPanel"><div class="board"><div class="empty">Loading…</div></div></div>
-    <div id="plTablePanel" style="display:none;"></div>
-    <div id="h2hPanel" style="display:none;"></div>
+    <div id="slotsPanel" style="display:none;"></div>
+    <div id="recapPanel" style="display:none;"></div>
+    <div id="blackjackPanel" style="display:none;"></div>
+    <div id="questionsPanel" style="display:none;"></div>
   </div>
 
 <script>
@@ -74,24 +95,28 @@
   catch(err){ console.warn('Supabase not configured yet — running in preview mode.', err); }
 
   document.getElementById('tabLeaderboard').addEventListener('click', ()=>switchTab('leaderboard'));
-  document.getElementById('tabPLTable').addEventListener('click', ()=>switchTab('pltable'));
-  document.getElementById('tabH2H').addEventListener('click', ()=>switchTab('h2h'));
+  document.getElementById('tabSlots').addEventListener('click', ()=>switchTab('slots'));
+  document.getElementById('tabRecap').addEventListener('click', ()=>switchTab('recap'));
+  document.getElementById('tabBlackjack').addEventListener('click', ()=>switchTab('blackjack'));
+  document.getElementById('tabQuestions').addEventListener('click', ()=>switchTab('questions'));
 
   function switchTab(tab){
-    document.getElementById('tabLeaderboard').classList.toggle('active', tab==='leaderboard');
-    document.getElementById('tabPLTable').classList.toggle('active', tab==='pltable');
-    document.getElementById('tabH2H').classList.toggle('active', tab==='h2h');
-    document.getElementById('leaderboardPanel').style.display = tab==='leaderboard' ? 'block' : 'none';
-    document.getElementById('plTablePanel').style.display = tab==='pltable' ? 'block' : 'none';
-    document.getElementById('h2hPanel').style.display = tab==='h2h' ? 'block' : 'none';
+    ['Leaderboard','Slots','Recap','Blackjack','Questions'].forEach(t=>{
+      document.getElementById('tab'+t).classList.toggle('active', t.toLowerCase()===tab);
+    });
+    ['leaderboardPanel','slotsPanel','recapPanel','blackjackPanel','questionsPanel'].forEach(id=>{
+      document.getElementById(id).style.display = id === tab+'Panel' ? 'block' : 'none';
+    });
     if(tab==='leaderboard') renderLeaderboard();
-    else if(tab==='pltable') renderPLTable();
-    else renderH2HTab();
+    else if(tab==='slots') renderSlotsTab();
+    else if(tab==='recap') renderRecapTab();
+    else if(tab==='blackjack') renderBlackjackTab();
+    else if(tab==='questions') renderQuestionsTab();
   }
 
   async function loadAll(){
     if(!sb) return null;
-    const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2hFixtures},{data:roulettePreds}] = await Promise.all([
+    const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2hFixtures},{data:roulettePreds},{data:blackjackPicks},{data:settings}] = await Promise.all([
       sb.from('players').select('*'),
       sb.from('picks').select('*'),
       sb.from('answers').select('*'),
@@ -99,8 +124,14 @@
       sb.from('team_stats').select('*'),
       sb.from('h2h_fixtures').select('*'),
       sb.from('roulette_predictions').select('*'),
+      sb.from('blackjack_picks').select('*'),
+      sb.from('settings').select('*'),
     ]);
-    return { players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[], h2hFixtures:sortByMonth(h2hFixtures||[]), roulettePredictions:roulettePreds||[] };
+    return {
+      players:players||[], picks:picks||[], answers:answers||[], questions:questions||[], teamStats:teamStats||[],
+      h2hFixtures:sortByMonth(h2hFixtures||[]), roulettePredictions:roulettePreds||[], blackjackPicks:blackjackPicks||[],
+      settings:settings||[],
+    };
   }
 
   function statsFor(teamStats, tag){ return teamStats.find(s=>s.team_tag===tag); }
@@ -147,18 +178,32 @@
     return total;
   }
 
+  function computeBlackjackPoints(playerId, blackjackPicks){
+    const cards = blackjackPicks.filter(c=>c.player_id===playerId);
+    return scoreBlackjack(cards).points;
+  }
+
+  // ============================================================
+  // Tab 1: Leaderboard
+  // ============================================================
   async function renderLeaderboard(){
     const panel = document.getElementById('leaderboardPanel');
     const data = await loadAll();
     if(!data){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see live standings.</div></div>'; return; }
-    const { players, picks, answers, questions, teamStats, h2hFixtures, roulettePredictions } = data;
+    const { players, picks, answers, questions, teamStats, h2hFixtures, roulettePredictions, blackjackPicks, settings } = data;
     if(players.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No entries yet — be the first to submit picks!</div></div>'; return; }
+
+    const refreshSetting = settings.find(s=>s.key==='last_results_refresh');
+    const refreshedLabel = refreshSetting && refreshSetting.value
+      ? new Date(refreshSetting.value).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit', year:'2-digit' })
+      : '—';
 
     const scored = players.map(p => {
       const slotsPts = computeSlotsPoints(p.id, picks, teamStats);
-      const questionsPts = computeQuestionsPoints(p.id, answers, questions);
       const h2hPts = computeH2HPoints(p.id, roulettePredictions, h2hFixtures);
-      return { name:p.name, slotsPts, questionsPts, h2hPts, total: slotsPts+questionsPts+h2hPts };
+      const bjPts = computeBlackjackPoints(p.id, blackjackPicks);
+      const questionsPts = computeQuestionsPoints(p.id, answers, questions);
+      return { name:p.name, slotsPts, h2hPts, bjPts, questionsPts, total: slotsPts+h2hPts+bjPts+questionsPts };
     });
     scored.sort((a,b)=>b.total-a.total);
 
@@ -167,60 +212,147 @@
         <td class="rank">${i+1}</td>
         <td class="pname">${p.name}</td>
         <td class="num psub">${Math.round(p.slotsPts*100)/100}</td>
-        <td class="num psub">${p.questionsPts}</td>
         <td class="num psub">${p.h2hPts}</td>
+        <td class="num psub">${p.bjPts}</td>
+        <td class="num psub">${p.questionsPts}</td>
         <td class="num ptotal">${Math.round(p.total*100)/100}</td>
       </tr>`).join('');
 
     panel.innerHTML = `
       <div class="board">
-        <div class="legend-row"><span><b>Slots</b> = 7 slot picks</span><span><b>Questions</b> = 19 answers</span><span><b>Super Sunday</b> = monthly head-to-head</span></div>
+        <div class="legend-row"><span><b>Slots</b> = 7 slot picks</span><span><b>Super Sundays</b> = monthly roulette</span><span><b>Blackjack</b> = goals challenge</span><span><b>Questions</b> = 19 answers</span></div>
         <table>
-          <tr><th>#</th><th>Player</th><th class="num">Slots</th><th class="num">Questions</th><th class="num">Super Sunday</th><th class="num">Total</th></tr>
+          <tr>
+            <th>#</th><th>Player</th>
+            <th class="num">Slots<span class="th-sub">(refreshed at ${refreshedLabel})</span></th>
+            <th class="num">Super Sundays</th>
+            <th class="num">Blackjack</th>
+            <th class="num">Questions</th>
+            <th class="num">Total</th>
+          </tr>
           ${rows}
         </table>
       </div>`;
   }
 
-  async function renderPLTable(){
-    const panel = document.getElementById('plTablePanel');
-    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see the table.</div></div>'; return; }
-    const { data } = await sb.from('team_stats').select('*');
-    if(!data || data.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No results entered yet.</div></div>'; return; }
+  // ============================================================
+  // Tab 2: Slots — PL table / player picks / actual position mirror
+  // ============================================================
+  let slotsTabData = null;
 
-    const list = data.map(t => ({ ...t, gd: t.goals_for-t.goals_against, pts: t.wins*3+t.draws }));
+  async function renderSlotsTab(){
+    const panel = document.getElementById('slotsPanel');
+    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
+    const [{data:teamStats},{data:players},{data:picks}] = await Promise.all([
+      sb.from('team_stats').select('*'),
+      sb.from('players').select('*'),
+      sb.from('picks').select('*'),
+    ]);
+    slotsTabData = { teamStats: teamStats||[], players: players||[], picks: picks||[] };
+
+    const list = slotsTabData.teamStats.map(t => ({ ...t, gd: t.goals_for-t.goals_against, pts: t.wins*3+t.draws }));
     list.sort((a,b)=>{
       if(b.pts!==a.pts) return b.pts-a.pts;
       if(b.gd!==a.gd) return b.gd-a.gd;
       if(b.goals_for!==a.goals_for) return b.goals_for-a.goals_for;
       return a.team_name.localeCompare(b.team_name);
     });
-    const rows = list.map((t,i)=>`
+    slotsTabData.rankedTable = list;
+
+    const plRows = list.map((t,i)=>`
       <tr>
         <td class="rank">${i+1}</td>
         <td class="pname">${t.team_name}</td>
         <td class="num psub">${t.matches_played}</td>
         <td class="num psub">${t.wins}</td>
-        <td class="num psub">${t.draws}</td>
-        <td class="num psub">${t.losses}</td>
         <td class="num psub">${t.goals_for}</td>
-        <td class="num psub">${t.goals_against}</td>
-        <td class="num psub">${t.gd}</td>
         <td class="num ptotal">${t.pts}</td>
       </tr>`).join('');
+
+    const playerOptions = slotsTabData.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
     panel.innerHTML = `
-      <div class="board">
-        <div class="legend-row"><span>Based on results entered by the organiser each matchweek. Sorted the same way the real Premier League breaks ties: Points → Goal Difference → Goals For.</span></div>
-        <div class="legend-row"><span>Remember, this table is purely based on teams playing opponents for the first time, hence eventually this may differ to the official PL table if a rescheduling takes place.</span></div>
-        <table>
-          <tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">GF</th><th class="num">GA</th><th class="num">GD</th><th class="num">Pts</th></tr>
-          ${rows}
-        </table>
-      </div>`;
+      <div class="slots-layout">
+        <div class="board">
+          <div class="legend-row"><span>PL table (first-time-fixtures only) — Points → GD → GF → alphabetical.</span></div>
+          <table>
+            <tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">GF</th><th class="num">Pts</th></tr>
+            ${plRows || '<tr><td colspan="6" class="psub" style="text-align:center; padding:1rem;">No results entered yet.</td></tr>'}
+          </table>
+        </div>
+        <div>
+          <select class="player-select" id="slotsPlayerSelect">
+            <option value="">Select Player Name</option>
+            ${playerOptions}
+          </select>
+          <div class="board" id="slotsPicksBoard" style="display:none;">
+            <div class="legend-row"><span>Their 7 slot picks — W, GF, and points (multiplier applied once correct).</span></div>
+            <div id="slotsPicksList"></div>
+          </div>
+        </div>
+        <div>
+          <div style="height:2.9rem;"></div>
+          <div class="board" id="slotsActualBoard" style="display:none;">
+            <div class="legend-row"><span>Where that team actually sits right now.</span></div>
+            <div id="slotsActualList"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('slotsPlayerSelect').addEventListener('change', renderSlotsPlayerPicks);
   }
 
-  async function renderH2HTab(){
-    const panel = document.getElementById('h2hPanel');
+  function renderSlotsPlayerPicks(){
+    const playerId = document.getElementById('slotsPlayerSelect').value;
+    const picksBoard = document.getElementById('slotsPicksBoard');
+    const actualBoard = document.getElementById('slotsActualBoard');
+    if(!playerId){ picksBoard.style.display='none'; actualBoard.style.display='none'; return; }
+
+    const { teamStats, picks, rankedTable } = slotsTabData;
+    const myPicks = picks.filter(p=>p.player_id===playerId);
+    const orderedPicks = SLOTS.map(s => myPicks.find(p=>p.slot===s.id)).filter(Boolean);
+
+    const picksHtml = SLOTS.map(s => {
+      const pick = myPicks.find(p=>p.slot===s.id);
+      if(!pick) return `<div class="slot-pick-row"><span class="spr-label">${s.label}</span><span class="spr-team psub">— not picked —</span></div>`;
+      const team = teamByTag(pick.team_tag);
+      const stats = statsFor(teamStats, pick.team_tag);
+      const result = pickScore(pick, stats);
+      return `<div class="slot-pick-row">
+        <span class="spr-label">${s.label}</span>
+        <span class="spr-team">${team ? team.name : pick.team_tag}</span>
+        <span class="spr-stats">${stats ? `${stats.wins}W · ${stats.goals_for}GF` : '—'}</span>
+        <span class="spr-points">${Math.round(result.points*100)/100}</span>
+      </div>`;
+    }).join('');
+
+    const actualHtml = SLOTS.map(s => {
+      const pick = myPicks.find(p=>p.slot===s.id);
+      if(!pick) return `<div class="actual-pos-row psub">—</div>`;
+      const idx = rankedTable.findIndex(t=>t.team_tag===pick.team_tag);
+      const posLabel = idx===-1 ? 'Not yet ranked' : `Actual Position: ${idx+1}${ordinalSuffix(idx+1)}`;
+      return `<div class="actual-pos-row">${posLabel}</div>`;
+    }).join('');
+
+    document.getElementById('slotsPicksList').innerHTML = picksHtml;
+    document.getElementById('slotsActualList').innerHTML = actualHtml;
+    picksBoard.style.display = 'block';
+    actualBoard.style.display = 'block';
+  }
+
+  function ordinalSuffix(n){
+    if(n%10===1 && n%100!==11) return 'st';
+    if(n%10===2 && n%100!==12) return 'nd';
+    if(n%10===3 && n%100!==13) return 'rd';
+    return 'th';
+  }
+
+  // ============================================================
+  // Tab 3: Super Sunday Recap
+  // ============================================================
+  async function renderRecapTab(){
+    const panel = document.getElementById('recapPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
     const [{data:h2hFixturesRaw},{data:roulettePredictions},{data:players}] = await Promise.all([
       sb.from('h2h_fixtures').select('*'),
@@ -242,7 +374,7 @@
 
     const monthBlocks = (h2hFixtures||[]).map(f=>{
       if(!f.team_a || !f.team_b){
-        return `<div class="board" style="margin-bottom:1rem;"><div class="legend-row"><span>${f.month}: fixture not added yet — organiser sets this closer to the time.</span></div></div>`;
+        return `<div class="board" style="margin-bottom:1rem;"><div class="legend-row"><span>${f.month}: fixture not added yet.</span></div></div>`;
       }
       const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
       const predsThisMonth = (roulettePredictions||[]).filter(p=>p.month===f.month);
@@ -266,8 +398,8 @@
       return `
         <div class="board" style="margin-bottom:1rem;">
           <div class="legend-row">
-            <span><b>${f.month}: ${teamA.name} v ${teamB.name}</b></span>
-            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet — points will show once all outcomes are entered'}</span>
+            <span><b>${f.month}${f.fixture_date ? ` (${f.fixture_date})` : ''}: ${teamA.name} v ${teamB.name}</b></span>
+            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet'}</span>
           </div>
           <table>
             <tr><th>Player</th><th>Tier correct</th><th>Scoreline picked</th><th class="num">Points</th></tr>
@@ -278,9 +410,115 @@
 
     panel.innerHTML = `
       <div class="legend-row" style="margin-bottom:1rem; background:#FCE9B8; border:1px solid #C9A227; border-radius:12px; border-bottom:none; color:#6E5A10;">
-        <span>ℹ️ 6 tiered bets: 0/1=0, 2=10, 3=15, 4=25, 5=40, 6=75 points. Exact Scoreline = +50 on top. Optional Red Card (lose 25/win 100) and Penalty (lose 15/win 30) apply if used.</span>
+        <span>ℹ️ 6 tiered bets: 0/1=0, 2=10, 3=15, 4=25, 5=40, 6=75 points. Exact Scoreline = 50 (standalone). Optional Red Card (lose 25/win 100) and Penalty (lose 15/win 30) apply if used.</span>
       </div>
       ${monthBlocks || '<div class="board"><div class="empty">No Super Sunday fixtures yet.</div></div>'}`;
+  }
+
+  // ============================================================
+  // Tab 4: Blackjack
+  // ============================================================
+  async function renderBlackjackTab(){
+    const panel = document.getElementById('blackjackPanel');
+    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
+    const [{data:picks},{data:players}] = await Promise.all([
+      sb.from('blackjack_picks').select('*'),
+      sb.from('players').select('*'),
+    ]);
+    if(!picks || picks.length===0){ panel.innerHTML = '<div class="board"><div class="empty">No Blackjack submissions yet.</div></div>'; return; }
+
+    const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'Unknown'; };
+    const byPlayer = {};
+    picks.forEach(c => { (byPlayer[c.player_id] = byPlayer[c.player_id] || []).push(c); });
+
+    const rows = Object.entries(byPlayer).map(([playerId, cards]) => {
+      cards.sort((a,b)=>a.card_index-b.card_index);
+      const picksLabel = cards.map(c => `${c.player_name} (${c.actual_goals||0})`).join(', ');
+      const result = scoreBlackjack(cards);
+      const totalLabel = result.bust ? `${result.total} (BUST)` : (!result.valid ? `${result.total} (needs 1+ each)` : `${result.total}`);
+      return `<tr>
+        <td class="pname">${playerName(playerId)}</td>
+        <td class="psub">${picksLabel}</td>
+        <td class="num psub">${totalLabel}</td>
+        <td class="num ptotal">${result.points}</td>
+      </tr>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="board">
+        <div class="legend-row"><span>Every selected player must score 1+ or the entry is worth 0. 16=50, 17=100, 18=150, 19=200, 20=250, 21=400. 22+ is a bust (0).</span></div>
+        <table>
+          <tr><th>Player</th><th>Players Selected (goals)</th><th class="num">Total</th><th class="num">Points</th></tr>
+          ${rows}
+        </table>
+      </div>`;
+  }
+
+  // ============================================================
+  // Tab 5: Questions
+  // ============================================================
+  let questionsTabData = null;
+
+  async function renderQuestionsTab(){
+    const panel = document.getElementById('questionsPanel');
+    if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
+    const [{data:players},{data:answers},{data:questions}] = await Promise.all([
+      sb.from('players').select('*'),
+      sb.from('answers').select('*'),
+      sb.from('questions').select('*'),
+    ]);
+    questionsTabData = { players:players||[], answers:answers||[], questions:questions||[] };
+
+    const playerOptions = questionsTabData.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    panel.innerHTML = `
+      <select class="player-select" id="questionsPlayerSelect">
+        <option value="">Select Player Name</option>
+        ${playerOptions}
+      </select>
+      <div class="board" id="questionsAnswersBoard" style="display:none;">
+        <div id="questionsAnswersList"></div>
+      </div>
+    `;
+    document.getElementById('questionsPlayerSelect').addEventListener('change', renderQuestionsPlayerAnswers);
+  }
+
+  function fmtAnswerForDisplay(q, row, correctAnswer){
+    const raw = row ? row.answer : null;
+    if(raw==null || raw==='') return { text:'—', status:'' };
+    let text = '';
+    if(q.type==='multi3' || q.type==='single1'){
+      text = Array.isArray(raw) ? raw.map(t=>{ const tm=teamByTag(t); return tm?tm.name:t; }).join(', ') : String(raw);
+    } else if(q.type==='yesno'){
+      text = raw==='yes' ? 'Yes' : raw==='no' ? 'No' : String(raw);
+    } else if(q.type==='teamselect'){
+      const tm = teamByTag(raw); text = tm ? tm.name : raw;
+    } else {
+      text = String(raw);
+    }
+    let status = '';
+    if(correctAnswer){
+      const scored = scoreAnswer(q, q.type==='numeric-tiered'||q.type==='numeric-single' ? {playerId:'x',value:Number(raw)} : raw, correctAnswer, null);
+      if(scored.resolved) status = scored.points>0 ? 'status-correct' : 'status-wrong';
+    }
+    return { text, status };
+  }
+
+  function renderQuestionsPlayerAnswers(){
+    const playerId = document.getElementById('questionsPlayerSelect').value;
+    const board = document.getElementById('questionsAnswersBoard');
+    if(!playerId){ board.style.display='none'; return; }
+    const { answers, questions } = questionsTabData;
+
+    const rows = QUESTIONS.map(q => {
+      const row = answers.find(a=>a.player_id===playerId && a.question_id===q.id);
+      const dbQ = questions.find(x=>x.id===q.id);
+      const correctAnswer = dbQ ? dbQ.correct_answer : null;
+      const { text } = fmtAnswerForDisplay(q, row, correctAnswer);
+      return `<tr><td class="pname">Q${q.id}: ${q.short}</td><td class="num psub">${text}</td></tr>`;
+    }).join('');
+
+    document.getElementById('questionsAnswersList').innerHTML = `<table>${rows}</table>`;
+    board.style.display = 'block';
   }
 
   renderLeaderboard();
