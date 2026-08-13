@@ -377,7 +377,7 @@
     });
   }
 
-  // --- Roulette open/closed toggle ---
+  // --- Monthly Super Sundays open/closed toggle ---
   async function loadRouletteToggle(){
     const { data } = await supabaseAdmin.from('settings').select('*').eq('key','roulette_open').maybeSingle();
     const isOpen = data ? data.value === 'true' : false;
@@ -386,9 +386,9 @@
   function renderRouletteToggle(isOpen){
     const btn = document.getElementById('rouletteToggleBtn');
     const status = document.getElementById('rouletteToggleStatus');
-    btn.textContent = isOpen ? '🔓 Roulette is OPEN — click to close' : '🔒 Roulette is CLOSED — click to open';
+    btn.textContent = isOpen ? '🔓 Monthly Super Sundays is OPEN — click to close' : '🔒 Monthly Super Sundays is CLOSED — click to open';
     btn.className = isOpen ? 'btn' : 'btn btn-secondary';
-    status.textContent = isOpen ? 'Players can enter the Roulette room right now.' : 'Players see a locked padlock on the Roulette tile until you open it.';
+    status.textContent = isOpen ? 'Players can enter the Monthly Super Sundays room right now.' : 'Players see a locked padlock on the Monthly Super Sundays tile until you open it.';
     btn.onclick = async () => {
       const { error } = await supabaseAdmin.from('settings').upsert({ key:'roulette_open', value: isOpen ? 'false' : 'true' }, { onConflict:'key' });
       if(!error) renderRouletteToggle(!isOpen);
