@@ -337,7 +337,14 @@
   document.getElementById('loadTableBtn').addEventListener('click', async () => {
     const { data } = await supabaseAdmin.from('team_stats').select('*');
     if(data && data.length){
-      data.sort((a,b) => (b.wins*3+b.draws) - (a.wins*3+a.draws));
+      data.sort((a,b) => {
+        const aPts = a.wins*3+a.draws, bPts = b.wins*3+b.draws;
+        if(bPts!==aPts) return bPts-aPts;
+        const aGd = a.goals_for-a.goals_against, bGd = b.goals_for-b.goals_against;
+        if(bGd!==aGd) return bGd-aGd;
+        if(b.goals_for!==a.goals_for) return b.goals_for-a.goals_for;
+        return a.team_name.localeCompare(b.team_name);
+      });
       renderTable(data);
     }
   });
