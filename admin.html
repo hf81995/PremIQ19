@@ -87,6 +87,15 @@
       </div>
     </div>
 
+    <div class="panel" style="border:2px solid #A32638;">
+      <h2 style="color:#A32638;">🔒 Leaderboard Visibility</h2>
+      <p class="note">Keep this CLOSED before the season starts so players can't see each other's picks and answers while people are still filling in the game. This doesn't touch anyone's data — it just hides the leaderboard page itself until you open it, permanently, whenever you're ready.</p>
+      <div class="q-row" style="margin-top:0.6rem;">
+        <button class="btn" id="leaderboardToggleBtn">Loading…</button>
+        <span id="leaderboardToggleStatus" style="font-size:0.78rem; color:var(--ink-soft);"></span>
+      </div>
+    </div>
+
     <div class="panel">
       <h2>2. Enter Matchweek Results</h2>
       <label for="mwSelect">Matchweek</label>
@@ -157,6 +166,7 @@
     loadH2HPanel();
     loadRouletteToggle();
     loadGameLockToggle();
+    loadLeaderboardToggle();
     loadBlackjackPanel();
     loadQuestionsPanel();
     loadPlayersPanel();
@@ -347,6 +357,24 @@
     btn.onclick = async () => {
       const { error } = await supabaseAdmin.from('settings').upsert({ key:'game_locked', value: isLocked ? 'false' : 'true' }, { onConflict:'key' });
       if(!error) renderGameLockToggle(!isLocked);
+    };
+  }
+
+  // --- Leaderboard visibility toggle ---
+  async function loadLeaderboardToggle(){
+    const { data } = await supabaseAdmin.from('settings').select('*').eq('key','leaderboard_open').maybeSingle();
+    const isOpen = data ? data.value === 'true' : false;
+    renderLeaderboardToggle(isOpen);
+  }
+  function renderLeaderboardToggle(isOpen){
+    const btn = document.getElementById('leaderboardToggleBtn');
+    const status = document.getElementById('leaderboardToggleStatus');
+    btn.textContent = isOpen ? '🔓 OPEN — click to hide again' : '🔒 CLOSED — click to open for everyone';
+    btn.className = isOpen ? 'btn' : 'btn btn-secondary';
+    status.textContent = isOpen ? 'Anyone can view the leaderboard right now.' : 'Players just see a "not open yet" message.';
+    btn.onclick = async () => {
+      const { error } = await supabaseAdmin.from('settings').upsert({ key:'leaderboard_open', value: isOpen ? 'false' : 'true' }, { onConflict:'key' });
+      if(!error) renderLeaderboardToggle(!isOpen);
     };
   }
 

@@ -79,6 +79,15 @@
   </div>
 
   <div class="wrap">
+    <div id="leaderboardLockedNotice" style="display:none;" class="board">
+      <div class="empty" style="padding:3rem 1.5rem;">
+        <div style="font-size:2.2rem; margin-bottom:0.8rem;">🔒</div>
+        <p style="font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:0.5rem;">The leaderboard isn't open yet</p>
+        <p style="font-size:0.85rem;">The organiser will open this up once the season begins. Check back soon!</p>
+      </div>
+    </div>
+
+    <div id="leaderboardMainContent" style="display:none;">
     <div class="tab-bar">
       <button class="tab-btn active" id="tabLeaderboard">Leaderboard</button>
       <button class="tab-btn" id="tabSlots">Slots</button>
@@ -92,6 +101,7 @@
     <div id="recapPanel" style="display:none;"></div>
     <div id="blackjackPanel" style="display:none;"></div>
     <div id="questionsPanel" style="display:none;"></div>
+    </div>
   </div>
 
 <script>
@@ -586,8 +596,23 @@
     board.style.display = 'block';
   }
 
-  renderLeaderboard();
-  setInterval(()=>{ document.getElementById('tabLeaderboard').classList.contains('active') && renderLeaderboard(); }, 30000);
+  async function initLeaderboard(){
+    if(!sb){
+      document.getElementById('leaderboardMainContent').style.display = 'block';
+      renderLeaderboard();
+      return;
+    }
+    const { data } = await sb.from('settings').select('*').eq('key','leaderboard_open').maybeSingle();
+    const isOpen = data ? data.value === 'true' : false;
+    if(!isOpen){
+      document.getElementById('leaderboardLockedNotice').style.display = 'block';
+      return;
+    }
+    document.getElementById('leaderboardMainContent').style.display = 'block';
+    renderLeaderboard();
+    setInterval(()=>{ document.getElementById('tabLeaderboard').classList.contains('active') && renderLeaderboard(); }, 30000);
+  }
+  initLeaderboard();
 </script>
 </body>
 </html>
