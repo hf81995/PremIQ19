@@ -703,7 +703,6 @@
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles
   let blackjackCards = [ {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''}, {player:'',goals:''} ];
-  let slotSnapshotQ1 = null, slotSnapshotQ2 = null;
 
   function setSubtitle(t){ document.getElementById('subtitleText').textContent = t; }
   function showStep(id){
@@ -888,7 +887,9 @@
     if(cameFromQuizToSlots){
       cameFromQuizToSlots = false;
       document.getElementById('slotsBackBtn').textContent = 'Submit and back to hub';
-      checkSlotChangeAndReturn();
+      setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
+      renderQuestion();
+      showStep('questionsStep');
     } else {
       saveAndReturnToHub();
     }
@@ -897,7 +898,6 @@
   document.getElementById('roomQuizBtn').addEventListener('click', enterQuiz);
   let cameFromQuizToSlots = false;
   document.getElementById('viewSlotsBtn').addEventListener('click', ()=>{
-    slotSnapshotQ1 = assignments['1st']; slotSnapshotQ2 = assignments['20'];
     cameFromQuizToSlots = true;
     setSubtitle('Slots: Select 7 clubs to finish in the slots');
     showStep('slotsStep'); render();
@@ -920,18 +920,6 @@
   document.getElementById('bjBackBtn').addEventListener('click', saveAndReturnToHub);
 
   document.getElementById('submitAllBtn').addEventListener('click', submitAll);
-
-  function checkSlotChangeAndReturn(){
-    const q1Changed = slotSnapshotQ1 !== assignments['1st'];
-    const q2Changed = slotSnapshotQ2 !== assignments['20'];
-    let jumpTo = null, lines = [];
-    if(q1Changed){ answersState[1] = []; lines.push('Your Slot 1st pick changed, so your Question 1 selections have been reset — please redo it.'); jumpTo = 1; }
-    if(q2Changed){ answersState[2] = []; lines.push('Your Slot 20th pick changed, so your Question 2 selection has been reset — please redo it.'); if(jumpTo===null) jumpTo = 2; }
-    if(jumpTo !== null){ alert(lines.join('\n\n')); currentQ = jumpTo; }
-    setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
-    renderQuestion();
-    showStep('questionsStep');
-  }
 
   // ============================================================
   // Hub completion tracking
@@ -984,8 +972,22 @@
   function clearZoneHighlights(){ document.querySelectorAll('.zone').forEach(z=>z.classList.remove('droptarget')); }
   function zoneElAtPoint(x,y){ const el=document.elementFromPoint(x,y); return el ? el.closest('.zone') : null; }
 
+  function warnIfKeySlotChanging(targetZoneId, newTeamId){
+    if(targetZoneId!=='1st' && targetZoneId!=='20') return true;
+    const existing = assignments[targetZoneId];
+    if(!existing || existing===newTeamId) return true; // no real change happening
+    const qNum = targetZoneId==='1st' ? 1 : 2;
+    const alreadyAnswered = answersState[qNum] && answersState[qNum].length > 0;
+    if(!alreadyAnswered) return true; // nothing to lose yet
+    const slotLabel = targetZoneId==='1st' ? 'Slot 1st' : 'Slot 20th';
+    const proceed = confirm(`Changing ${slotLabel} will reset your Question ${qNum} answer in the Quiz, since it was built around your old pick. Continue?`);
+    if(proceed) answersState[qNum] = [];
+    return proceed;
+  }
+
   function commitDrop(teamId, fromZone, targetZoneId){
     if(!targetZoneId){ if(fromZone) assignments[fromZone]=null; render(); return; }
+    if(!warnIfKeySlotChanging(targetZoneId, teamId)) return;
     if(fromZone) assignments[fromZone]=null;
     const bumped = assignments[targetZoneId];
     assignments[targetZoneId]=teamId;
@@ -1049,7 +1051,12 @@
     selectedTeamId=teamId; selectedFromZone=fromZone; render();
   }
   function placeInZone(zoneId){ if(!selectedTeamId) return; commitDrop(selectedTeamId, selectedFromZone, zoneId); selectedTeamId=null; selectedFromZone=null; }
-  function removeFromZone(zoneId, evt){ if(evt) evt.stopPropagation(); assignments[zoneId]=null; render(); }
+  function removeFromZone(zoneId, evt){
+    if(evt) evt.stopPropagation();
+    if(!warnIfKeySlotChanging(zoneId, null)) return;
+    assignments[zoneId]=null;
+    render();
+  }
   function resetAll(){ SLOTS.forEach(s=>assignments[s.id]=null); selectedTeamId=null; selectedFromZone=null; render(); }
   document.getElementById('resetBtn').addEventListener('click', resetAll);
 
@@ -1278,8 +1285,6 @@
   let cameFromSummary = false;
 
   function enterQuiz(){
-    slotSnapshotQ1 = slotSnapshotQ1 ?? assignments['1st'];
-    slotSnapshotQ2 = slotSnapshotQ2 ?? assignments['20'];
     setSubtitle('Answer 19 questions to earn more points and prove your Prem IQ');
     if(quizCompleteCount()===19){
       renderQuizSummary();
