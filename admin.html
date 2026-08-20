@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <script src="questions-data.js"></script>
 <style>
@@ -145,6 +146,13 @@
       <div class="status-line" id="playersStatus"></div>
     </div>
 
+    <div class="panel">
+      <h2>8. Export Submissions</h2>
+      <p class="note">Downloads one spreadsheet with three tabs — Slots, Questions, and Blackjack — showing every player's current picks. Safe to run any time, as many times as you like.</p>
+      <button class="btn" id="exportSpreadsheetBtn">📊 Export All Submissions to Spreadsheet</button>
+      <div class="status-line" id="exportStatus"></div>
+    </div>
+
   </div>
 
 <script>
@@ -253,7 +261,8 @@
       if(ptsB !== ptsA) return ptsB - ptsA;
       const gdA = a.goals_for - a.goals_against, gdB = b.goals_for - b.goals_against;
       if(gdB !== gdA) return gdB - gdA;
-      return b.goals_for - a.goals_for;
+      if(b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+      return a.team_name.localeCompare(b.team_name);
     });
     if(!allPlayed19){
       list.forEach(s => s.finishing_slot = null);
@@ -683,6 +692,75 @@
       loadQuestionsPanel();
     } catch(err){
       status.textContent = 'Error: ' + err.message; status.className='status-line error';
+    }
+  });
+
+  // --- Export all submissions to a spreadsheet ---
+  function fmtAnswerForExport(q, raw){
+    if(raw==null || raw==='') return '';
+    if(q.type==='multi3' || q.type==='single1'){
+      const arr = Array.isArray(raw) ? raw : [raw];
+      return arr.map(t=>{ const tm=teamByTag(t); return tm?tm.name:t; }).join(', ');
+    }
+    if(q.type==='yesno') return raw==='yes' ? 'Yes' : raw==='no' ? 'No' : String(raw);
+    if(q.type==='teamselect'){ const tm=teamByTag(raw); return tm ? tm.name : raw; }
+    return String(raw);
+  }
+
+  document.getElementById('exportSpreadsheetBtn').addEventListener('click', async () => {
+    const status = document.getElementById('exportStatus');
+    status.textContent = 'Building spreadsheet…'; status.className = 'status-line';
+    try{
+      const [{data:players},{data:picks},{data:answers},{data:blackjackPicks}] = await Promise.all([
+        supabaseAdmin.from('players').select('*').order('name'),
+        supabaseAdmin.from('picks').select('*'),
+        supabaseAdmin.from('answers').select('*'),
+        supabaseAdmin.from('blackjack_picks').select('*'),
+      ]);
+      if(!players || players.length===0){
+        status.textContent = 'No players have submitted anything yet.'; status.className = 'status-line error';
+        return;
+      }
+
+      const slotsData = players.map(p => {
+        const row = { Player: p.name };
+        SLOTS.forEach(s => {
+          const pick = (picks||[]).find(x=>x.player_id===p.id && x.slot===s.id);
+          const team = pick ? teamByTag(pick.team_tag) : null;
+          row[s.label] = team ? team.name : (pick ? pick.team_tag : '');
+        });
+        return row;
+      });
+
+      const questionsData = players.map(p => {
+        const row = { Player: p.name };
+        QUESTIONS.forEach(q => {
+          const a = (answers||[]).find(x=>x.player_id===p.id && x.question_id===q.id);
+          row[`Q${q.id}: ${q.short}`] = a ? fmtAnswerForExport(q, a.answer) : '';
+        });
+        return row;
+      });
+
+      const blackjackData = players.map(p => {
+        const row = { Player: p.name };
+        const cards = (blackjackPicks||[]).filter(x=>x.player_id===p.id).sort((a,b)=>a.card_index-b.card_index);
+        for(let i=1; i<=5; i++){
+          const c = cards.find(x=>x.card_index===i);
+          row[`Card ${i}`] = c ? c.player_name : '';
+        }
+        return row;
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(slotsData), 'Slots');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(questionsData), 'Questions');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(blackjackData), 'Blackjack');
+      const stamp = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `PremIQ19_Submissions_${stamp}.xlsx`);
+
+      status.textContent = `Downloaded — ${players.length} player(s) included.`; status.className = 'status-line ok';
+    } catch(err){
+      status.textContent = 'Error: ' + err.message; status.className = 'status-line error';
     }
   });
 </script>
