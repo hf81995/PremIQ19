@@ -1795,9 +1795,8 @@
   function renderBlackjackSummary(){
     const panel = document.getElementById('summaryBlackjackPanel');
     const used = blackjackCards.slice(0,numCards);
-    const team = assignments['1st'] ? teamByTag(assignments['1st']) : null;
     const rows = used.map((c,i)=>`<div class="summary-row"><span class="s-label">Card ${i+1}</span><span class="s-value">${c.player||'—'}</span></div>`).join('');
-    panel.innerHTML = rows + `<div class="summary-row"><span class="s-label"><strong>Team</strong></span><span class="s-value">${team?team.name:'—'}</span></div>`;
+    panel.innerHTML = rows || '<div class="summary-row"><span class="s-label">No picks yet</span><span class="s-value">—</span></div>';
   }
 
   function fmtAnswer(q){
