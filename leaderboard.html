@@ -62,6 +62,8 @@
   }
 
   .slot-pick-correct{ background:rgba(203,166,51,0.22) !important; }
+  .qa-correct{ background:rgba(46,139,87,0.14) !important; }
+  .qa-wrong{ background:rgba(163,38,56,0.08) !important; }
   .slot-pick-correct td{ font-weight:700; }
   .slot-pick-wrong{ background:rgba(163,38,56,0.1) !important; }
   .team-tag-mini{
@@ -557,9 +559,9 @@
     document.getElementById('questionsPlayerSelect').addEventListener('change', renderQuestionsPlayerAnswers);
   }
 
-  function fmtAnswerForDisplay(q, row, correctAnswer){
+  function fmtAnswerForDisplay(q, row, correctAnswer, allAnswersRaw){
     const raw = row ? row.answer : null;
-    if(raw==null || raw==='') return { text:'—', status:'' };
+    if(raw==null || raw==='') return { text:'—', status:'unanswered', points:null };
     let text = '';
     if(q.type==='multi3' || q.type==='single1'){
       text = Array.isArray(raw) ? raw.map(t=>{ const tm=teamByTag(t); return tm?tm.name:t; }).join(', ') : String(raw);
@@ -567,15 +569,24 @@
       text = raw==='yes' ? 'Yes' : raw==='no' ? 'No' : String(raw);
     } else if(q.type==='teamselect'){
       const tm = teamByTag(raw); text = tm ? tm.name : raw;
+    } else if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+      text = `${raw} ${q.unit||''}`.trim();
     } else {
       text = String(raw);
     }
-    let status = '';
-    if(correctAnswer){
-      const scored = scoreAnswer(q, q.type==='numeric-tiered'||q.type==='numeric-single' ? {playerId:'x',value:Number(raw)} : raw, correctAnswer, null);
-      if(scored.resolved) status = scored.points>0 ? 'status-correct' : 'status-wrong';
+
+    if(!correctAnswer) return { text, status:'pending', points:null };
+
+    let playerAnswerForScoring, allAnswersForScoring = null;
+    if(q.type==='numeric-tiered' || q.type==='numeric-single'){
+      playerAnswerForScoring = { playerId: row.player_id, value: (raw!=null && raw!=='') ? Number(raw) : null };
+      allAnswersForScoring = (allAnswersRaw||[]).filter(a=>a.question_id===q.id).map(a=>({ playerId:a.player_id, value: (a.answer!=null && a.answer!=='') ? Number(a.answer) : null }));
+    } else {
+      playerAnswerForScoring = raw;
     }
-    return { text, status };
+    const scored = scoreAnswer(q, playerAnswerForScoring, correctAnswer, allAnswersForScoring);
+    if(!scored.resolved) return { text, status:'pending', points:null };
+    return { text, status: scored.points>0 ? 'correct' : 'wrong', points: scored.points };
   }
 
   function renderQuestionsPlayerAnswers(){
@@ -588,11 +599,16 @@
       const row = answers.find(a=>a.player_id===playerId && a.question_id===q.id);
       const dbQ = questions.find(x=>x.id===q.id);
       const correctAnswer = dbQ ? dbQ.correct_answer : null;
-      const { text } = fmtAnswerForDisplay(q, row, correctAnswer);
-      return `<tr><td class="pname">Q${q.id}: ${q.short}</td><td class="num psub">${text}</td></tr>`;
+      const { text, status, points } = fmtAnswerForDisplay(q, row, correctAnswer, answers);
+      const statusLabel = status==='correct' ? `✅ Correct (${points}pt${points===1?'':'s'})`
+        : status==='wrong' ? '❌ Wrong (0pts)'
+        : status==='unanswered' ? '—'
+        : '⏳ Not marked yet';
+      const rowClass = status==='correct' ? 'qa-correct' : status==='wrong' ? 'qa-wrong' : '';
+      return `<tr class="${rowClass}"><td class="pname">Q${q.id}: ${q.short}</td><td class="psub">${text}</td><td class="num">${statusLabel}</td></tr>`;
     }).join('');
 
-    document.getElementById('questionsAnswersList').innerHTML = `<table>${rows}</table>`;
+    document.getElementById('questionsAnswersList').innerHTML = `<table><tr><th>Question</th><th>Their Answer</th><th class="num">Status</th></tr>${rows}</table>`;
     board.style.display = 'block';
   }
 
