@@ -63,6 +63,7 @@
 
   .slot-pick-correct{ background:rgba(203,166,51,0.22) !important; }
   .qa-correct{ background:rgba(46,139,87,0.14) !important; }
+  .qa-points{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); font-size:0.72rem; background:rgba(203,166,51,0.18); border-radius:6px; }
   .qa-wrong{ background:rgba(163,38,56,0.08) !important; }
   .slot-pick-correct td{ font-weight:700; }
   .slot-pick-wrong{ background:rgba(163,38,56,0.1) !important; }
@@ -599,16 +600,23 @@
       const row = answers.find(a=>a.player_id===playerId && a.question_id===q.id);
       const dbQ = questions.find(x=>x.id===q.id);
       const correctAnswer = dbQ ? dbQ.correct_answer : null;
+      const liveUpdate = dbQ ? dbQ.live_update : null;
       const { text, status, points } = fmtAnswerForDisplay(q, row, correctAnswer, answers);
       const statusLabel = status==='correct' ? `✅ Correct (${points}pt${points===1?'':'s'})`
         : status==='wrong' ? '❌ Wrong (0pts)'
         : status==='unanswered' ? '—'
         : '⏳ Not marked yet';
       const rowClass = status==='correct' ? 'qa-correct' : status==='wrong' ? 'qa-wrong' : '';
-      return `<tr class="${rowClass}"><td class="pname">Q${q.id}: ${q.short}</td><td class="psub">${text}</td><td class="num">${statusLabel}</td></tr>`;
+      return `<tr class="${rowClass}">
+        <td class="pname">Q${q.id}: ${q.short}</td>
+        <td class="psub">${text}</td>
+        <td class="num">${statusLabel}</td>
+        <td class="qa-points">${q.pointsText || ''}</td>
+        <td class="psub">${liveUpdate ? liveUpdate : '—'}</td>
+      </tr>`;
     }).join('');
 
-    document.getElementById('questionsAnswersList').innerHTML = `<table><tr><th>Question</th><th>Their Answer</th><th class="num">Status</th></tr>${rows}</table>`;
+    document.getElementById('questionsAnswersList').innerHTML = `<table><tr><th>Question</th><th>Their Answer</th><th class="num">Status</th><th>Points On Offer</th><th>Live Update</th></tr>${rows}</table>`;
     board.style.display = 'block';
   }
 
