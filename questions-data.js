@@ -206,7 +206,7 @@ const ROULETTE_CATEGORIES = [
   { id:'redcard',    name:'Red Card in the Match',                group:'optional', type:'yesno', yesOnly:true, winPoints:100, lossPoints:25 },
   { id:'penalty',    name:'Penalty in the Match',                 group:'optional', type:'yesno', yesOnly:true, winPoints:30,  lossPoints:15 },
 ];
-const ROULETTE_TIER_POINTS = { 0:0, 1:0, 2:10, 3:15, 4:25, 5:40, 6:75 };
+const ROULETTE_TIER_POINTS = { 0:0, 1:10, 2:15, 3:20, 4:40, 5:50, 6:75 };
 
 function rouletteCategoryById(id){ return ROULETTE_CATEGORIES.find(c => c.id === id); }
 
