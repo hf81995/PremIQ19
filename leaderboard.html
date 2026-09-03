@@ -64,6 +64,34 @@
   .slot-pick-correct{ background:rgba(203,166,51,0.22) !important; }
   .qa-correct{ background:rgba(46,139,87,0.14) !important; }
   .qa-points{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); font-size:0.72rem; background:rgba(203,166,51,0.18); border-radius:6px; }
+
+  .month-collapse{
+    background:var(--chalk); border-radius:16px; overflow:hidden; box-shadow:0 20px 40px -20px rgba(0,0,0,0.4);
+    margin-bottom:1rem;
+  }
+  .month-collapse summary{
+    list-style:none; cursor:pointer; padding:0.9rem 1.1rem; display:flex; align-items:center; justify-content:space-between;
+    gap:0.6rem; font-size:0.85rem; background:var(--chalk-dim); flex-wrap:wrap;
+  }
+  .month-collapse summary::-webkit-details-marker{ display:none; }
+  .month-collapse summary::before{ content:'▶'; margin-right:0.6rem; font-size:0.7rem; color:var(--ink-soft); transition:transform .15s ease; display:inline-block; }
+  .month-collapse[open] summary::before{ transform:rotate(90deg); }
+  .recap-summary-status{ font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--ink-soft); }
+  .month-collapse-body{ padding:0.9rem 1rem; }
+
+  .recap-player-card{ border:1.5px solid var(--line); border-radius:12px; padding:0.7rem 0.85rem; margin-bottom:0.7rem; }
+  .recap-player-card:last-child{ margin-bottom:0; }
+  .recap-player-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem; }
+  .recap-player-name{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; }
+  .recap-player-points{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); font-size:0.78rem; }
+  .recap-pick-line{ display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.35rem; }
+  .recap-pick-line:last-child{ margin-bottom:0; }
+  .recap-pick{
+    display:flex; flex-direction:column; background:var(--chalk-dim); border-radius:8px; padding:0.3rem 0.5rem;
+    flex:1 1 auto; min-width:90px;
+  }
+  .recap-pick-label{ font-family:'Space Mono',monospace; font-size:0.56rem; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.03em; }
+  .recap-pick-value{ font-size:0.78rem; font-weight:700; color:var(--ink); }
   .qa-wrong{ background:rgba(163,38,56,0.08) !important; }
   .slot-pick-correct td{ font-weight:700; }
   .slot-pick-wrong{ background:rgba(163,38,56,0.1) !important; }
@@ -432,58 +460,85 @@
   async function renderRecapTab(){
     const panel = document.getElementById('recapPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
-    const [{data:h2hFixturesRaw},{data:roulettePredictions},{data:players}] = await Promise.all([
+    const [{data:h2hFixturesRaw},{data:roulettePredictions},{data:players},{data:lockData}] = await Promise.all([
       sb.from('h2h_fixtures').select('*'),
       sb.from('roulette_predictions').select('*'),
       sb.from('players').select('*'),
+      sb.from('settings').select('*').eq('key','roulette_open').maybeSingle(),
     ]);
+    const rouletteOpen = lockData ? lockData.value === 'true' : false;
+
+    if(rouletteOpen){
+      panel.innerHTML = `
+        <div class="board"><div class="empty" style="padding:3rem 1.5rem;">
+          <div style="font-size:2.2rem; margin-bottom:0.8rem;">🔒</div>
+          <p style="font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:0.5rem;">Picks are kept secret while Monthly Super Sundays is open</p>
+          <p style="font-size:0.85rem;">This stops anyone seeing what others have picked before the window closes. Once the organiser locks Monthly Super Sundays again, everyone's picks will show here.</p>
+        </div></div>`;
+      return;
+    }
+
     const h2hFixtures = sortByMonth(h2hFixturesRaw || []);
     const playerName = id => { const p=(players||[]).find(x=>x.id===id); return p?p.name:'—'; };
 
     function fmtPrediction(cat, pred, fixture){
       const teamA = fixture.team_a ? teamByTag(fixture.team_a) : null;
       const teamB = fixture.team_b ? teamByTag(fixture.team_b) : null;
+      if(!pred) return cat.group==='optional' ? 'Not Picked' : '—';
       if(cat.type==='threeway') return pred.value==='A' ? `${teamA?.name} win` : pred.value==='D' ? 'Draw' : pred.value==='B' ? `${teamB?.name} win` : '—';
       if(cat.type==='twoway') return pred.value==='A' ? (teamA?.name||'Team A') : pred.value==='B' ? (teamB?.name||'Team B') : '—';
       if(cat.type==='yesno') return pred.value==='yes' ? 'Yes' : pred.value==='no' ? 'No' : '—';
-      if(cat.type==='scoreline') return (pred.scoreA!=null && pred.scoreB!=null) ? `${pred.scoreA}-${pred.scoreB}` : '—';
+      if(cat.type==='scoreline') return (pred.scoreA!=null && pred.scoreA!=='' && pred.scoreB!=null && pred.scoreB!=='') ? `${pred.scoreA}-${pred.scoreB}` : '—';
       return '—';
     }
 
-    const monthBlocks = (h2hFixtures||[]).map(f=>{
+    const LINE1_CATS = ['result','btts','corners','shots','yellowcard','outsidebox'];
+    const LINE2_CATS = ['scoreline','redcard','penalty'];
+
+    const monthBlocks = (h2hFixtures||[]).map((f, idx)=>{
       if(!f.team_a || !f.team_b){
-        return `<div class="board" style="margin-bottom:1rem;"><div class="legend-row"><span>${f.month}: fixture not added yet.</span></div></div>`;
+        return `<details class="month-collapse"><summary>${f.month} — fixture not added yet</summary></details>`;
       }
       const teamA = teamByTag(f.team_a), teamB = teamByTag(f.team_b);
       const predsThisMonth = (roulettePredictions||[]).filter(p=>p.month===f.month);
       const playerIds = [...new Set(predsThisMonth.map(p=>p.player_id))];
 
-      const rows = playerIds.map(pid => {
+      const playerCards = playerIds.map(pid => {
         const myRows = predsThisMonth.filter(p=>p.player_id===pid);
+        const byId = {}; myRows.forEach(r => byId[r.category] = r);
         const result = scoreRoulette(myRows, f);
-        const tierSummary = result.resolved ? `${result.breakdown.tierCorrectCount}/${result.breakdown.tierEligible}` : `${myRows.filter(r=>rouletteCategoryById(r.category)?.group==='tier').length}/6 answered`;
-        const scorelineRow = myRows.find(r=>r.category==='scoreline');
-        const scorelineLabel = scorelineRow ? fmtPrediction(rouletteCategoryById('scoreline'), scorelineRow.prediction, f) : '—';
-        return `<tr>
-          <td class="pname">${playerName(pid)}</td>
-          <td class="psub">${tierSummary}</td>
-          <td class="psub">${scorelineLabel}</td>
-          <td class="num ptotal">${result.resolved ? result.points : '—'}</td>
-        </tr>`;
+        const pointsLabel = result.resolved ? `${result.points} pts` : 'Not resolved yet';
+
+        const line1 = LINE1_CATS.map(catId => {
+          const cat = rouletteCategoryById(catId);
+          const row = byId[catId];
+          return `<span class="recap-pick"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
+        }).join('');
+        const line2 = LINE2_CATS.map(catId => {
+          const cat = rouletteCategoryById(catId);
+          const row = byId[catId];
+          return `<span class="recap-pick"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
+        }).join('');
+
+        return `
+          <div class="recap-player-card">
+            <div class="recap-player-head"><span class="recap-player-name">${playerName(pid)}</span><span class="recap-player-points">${pointsLabel}</span></div>
+            <div class="recap-pick-line">${line1}</div>
+            <div class="recap-pick-line">${line2}</div>
+          </div>`;
       }).join('');
 
       const resolved = f.result != null;
       return `
-        <div class="board" style="margin-bottom:1rem;">
-          <div class="legend-row">
-            <span><b>${f.month}${f.fixture_date ? ` (${f.fixture_date})` : ''}: ${teamA.name} v ${teamB.name}</b></span>
-            <span>${resolved ? `Final score: ${f.score_a}-${f.score_b}` : 'Not played yet'}</span>
+        <details class="month-collapse" ${idx===0 ? 'open' : ''}>
+          <summary>
+            <span><b>${f.month}${f.fixture_date ? ` (${f.fixture_date})` : ''}</b> — ${teamA.name} v ${teamB.name}</span>
+            <span class="recap-summary-status">${resolved ? `Final: ${f.score_a}-${f.score_b}` : 'Not played yet'}</span>
+          </summary>
+          <div class="month-collapse-body">
+            ${playerCards || '<p class="psub" style="text-align:center; padding:1rem;">No predictions yet</p>'}
           </div>
-          <table>
-            <tr><th>Player</th><th>Tier correct</th><th>Scoreline picked</th><th class="num">Points</th></tr>
-            ${rows || '<tr><td colspan="4" class="psub" style="text-align:center; padding:1rem;">No predictions yet</td></tr>'}
-          </table>
-        </div>`;
+        </details>`;
     }).join('');
 
     panel.innerHTML = `
