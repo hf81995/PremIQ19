@@ -598,9 +598,9 @@
         <table class="bj-score-table">
           <tr><td>Result</td><td></td></tr>
           <tr><td>Both Teams To Score</td><td></td></tr>
-          <tr><td>Most Corners</td><td>(points handed back if tied)</td></tr>
-          <tr><td>Most Shots on Target</td><td>(points handed back if tied)</td></tr>
-          <tr><td>First Team to Receive a Yellow Card</td><td>(points handed back if neither)</td></tr>
+          <tr><td>Most Corners</td><td>(not a winner if tied)</td></tr>
+          <tr><td>Most Shots on Target</td><td>(not a winner if tied)</td></tr>
+          <tr><td>First Team to Receive a Yellow Card</td><td>(not a winner if neither)</td></tr>
           <tr><td>Goal Scored From Outside the Box</td><td></td></tr>
         </table>
         <table class="bj-score-table">
@@ -1538,6 +1538,14 @@
     }
 
     const teamA = teamByTag(currentFixture.team_a), teamB = teamByTag(currentFixture.team_b);
+    if(!teamA || !teamB){
+      fixtureLine.innerHTML = `<span style="font-size:0.85rem; color:#E8A0A8;">⚠ This month's fixture has an invalid team code (got "${currentFixture.team_a}" / "${currentFixture.team_b}") — ask the organiser to check it uses the correct 3-letter tags (e.g. ARS, CHE) in Supabase.</span>`;
+      catsEl.innerHTML = '';
+      document.getElementById('rouletteOptionalCategories').innerHTML = '';
+      spendEl.textContent = '';
+      document.getElementById('h2hCompleteBanner').style.display = 'none';
+      return;
+    }
     fixtureLine.innerHTML = `
       <div class="roulette-fixture-month">${currentFixture.month} — Super Sunday${currentFixture.fixture_date ? ` · ${currentFixture.fixture_date}` : ''}</div>
       <div class="roulette-fixture-teams">${teamA.name} <span class="roulette-fixture-vs">V</span> ${teamB.name}</div>

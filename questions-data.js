@@ -198,9 +198,9 @@ function scoreAnswer(q, playerAnswer, correctAnswer, allAnswers){
 const ROULETTE_CATEGORIES = [
   { id:'result',     name:'Result',                              group:'tier', type:'threeway' },
   { id:'btts',       name:'Both Teams To Score',                  group:'tier', type:'yesno' },
-  { id:'corners',    name:'Most Corners',                         group:'tier', type:'twoway', tieNote:'Points handed back if tied' },
-  { id:'shots',      name:'Most Shots on Target',                 group:'tier', type:'twoway', tieNote:'Points handed back if tied' },
-  { id:'yellowcard', name:'First Team to Receive a Yellow Card',  group:'tier', type:'twoway', tieNote:'Points handed back if neither' },
+  { id:'corners',    name:'Most Corners',                         group:'tier', type:'twoway', tieNote:'Not a winner if tied' },
+  { id:'shots',      name:'Most Shots on Target',                 group:'tier', type:'twoway', tieNote:'Not a winner if tied' },
+  { id:'yellowcard', name:'First Team to Receive a Yellow Card',  group:'tier', type:'twoway', tieNote:'Not a winner if neither' },
   { id:'outsidebox', name:'Goal Scored From Outside the Box',     group:'tier', type:'yesno' },
   { id:'scoreline',  name:'Scoreline',                            group:'standalone', type:'scoreline', points:50 },
   { id:'redcard',    name:'Red Card in the Match',                group:'optional', type:'yesno', yesOnly:true, winPoints:100, lossPoints:25 },
