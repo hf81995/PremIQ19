@@ -83,13 +83,19 @@
   .recap-player-card:last-child{ margin-bottom:0; }
   .recap-player-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem; }
   .recap-player-name{ font-family:'Bebas Neue',sans-serif; font-size:1.05rem; }
-  .recap-player-points{ font-family:'Space Mono',monospace; font-weight:800; color:var(--pitch); font-size:0.78rem; }
+  .recap-player-points{
+    font-family:'Space Mono',monospace; font-weight:800; color:var(--ink); font-size:0.9rem;
+    background:var(--gold); padding:0.25rem 0.65rem; border-radius:999px;
+  }
   .recap-pick-line{ display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.35rem; }
   .recap-pick-line:last-child{ margin-bottom:0; }
   .recap-pick{
     display:flex; flex-direction:column; background:var(--chalk-dim); border-radius:8px; padding:0.3rem 0.5rem;
-    flex:1 1 auto; min-width:90px;
+    flex:1 1 auto; min-width:90px; border:1.5px solid transparent;
   }
+  .recap-pick-green{ background:rgba(46,139,87,0.16); border-color:rgba(46,139,87,0.4); }
+  .recap-pick-red{ background:rgba(163,38,56,0.1); border-color:rgba(163,38,56,0.35); }
+  .recap-pick-grey{ opacity:0.65; }
   .recap-pick-label{ font-family:'Space Mono',monospace; font-size:0.56rem; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.03em; }
   .recap-pick-value{ font-size:0.78rem; font-weight:700; color:var(--ink); }
   .qa-wrong{ background:rgba(163,38,56,0.08) !important; }
@@ -492,6 +498,31 @@
       return '—';
     }
 
+    // Green if correct, red if wrong, grey if not picked / not resolved yet /
+    // handed-back (tied corners, neither carded — genuinely neutral, not wrong).
+    function pickColorClass(cat, row, fixture){
+      if(!row) return 'grey';
+      if(!rouletteCategoryResolved(cat.id, fixture)) return 'grey';
+      if(cat.id==='scoreline'){
+        const p = row.prediction;
+        const correct = p.scoreA!=null && p.scoreA!=='' && p.scoreB!=null && p.scoreB!==''
+          && p.scoreA == fixture.score_a && p.scoreB == fixture.score_b;
+        return correct ? 'green' : 'red';
+      }
+      if(cat.group==='tier'){
+        const outcome = rouletteCategoryOutcome(cat.id, row.prediction, fixture);
+        if(outcome==='handedback') return 'grey';
+        return outcome ? 'green' : 'red';
+      }
+      if(cat.group==='optional'){
+        const actual = cat.id==='redcard' ? fixture.redcard_actual : fixture.penalty_actual;
+        if(actual==null) return 'grey';
+        const correct = row.prediction.value === (actual ? 'yes' : 'no');
+        return correct ? 'green' : 'red';
+      }
+      return 'grey';
+    }
+
     const LINE1_CATS = ['result','btts','corners','shots','yellowcard','outsidebox'];
     const LINE2_CATS = ['scoreline','redcard','penalty'];
 
@@ -512,12 +543,14 @@
         const line1 = LINE1_CATS.map(catId => {
           const cat = rouletteCategoryById(catId);
           const row = byId[catId];
-          return `<span class="recap-pick"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
+          const colorClass = pickColorClass(cat, row, f);
+          return `<span class="recap-pick recap-pick-${colorClass}"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
         }).join('');
         const line2 = LINE2_CATS.map(catId => {
           const cat = rouletteCategoryById(catId);
           const row = byId[catId];
-          return `<span class="recap-pick"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
+          const colorClass = pickColorClass(cat, row, f);
+          return `<span class="recap-pick recap-pick-${colorClass}"><span class="recap-pick-label">${cat.name}</span><span class="recap-pick-value">${fmtPrediction(cat, row?row.prediction:null, f)}</span></span>`;
         }).join('');
 
         return `
