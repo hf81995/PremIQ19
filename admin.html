@@ -126,6 +126,11 @@
         <button class="btn" id="rouletteToggleBtn">Loading…</button>
         <span id="rouletteToggleStatus" style="font-size:0.78rem; color:var(--ink-soft);"></span>
       </div>
+      <div class="q-row" style="margin-bottom:0.8rem; align-items:center;">
+        <span style="font-weight:700; font-size:0.85rem;">Currently live for players:</span>
+        <span id="currentMonthStatus" style="font-family:'Space Mono',monospace; background:var(--gold); color:var(--ink); padding:0.2rem 0.6rem; border-radius:999px; font-weight:700; font-size:0.8rem;">Loading…</span>
+      </div>
+      <p class="note" style="margin-top:-0.4rem;">This follows the actual calendar automatically — whichever month it is right now is what players see, and it switches over on its own the moment the next month starts. Older months keep their data and stay visible on the leaderboard, but players can no longer change them.</p>
       <div id="h2hWrap"></div>
       <div class="status-line" id="h2hStatus"></div>
     </div>
@@ -179,6 +184,7 @@
     populateMwSelect();
     loadH2HPanel();
     loadRouletteToggle();
+    loadCurrentMonthSelector();
     loadGameLockToggle();
     loadLeaderboardToggle();
     loadBlackjackPanel();
@@ -400,6 +406,15 @@
     };
   }
 
+  // --- Current month indicator (follows the real calendar automatically) ---
+  function getCurrentRouletteMonth(){
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return monthNames[new Date().getMonth()];
+  }
+  function loadCurrentMonthSelector(){
+    document.getElementById('currentMonthStatus').textContent = getCurrentRouletteMonth();
+  }
+
   // --- Monthly Super Sundays open/closed toggle ---
   async function loadRouletteToggle(){
     const { data } = await supabaseAdmin.from('settings').select('*').eq('key','roulette_open').maybeSingle();
@@ -421,6 +436,7 @@
   // --- Monthly Super Sunday panel ---
   async function loadH2HPanel(){
     const { data: raw } = await supabaseAdmin.from('h2h_fixtures').select('*');
+    const currentMonth = getCurrentRouletteMonth();
     const data = sortByMonth(raw || []);
     const wrap = document.getElementById('h2hWrap');
     const teamOptions = TEAMS.map(t => `<option value="${t.tag}">${t.name}</option>`).join('');
@@ -430,9 +446,10 @@
     wrap.innerHTML = (data||[]).map(f => {
       const teamAName = f.team_a ? (teamByTag(f.team_a)?.name || f.team_a) : null;
       const teamBName = f.team_b ? (teamByTag(f.team_b)?.name || f.team_b) : null;
+      const isLive = f.month === currentMonth;
       return `
-      <div class="h2h-month-card" data-month="${f.month}">
-        <strong>${f.month}</strong>
+      <div class="h2h-month-card" data-month="${f.month}" style="${isLive ? 'border-color:var(--gold); border-width:2px;' : ''}">
+        <strong>${f.month}</strong>${isLive ? ' <span style="background:var(--gold); color:var(--ink); font-size:0.65rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:999px; margin-left:0.5rem;">🔴 LIVE FOR PLAYERS</span>' : ''}
         <div class="q-row" style="flex-wrap:wrap; margin-top:0.4rem;">
           <select class="h2h-a"><option value="">— Team A —</option>${teamOptions}</select>
           <span>vs</span>
