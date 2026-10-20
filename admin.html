@@ -164,6 +164,13 @@
       <div class="status-line" id="exportStatus"></div>
     </div>
 
+    <div class="panel">
+      <h2>9. Export Standings</h2>
+      <p class="note">Downloads a spreadsheet of current points: each player's Slots, Super Sundays, Blackjack and Quiz points, total and rank, plus a Slots breakdown sheet. Upload it to Claude for a written summary of how everyone is doing.</p>
+      <button class="btn" id="exportStandingsBtn">🏆 Export Standings</button>
+      <div class="status-line" id="exportStandingsStatus"></div>
+    </div>
+
   </div>
 
 <script>
@@ -797,6 +804,66 @@
       XLSX.writeFile(wb, `PremIQ19_Submissions_${stamp}.xlsx`);
 
       status.textContent = `Downloaded — ${players.length} player(s) included.`; status.className = 'status-line ok';
+    } catch(err){
+      status.textContent = 'Error: ' + err.message; status.className = 'status-line error';
+    }
+  });
+
+  // --- Export standings (same scoring as leaderboard.html) ---
+  document.getElementById('exportStandingsBtn').addEventListener('click', async () => {
+    const status = document.getElementById('exportStandingsStatus');
+    status.textContent = 'Calculating standings…'; status.className = 'status-line';
+    try{
+      const q = t => supabaseAdmin.from(t).select('*');
+      const [{data:players},{data:picks},{data:answers},{data:questions},{data:teamStats},{data:h2h},{data:rp},{data:bj}] = await Promise.all([
+        q('players'),q('picks'),q('answers'),q('questions'),q('team_stats'),q('h2h_fixtures'),q('roulette_predictions'),q('blackjack_picks')]);
+      if(!players || players.length===0){ status.textContent='No players yet.'; status.className='status-line error'; return; }
+      const ts = teamStats||[];
+      const ranked = ts.map(t=>({...t, gd:t.goals_for-t.goals_against, pts:t.wins*3+t.draws}))
+        .sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.goals_for-a.goals_for || a.team_name.localeCompare(b.team_name));
+      const posOf = tag => { const i=ranked.findIndex(t=>t.team_tag===tag); return i===-1?null:i+1; };
+      const r2 = n => Math.round(n*100)/100;
+      const slotDetail = [];
+
+      const rows = players.map(p=>{
+        let slots=0;
+        (picks||[]).filter(x=>x.player_id===p.id).forEach(pk=>{
+          const st = ts.find(t=>t.team_tag===pk.team_tag);
+          const pos = posOf(pk.team_tag);
+          const pts = pickScore(pk, st, pos).points;
+          slots += pts;
+          const tm = teamByTag(pk.team_tag);
+          slotDetail.push({Player:p.name, Slot:pk.slot, Team: tm?tm.name:pk.team_tag, 'Current position':pos, Points:r2(pts)});
+        });
+        let ss=0;
+        const mine=(rp||[]).filter(r=>r.player_id===p.id);
+        [...new Set(mine.map(r=>r.month))].forEach(m=>{
+          ss += scoreRoulette(mine.filter(r=>r.month===m), (h2h||[]).find(f=>f.month===m)).points;
+        });
+        const blackjack = scoreBlackjack((bj||[]).filter(c=>c.player_id===p.id)).points;
+        let quiz=0;
+        QUESTIONS.forEach(qq=>{
+          const dbQ=(questions||[]).find(x=>x.id===qq.id);
+          const row=(answers||[]).find(a=>a.player_id===p.id && a.question_id===qq.id);
+          if(!row) return;
+          let pa, all=null;
+          if(qq.type==='numeric-tiered'||qq.type==='numeric-single'){
+            const num=a=>(a.answer!=null&&a.answer!=='')?Number(a.answer):null;
+            pa={playerId:p.id,value:num(row)};
+            all=(answers||[]).filter(a=>a.question_id===qq.id).map(a=>({playerId:a.player_id,value:num(a)}));
+          } else pa=row.answer;
+          quiz += scoreAnswer(qq, pa, dbQ?dbQ.correct_answer:null, all).points;
+        });
+        return {Player:p.name, Slots:r2(slots), 'Super Sundays':r2(ss), Blackjack:r2(blackjack), Quiz:r2(quiz), Total:r2(slots+ss+blackjack+quiz)};
+      }).sort((a,b)=>b.Total-a.Total);
+      rows.forEach((r,i)=>{ r.Rank = i>0 && r.Total===rows[i-1].Total ? rows[i-1].Rank : i+1; });
+      const out = rows.map(r=>({Rank:r.Rank, Player:r.Player, Slots:r.Slots, 'Super Sundays':r['Super Sundays'], Blackjack:r.Blackjack, Quiz:r.Quiz, Total:r.Total}));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(out), 'Standings');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(slotDetail), 'Slots breakdown');
+      XLSX.writeFile(wb, `PremIQ19_Standings_${new Date().toISOString().slice(0,10)}.xlsx`);
+      status.textContent = `Downloaded — ${rows.length} player(s) ranked.`; status.className='status-line ok';
     } catch(err){
       status.textContent = 'Error: ' + err.message; status.className = 'status-line error';
     }
