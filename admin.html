@@ -166,7 +166,7 @@
 
     <div class="panel">
       <h2>9. Export Standings</h2>
-      <p class="note">Downloads a spreadsheet of current points: each player's Slots, Super Sundays, Blackjack and Quiz points, total and rank, plus a Slots breakdown sheet. Upload it to Claude for a written summary of how everyone is doing.</p>
+      <p class="note">Downloads a spreadsheet of current points: each player's Slots, Super Sundays, Blackjack and Quiz points, total and rank, plus breakdown sheets for Slots, the Quiz (every answer, the official answer, who scored and your live-update notes), Super Sundays and Blackjack. Upload it to Claude for a written summary of how everyone is doing.</p>
       <button class="btn" id="exportStandingsBtn">🏆 Export Standings</button>
       <div class="status-line" id="exportStandingsStatus"></div>
     </div>
@@ -706,12 +706,15 @@
         <span style="width:26px; font-weight:700;">Q${q.id}</span>
         <span style="flex:2; font-size:0.75rem;">${(typeof q.label==='function' ? q.label('[team]') : q.label)}</span>
         ${correctAnswerInputHtml(q)}
+        <label style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;"><input type="checkbox" class="q-open" data-id="${q.id}"> Still open — players matching the answer above score now; everyone else shows "Still open" (not wrong) until I untick this</label>
         <input type="text" class="q-live-update" data-id="${q.id}" placeholder="Live update (optional, shown to players before this is marked)" style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;">
       </div>
     `).join('');
     (data||[]).forEach(dbQ => {
       const row = wrap.querySelector(`[data-id="${dbQ.id}"]`);
       if(row) fillAnswerInput(questionById(dbQ.id), row, dbQ.correct_answer);
+      const openBox = wrap.querySelector(`.q-open[data-id="${dbQ.id}"]`);
+      if(openBox) openBox.checked = !!(dbQ.correct_answer && dbQ.correct_answer.open);
       const liveInput = wrap.querySelector(`.q-live-update[data-id="${dbQ.id}"]`);
       if(liveInput && dbQ.live_update) liveInput.value = dbQ.live_update;
     });
@@ -723,12 +726,15 @@
       for(const q of QUESTIONS){
         const row = document.querySelector(`#questionsWrap [data-id="${q.id}"]`);
         if(!row) continue;
-        const correctAnswer = parseAnswerInput(q, row);
+        let correctAnswer = parseAnswerInput(q, row);
+        const openBox = row.querySelector('.q-open');
+        const isOpen = !!(openBox && openBox.checked);
+        if(isOpen && !(correctAnswer && correctAnswer.void)) correctAnswer = { ...(correctAnswer||{}), open:true };
         const liveInput = document.querySelector(`.q-live-update[data-id="${q.id}"]`);
         const liveUpdate = liveInput ? liveInput.value.trim() : '';
         await supabaseAdmin.from('questions').update({
           correct_answer: correctAnswer,
-          resolved: correctAnswer != null,
+          resolved: correctAnswer != null && !isOpen,
           live_update: liveUpdate || null,
           updated_at: new Date().toISOString(),
         }).eq('id', q.id);
@@ -823,7 +829,20 @@
         .sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.goals_for-a.goals_for || a.team_name.localeCompare(b.team_name));
       const posOf = tag => { const i=ranked.findIndex(t=>t.team_tag===tag); return i===-1?null:i+1; };
       const r2 = n => Math.round(n*100)/100;
-      const slotDetail = [];
+      const slotDetail = [], quizDetail = [], ssDetail = [], bjDetail = [];
+      const tn = t => { const m=teamByTag(t); return m?m.name:t; };
+      const fmtCorrect = ca => {
+        if(ca==null) return 'Not yet answered';
+        if(ca.void) return 'VOID (question voided)';
+        const parts=[];
+        if(ca.open) parts.push('STILL OPEN (answers so far)');
+        if(ca.opponents) parts.push('Opponents beaten: '+ca.opponents.map(tn).join(', '));
+        if(ca.validTeams) parts.push('Valid: '+ca.validTeams.map(tn).join(', '));
+        if(ca.acceptedNames) parts.push('Accepted: '+ca.acceptedNames.join(', '));
+        if(ca.actualValue!=null) parts.push('Actual value: '+ca.actualValue);
+        if(ca.value!=null) parts.push(String(ca.value));
+        return parts.length ? parts.join(' | ') : JSON.stringify(ca);
+      };
 
       const rows = players.map(p=>{
         let slots=0;
@@ -838,21 +857,29 @@
         let ss=0;
         const mine=(rp||[]).filter(r=>r.player_id===p.id);
         [...new Set(mine.map(r=>r.month))].forEach(m=>{
-          ss += scoreRoulette(mine.filter(r=>r.month===m), (h2h||[]).find(f=>f.month===m)).points;
+          const fx=(h2h||[]).find(f=>f.month===m);
+          const sr=scoreRoulette(mine.filter(r=>r.month===m), fx);
+          ss += sr.points;
+          ssDetail.push({Player:p.name, Month:m, Fixture: fx?`${fx.team_a} v ${fx.team_b}`:'', Result: fx&&fx.score_a!=null?`${fx.score_a}-${fx.score_b}`:'Not played yet', Bets:mine.filter(r=>r.month===m).map(r=>`${r.category}: ${typeof r.prediction==='object'?JSON.stringify(r.prediction):r.prediction}`).join(' ; '), Points:r2(sr.points)});
         });
-        const blackjack = scoreBlackjack((bj||[]).filter(c=>c.player_id===p.id)).points;
+        const myCards=(bj||[]).filter(c=>c.player_id===p.id).sort((a,b)=>a.card_index-b.card_index);
+        const bjr = scoreBlackjack(myCards);
+        const blackjack = bjr.points;
+        if(myCards.length) bjDetail.push({Player:p.name, Cards: myCards.map(c=>`${c.player_name} (${c.actual_goals||0})`).join(', '), 'Goals so far':bjr.total, Status: !bjr.valid?'Invalid so far (a card has 0 goals)':(bjr.bust?'BUST (22+)':'Live'), Points:r2(blackjack)});
         let quiz=0;
         QUESTIONS.forEach(qq=>{
           const dbQ=(questions||[]).find(x=>x.id===qq.id);
           const row=(answers||[]).find(a=>a.player_id===p.id && a.question_id===qq.id);
-          if(!row) return;
+          if(!row){ quizDetail.push({Player:p.name, Q:qq.id, Topic:qq.short, 'Points on offer':qq.pointsText||'', 'Official answer':fmtCorrect(dbQ?dbQ.correct_answer:null), 'Live update (admin note)':dbQ&&dbQ.live_update||'', 'Player answer':'(no answer)', Status:'No answer', Points:0}); return; }
           let pa, all=null;
           if(qq.type==='numeric-tiered'||qq.type==='numeric-single'){
             const num=a=>(a.answer!=null&&a.answer!=='')?Number(a.answer):null;
             pa={playerId:p.id,value:num(row)};
             all=(answers||[]).filter(a=>a.question_id===qq.id).map(a=>({playerId:a.player_id,value:num(a)}));
           } else pa=row.answer;
-          quiz += scoreAnswer(qq, pa, dbQ?dbQ.correct_answer:null, all).points;
+          const sa = scoreAnswer(qq, pa, dbQ?dbQ.correct_answer:null, all);
+          quiz += sa.points;
+          quizDetail.push({Player:p.name, Q:qq.id, Topic:qq.short, 'Points on offer':qq.pointsText||'', 'Official answer':fmtCorrect(dbQ?dbQ.correct_answer:null), 'Live update (admin note)':dbQ&&dbQ.live_update||'', 'Player answer':fmtAnswerForExport(qq,row.answer), Status: sa.void?'Void':(sa.open&&sa.points>0?'Scoring so far (question still open)':!sa.resolved?'Still open':(sa.points>0?'Scored':'Wrong / no points')), Points:r2(sa.points)});
         });
         return {Player:p.name, Slots:r2(slots), 'Super Sundays':r2(ss), Blackjack:r2(blackjack), Quiz:r2(quiz), Total:r2(slots+ss+blackjack+quiz)};
       }).sort((a,b)=>b.Total-a.Total);
@@ -862,6 +889,9 @@
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(out), 'Standings');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(slotDetail), 'Slots breakdown');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(quizDetail), 'Quiz breakdown');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ssDetail), 'Super Sundays breakdown');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bjDetail), 'Blackjack breakdown');
       XLSX.writeFile(wb, `PremIQ19_Standings_${new Date().toISOString().slice(0,10)}.xlsx`);
       status.textContent = `Downloaded — ${rows.length} player(s) ranked.`; status.className='status-line ok';
     } catch(err){

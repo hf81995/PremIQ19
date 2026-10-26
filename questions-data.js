@@ -125,7 +125,19 @@ function questionById(id){ return QUESTIONS.find(q => q.id === id); }
 // correct_answer (from Supabase) — used by leaderboard.html.
 // For numeric types, pass `allAnswers` (every player's raw guesses for
 // that question) since "closest" is relative across the whole group.
+// Wrapper: a question marked "still open" (correctAnswer.open) awards points to
+// anyone matching so far, but non-matching answers stay open instead of wrong.
 function scoreAnswer(q, playerAnswer, correctAnswer, allAnswers){
+  if(correctAnswer == null) return { points: 0, resolved: false };
+  const r = scoreAnswerCore(q, playerAnswer, correctAnswer, allAnswers);
+  if(correctAnswer.open && !correctAnswer.void){
+    r.open = true;
+    if(!(r.points > 0)) r.resolved = false;
+  }
+  return r;
+}
+
+function scoreAnswerCore(q, playerAnswer, correctAnswer, allAnswers){
   if(correctAnswer == null) return { points: 0, resolved: false };
   if(correctAnswer.void) return { points: 0, resolved: true, void: true };
 

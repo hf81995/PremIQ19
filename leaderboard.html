@@ -674,7 +674,8 @@
       playerAnswerForScoring = raw;
     }
     const scored = scoreAnswer(q, playerAnswerForScoring, correctAnswer, allAnswersForScoring);
-    if(!scored.resolved) return { text, status:'pending', points:null };
+    if(scored.open && scored.points>0) return { text, status:'partial', points:scored.points };
+    if(!scored.resolved) return { text, status:'pending', points:null, open: !!correctAnswer.open };
     return { text, status: scored.points>0 ? 'correct' : 'wrong', points: scored.points };
   }
 
@@ -689,12 +690,14 @@
       const dbQ = questions.find(x=>x.id===q.id);
       const correctAnswer = dbQ ? dbQ.correct_answer : null;
       const liveUpdate = dbQ ? dbQ.live_update : null;
-      const { text, status, points } = fmtAnswerForDisplay(q, row, correctAnswer, answers);
+      const { text, status, points, open } = fmtAnswerForDisplay(q, row, correctAnswer, answers);
       const statusLabel = status==='correct' ? `✅ Correct (${points}pt${points===1?'':'s'})`
         : status==='wrong' ? '❌ Wrong (0pts)'
+        : status==='partial' ? `✅ ${points}pt${points===1?'':'s'} so far (still open)`
         : status==='unanswered' ? '—'
+        : open ? '⏳ Still open'
         : '⏳ Not marked yet';
-      const rowClass = status==='correct' ? 'qa-correct' : status==='wrong' ? 'qa-wrong' : '';
+      const rowClass = (status==='correct' || status==='partial') ? 'qa-correct' : status==='wrong' ? 'qa-wrong' : '';
       return `<tr class="${rowClass}">
         <td class="pname">Q${q.id}: ${q.short}</td>
         <td class="psub">${text}</td>
