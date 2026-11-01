@@ -92,3 +92,16 @@ function scoreBlackjack(cards){
   if(total > 21) return { points:0, total, valid:true, bust:true };
   return { points: BLACKJACK_TIER_POINTS[total] || 0, total, valid:true, bust:false };
 }
+
+// Which Super Sunday month is live for players? Automatic, no toggle:
+// the earliest fixture (season order Aug→May) that has both teams set but no
+// result entered yet. Once you enter that month's result, the next month with
+// teams set goes live. Falls back to the calendar month if nothing qualifies.
+function liveSuperSundayMonth(fixtures){
+  const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const seasonIdx = m => { const i = names.indexOf(m); return i === -1 ? 99 : (i + 5) % 12; }; // Aug=0 … Jul=11
+  const open = (fixtures || [])
+    .filter(f => f.team_a && f.team_b && f.score_a == null)
+    .sort((a,b) => seasonIdx(a.month) - seasonIdx(b.month));
+  return open.length ? open[0].month : names[new Date().getMonth()];
+}

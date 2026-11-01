@@ -703,8 +703,7 @@
   let isAccountLocked = false;
   let rouletteOpen = false;
   function getCurrentRouletteMonth(){
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    return monthNames[new Date().getMonth()];
+    return liveSuperSundayMonth(h2hFixtures);
   }
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles
@@ -1535,7 +1534,7 @@
     const catsEl = document.getElementById('rouletteCategories');
     const spendEl = document.getElementById('rouletteSpend');
 
-    if(!currentFixture){
+    if(!currentFixture || (!currentFixture.team_a && !currentFixture.team_b)){
       fixtureLine.innerHTML = '<span style="font-size:0.85rem; color:#B9C4BB;">No Super Sunday fixture set yet — check back once the organiser adds one.</span>';
       catsEl.innerHTML = '';
       document.getElementById('rouletteOptionalCategories').innerHTML = '';

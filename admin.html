@@ -414,12 +414,12 @@
   }
 
   // --- Current month indicator (follows the real calendar automatically) ---
-  function getCurrentRouletteMonth(){
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    return monthNames[new Date().getMonth()];
+  function getCurrentRouletteMonth(fixtures){
+    return liveSuperSundayMonth(fixtures);
   }
-  function loadCurrentMonthSelector(){
-    document.getElementById('currentMonthStatus').textContent = getCurrentRouletteMonth();
+  async function loadCurrentMonthSelector(){
+    const { data } = await supabaseAdmin.from('h2h_fixtures').select('*');
+    document.getElementById('currentMonthStatus').textContent = getCurrentRouletteMonth(data || []);
   }
 
   // --- Monthly Super Sundays open/closed toggle ---
@@ -443,7 +443,7 @@
   // --- Monthly Super Sunday panel ---
   async function loadH2HPanel(){
     const { data: raw } = await supabaseAdmin.from('h2h_fixtures').select('*');
-    const currentMonth = getCurrentRouletteMonth();
+    const currentMonth = getCurrentRouletteMonth(raw || []);
     const data = sortByMonth(raw || []);
     const wrap = document.getElementById('h2hWrap');
     const teamOptions = TEAMS.map(t => `<option value="${t.tag}">${t.name}</option>`).join('');
