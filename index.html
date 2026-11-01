@@ -703,7 +703,7 @@
   let isAccountLocked = false;
   let rouletteOpen = false;
   function getCurrentRouletteMonth(){
-    return liveSuperSundayMonth(h2hFixtures);
+    return (typeof liveSuperSundayMonth==='function' ? liveSuperSundayMonth(h2hFixtures) : ['January','February','March','April','May','June','July','August','September','October','November','December'][new Date().getMonth()]);
   }
   const BLACKJACK_TARGET = 21;
   let numCards = 3; // 3–5 players, adjustable via the "+" tiles

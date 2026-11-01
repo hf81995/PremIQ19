@@ -415,7 +415,7 @@
 
   // --- Current month indicator (follows the real calendar automatically) ---
   function getCurrentRouletteMonth(fixtures){
-    return liveSuperSundayMonth(fixtures);
+    return (typeof liveSuperSundayMonth==='function' ? liveSuperSundayMonth(fixtures) : ['January','February','March','April','May','June','July','August','September','October','November','December'][new Date().getMonth()]);
   }
   async function loadCurrentMonthSelector(){
     const { data } = await supabaseAdmin.from('h2h_fixtures').select('*');
