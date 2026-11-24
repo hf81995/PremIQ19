@@ -179,6 +179,7 @@
   .qr-h{ display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:0.6rem; align-items:start; padding:0.7rem 0.75rem; }
   .qr-n{ font-family:'Space Mono',monospace; font-size:0.68rem; font-weight:700; color:var(--ink-soft); padding-top:2px; }
   .qr-t{ font-size:0.86rem; font-weight:700; line-height:1.3; }
+  #qStandings th, #qStandings td{ padding:0.5rem 0.3rem; } #qStandings th{ white-space:normal; line-height:1.2; vertical-align:bottom; } #qStandings td{ white-space:normal; } #qStandings .rank{ width:1.2rem; }
   .qr-w{ font-weight:500; color:var(--ink-soft); font-size:0.76rem; white-space:nowrap; }
   .qr-live{ font-size:0.72rem; color:var(--ink-soft); margin-top:2px; word-break:break-word; }
   .qr-mt{ display:flex; align-items:center; gap:0.5rem; margin-top:0.4rem; flex-wrap:wrap; }
@@ -999,37 +1000,44 @@
     const nPlayers = questionsTabData.players.length;
     const mineOf = m => youId ? m.per.find(p=>p.pl.id===youId) : null;
 
-    // ---- question standings: points now v hypothetical
+    // ---- summary table: points now / if the game ended today / likely outcome
     (function(){
       const rows = questionsTabData.players.map(pl=>{
-        let now = 0, proj = 0;
+        let now = 0, today = 0, likely = 0;
         models.forEach(m=>{
           const x = m.per.find(p=>p.pl.id===pl.id);
           const cur = x ? x.points : 0;
           now += cur;
+          // if the game ended today: swap in the what-if answers set in admin
           if(m.hyp && m.kind==='open'){
             const it = m.hyp.items.find(i=>i.pl.id===pl.id);
-            proj += it ? it.pts : 0;
-          } else proj += cur;
+            today += it ? it.pts : 0;
+          } else today += cur;
+          // likely outcome: only "Likely to flip" open questions change; everything else stays as it is
+          if(m.kind==='open' && !m.linked && m.lv===0){
+            if(m.flip){ const g = m.flip.gain.find(i=>i.pl.id===pl.id); likely += g ? g.pts : 0; }
+            else if(m.hyp){ const it = m.hyp.items.find(i=>i.pl.id===pl.id); likely += it ? it.pts : 0; }
+            else likely += cur;
+          } else likely += cur;
         });
-        return { pl, now, proj };
+        return { pl, now, today, likely };
       });
-      const nowOrder = rows.slice().sort((a,b)=> b.now-a.now || a.pl.name.localeCompare(b.pl.name));
-      nowOrder.forEach((r,i)=>{ r.nowRank = (i>0 && nowOrder[i-1].now===r.now) ? nowOrder[i-1].nowRank : i+1; });
-      const projOrder = rows.slice().sort((a,b)=> b.proj-a.proj || b.now-a.now || a.pl.name.localeCompare(b.pl.name));
-      projOrder.forEach((r,i)=>{ r.projRank = (i>0 && projOrder[i-1].proj===r.proj) ? projOrder[i-1].projRank : i+1; });
+      const rank = (key)=>{
+        const o = rows.slice().sort((x,y)=> y[key]-x[key] || x.pl.name.localeCompare(y.pl.name));
+        o.forEach((r,i)=>{ r['r_'+key] = (i>0 && o[i-1][key]===r[key]) ? o[i-1]['r_'+key] : i+1; });
+      };
+      rank('now'); rank('today'); rank('likely');
+      const order = rows.slice().sort((x,y)=> y.likely-x.likely || y.now-x.now || x.pl.name.localeCompare(y.pl.name));
       const nHyp = models.filter(m=>m.hyp && m.kind==='open').length;
-      document.getElementById('qStandingsNote').textContent = nHyp ? `${nHyp} hypothetical question${nHyp===1?'':'s'} included` : 'no hypotheticals set yet';
-      const flips = models.filter(m=>m.flip).sort((a,b)=>a.lv-b.lv);
-      const nm = (list, y) => list.length ? list.map(x=>{ const pl = x.pl||x; return `<span class="qr-p${pl.id===youId?' me':''}">${esc(pl.name)}${x.pts?' +'+x.pts:''}</span>`; }).join('') : '<span class="qr-p x">Nobody</span>';
+      const nFlip = models.filter(m=>m.kind==='open' && !m.linked && m.lv===0).length;
+      document.getElementById('qStandingsNote').textContent = `${nHyp} what-if, ${nFlip} likely to flip`;
+      const flips = models.filter(m=>m.flip).sort((x,y)=>x.lv-y.lv);
+      const nm = (list) => list.length ? list.map(x=>{ const pl = x.pl||x; return `<span class="qr-p${pl.id===youId?' me':''}">${esc(pl.name)}${x.pts?' +'+x.pts:''}</span>`; }).join('') : '<span class="qr-p x">Nobody</span>';
       const flipHtml = flips.length ? `<div style="padding:0 0.9rem 0.9rem;"><div class="qr-gh" style="color:var(--ink-soft);margin:0.2rem 0 0.4rem;">WHAT COULD FLIP</div>${flips.map(m=>`<div style="border-top:1px solid var(--line); padding:0.55rem 0;"><div style="font-size:0.8rem; font-weight:700;">Q${m.q.id}: ${esc(m.q.short)} <span class="qr-lb">(${Q_LV[m.lv]})</span></div><div class="qr-nm"><span class="h">IF IT FLIPS TO ${esc(m.flip.label.toUpperCase())}, THESE GAIN</span>${nm(m.flip.gain)}</div><div class="qr-nm"><span class="h">THESE DROP OUT</span>${nm(m.flip.drop)}</div></div>`).join('')}</div>` : '';
-      const body = projOrder.map(r=>{
-        const mv = r.nowRank - r.projRank;
-        const mvTxt = mv>0 ? `<span style="color:#1D6B3F;">▲ ${mv}</span>` : mv<0 ? `<span style="color:#8A1F30;">▼ ${-mv}</span>` : '<span class="psub">–</span>';
-        return `<tr class="${r.pl.id===youId?'slot-pick-correct':''}"><td class="rank">${r.projRank}</td><td class="pname">${esc(r.pl.name)}${r.pl.id===youId?' (you)':''}</td><td class="num psub">${r.now}</td><td class="num ptotal">${r.proj}</td><td class="num">${mvTxt}</td><td class="num psub">${r.nowRank}</td></tr>`;
-      }).join('');
-      document.getElementById('qStandings').innerHTML = `<div style="overflow-x:auto;"><table><tr><th>#</th><th>Player</th><th class="num">Points now</th><th class="num">Hypothetical</th><th class="num">Move</th><th class="num">Now rank</th></tr>${body}</table></div>
-        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;">Points now are what each player has today, including Q1 and Q2 so far. Hypothetical swaps in the what-if answers you've set in admin for open questions. Settled questions and open ones without a hypothetical stay at their current points. Nobody gets the hypothetical points for real.</div>${flipHtml}`;
+      const cell = (v, r, strong) => `<td class="num ${strong?'ptotal':'psub'}">${v}</td>`;
+      const body = order.map((r,i)=>`<tr class="${r.pl.id===youId?'slot-pick-correct':''}"><td class="rank">${r.r_likely}</td><td class="pname">${esc(r.pl.name)}${r.pl.id===youId?' (you)':''}</td>${cell(r.now,r.r_now,false)}${cell(r.today,r.r_today,false)}${cell(r.likely,r.r_likely,true)}</tr>`).join('');
+      document.getElementById('qStandings').innerHTML = `<div style="overflow-x:auto;"><table><tr><th>#</th><th>Player</th><th class="num">Points now</th><th class="num">If game ended today</th><th class="num">Likely outcome</th></tr>${body}</table></div>
+        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;"><b>Points now</b> is what each player has today, including Q1 and Q2 so far. <b>If game ended today</b> swaps in the what-if answers you've set in admin for open questions. <b>Likely outcome</b> keeps every open question as it is, except ones marked Likely to flip: on those the points go to the other side instead (for Yes/No and two-choice questions), or to the what-if ranking for numeric ones. Could flip, Likely to hold and settled questions stay as they are. Nobody gets any of these for real.</div>${flipHtml}`;
     })();
 
     const sumEl = document.getElementById('qSummary');
