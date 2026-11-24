@@ -640,6 +640,12 @@
   }
 
   // --- Question answers panel ---
+  function hypInputHtml(q){
+    if(q.type==='numeric-tiered' || q.type==='numeric-single') return `<input type="text" class="q-hyp" data-id="${q.id}" placeholder="e.g. 10" style="width:90px; font-size:0.75rem;">`;
+    if(q.type==='yesno') return `<select class="q-hyp" data-id="${q.id}" style="font-size:0.75rem;"><option value="">— none —</option><option value="yes">Yes</option><option value="no">No</option></select>`;
+    if(q.type==='twochoice') return `<select class="q-hyp" data-id="${q.id}" style="font-size:0.75rem;"><option value="">— none —</option><option value="${q.optionA}">${q.optionA}</option><option value="${q.optionB}">${q.optionB}</option></select>`;
+    return '';
+  }
   function correctAnswerInputHtml(q){
     if(q.type==='multi3' || q.type==='single1'){
       return `<input type="text" class="q-ans" placeholder="Beaten opponents, comma separated (e.g. MCI, LIV, CHE)" style="flex:2;">`;
@@ -708,6 +714,7 @@
         ${correctAnswerInputHtml(q)}
         <label style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;"><input type="checkbox" class="q-open" data-id="${q.id}"> Still open — players matching the answer above score now; everyone else shows "Still open" (not wrong) until I untick this</label>
         <label style="flex-basis:100%; margin-top:0.3rem; font-size:0.75rem;">How likely is the current picture to hold (shown on the leaderboard)? <select class="q-likelihood" data-id="${q.id}" style="font-size:0.75rem;"><option value="">Could flip (default)</option><option value="0">Likely to flip</option><option value="1">Could flip</option><option value="2">Likely to hold</option></select></label>
+        ${hypInputHtml(q) ? `<label style="flex-basis:100%; margin-top:0.3rem; font-size:0.75rem;">Hypothetical: what if it ended today? (shows who WOULD score on the leaderboard, nobody gets real points) ${hypInputHtml(q)}</label>` : ''}
         <input type="text" class="q-live-update" data-id="${q.id}" placeholder="Live update (optional, shown to players before this is marked)" style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;">
       </div>
     `).join('');
@@ -718,6 +725,8 @@
       if(openBox) openBox.checked = !!(dbQ.correct_answer && dbQ.correct_answer.open);
       const likeSel = wrap.querySelector(`.q-likelihood[data-id="${dbQ.id}"]`);
       if(likeSel && dbQ.correct_answer && dbQ.correct_answer.likelihood != null) likeSel.value = String(dbQ.correct_answer.likelihood);
+      const hypSel = wrap.querySelector(`.q-hyp[data-id="${dbQ.id}"]`);
+      if(hypSel && dbQ.correct_answer && dbQ.correct_answer.hypothetical != null) hypSel.value = String(dbQ.correct_answer.hypothetical);
       const liveInput = wrap.querySelector(`.q-live-update[data-id="${dbQ.id}"]`);
       if(liveInput && dbQ.live_update) liveInput.value = dbQ.live_update;
     });
@@ -733,13 +742,20 @@
         const openBox = row.querySelector('.q-open');
         const isOpen = !!(openBox && openBox.checked);
         if(isOpen && !(correctAnswer && correctAnswer.void)) correctAnswer = { ...(correctAnswer||{}), open:true };
+        const hypEl = row.querySelector('.q-hyp');
+        const hypVal = hypEl ? hypEl.value.trim() : '';
+        if(hypVal !== '' && !(correctAnswer && correctAnswer.void) && (isOpen || !correctAnswer)){
+          const isNum = (q.type==='numeric-tiered' || q.type==='numeric-single');
+          correctAnswer = { ...(correctAnswer||{}), open:true, hypothetical: isNum ? Number(hypVal) : hypVal };
+        }
+        const nowOpen = !!(correctAnswer && correctAnswer.open);
         const likeSel = row.querySelector('.q-likelihood');
-        if(isOpen && likeSel && likeSel.value !== '' && correctAnswer && !correctAnswer.void) correctAnswer = { ...correctAnswer, likelihood: Number(likeSel.value) };
+        if(nowOpen && likeSel && likeSel.value !== '' && correctAnswer && !correctAnswer.void) correctAnswer = { ...correctAnswer, likelihood: Number(likeSel.value) };
         const liveInput = document.querySelector(`.q-live-update[data-id="${q.id}"]`);
         const liveUpdate = liveInput ? liveInput.value.trim() : '';
         await supabaseAdmin.from('questions').update({
           correct_answer: correctAnswer,
-          resolved: correctAnswer != null && !isOpen,
+          resolved: correctAnswer != null && !(correctAnswer && correctAnswer.open),
           live_update: liveUpdate || null,
           updated_at: new Date().toISOString(),
         }).eq('id', q.id);

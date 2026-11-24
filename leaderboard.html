@@ -935,8 +935,8 @@
       else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
       let hyp = null;
       if(kind==='open' && !linked && ca){
-        if((q.type==='numeric-tiered' || q.type==='numeric-single') && ca.actualValue!=null){
-          const target = Number(ca.actualValue);
+        if((q.type==='numeric-tiered' || q.type==='numeric-single') && (ca.hypothetical!=null || ca.actualValue!=null)){
+          const target = Number(ca.hypothetical!=null ? ca.hypothetical : ca.actualValue);
           const ans = per.filter(p=>p.raw!=null && p.raw!=='' && !isNaN(Number(p.raw))).map(p=>({ p, diff:Math.abs(Number(p.raw)-target) }));
           const diffs = [...new Set(ans.map(a=>a.diff))].sort((a,b)=>a-b);
           const nRanks = q.type==='numeric-tiered' ? 2 : 1;
@@ -946,11 +946,15 @@
             ans.filter(a=>a.diff===d).forEach(a=>items.push({ pl:a.p.pl, rank:i+1, pts, diff:d }));
           });
           hyp = { kind:'rank', target, unit:q.unit||'', items, others: ans.length-items.length };
-        } else if((q.type==='yesno' || q.type==='twochoice') && ca.value!=null){
-          const cur = ca.value; let other, pts, label;
-          if(q.type==='yesno'){ other = cur==='yes' ? 'no' : 'yes'; label = other==='yes' ? 'YES' : 'NO'; pts = q.yesPoints!=null ? (other==='yes' ? q.yesPoints : q.noPoints) : q.points; }
-          else { other = cur===q.optionA ? q.optionB : q.optionA; label = String(other).toUpperCase(); pts = q.aPoints!=null ? (other===q.optionA ? q.aPoints : q.bPoints) : q.points; }
-          hyp = { kind:'flip', label, items: per.filter(p=>p.raw===other).map(p=>({ pl:p.pl, pts })) };
+        } else if((q.type==='yesno' || q.type==='twochoice') && (ca.hypothetical!=null || ca.value!=null)){
+          const fromHyp = ca.hypothetical!=null;
+          let other;
+          if(fromHyp) other = ca.hypothetical;
+          else other = q.type==='yesno' ? (ca.value==='yes' ? 'no' : 'yes') : (ca.value===q.optionA ? q.optionB : q.optionA);
+          const pts = q.type==='yesno' ? (q.yesPoints!=null ? (other==='yes' ? q.yesPoints : q.noPoints) : q.points)
+                                       : (q.aPoints!=null ? (other===q.optionA ? q.aPoints : q.bPoints) : q.points);
+          const label = q.type==='yesno' ? (other==='yes' ? 'YES' : 'NO') : String(other).toUpperCase();
+          hyp = { kind:'flip', label, fromHyp, items: per.filter(p=>p.raw===other).map(p=>({ pl:p.pl, pts })) };
         }
       }
       let lv = null;
@@ -1028,7 +1032,7 @@
           hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: CLOSEST TO ${esc(String(m.hyp.target))} ${esc(m.hyp.unit.toUpperCase())} IF IT ENDED NOW</span>${ch}${m.hyp.others>0?`<span class="v2-none">+${m.hyp.others} further away</span>`:''}</div>`;
         } else {
           const ch = m.hyp.items.length ? m.hyp.items.map(i=>`<span class="qr-p hyp${me(i.pl.id)}">${esc(i.pl.name)} +${i.pts}</span>`).join('') : '<span class="qr-p x">Nobody</span>';
-          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: WHO SCORES IF IT FLIPS TO ${esc(m.hyp.label)}</span>${ch}</div>`;
+          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: WHO SCORES IF IT ${m.hyp.fromHyp?'ENDS':'FLIPS TO'} ${esc(m.hyp.label)}</span>${ch}</div>`;
         }
       }
       const badge = m.kind==='settled' ? '<span class="qr-badge settled">✓ SETTLED</span>' : m.kind==='open' ? '<span class="qr-badge open">STILL OPEN</span>' : m.kind==='void' ? '<span class="qr-badge void">VOID</span>' : '<span class="qr-badge none">NOT MARKED YET</span>';
