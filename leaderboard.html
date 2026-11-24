@@ -179,6 +179,7 @@
   .qr-h{ display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:0.6rem; align-items:start; padding:0.7rem 0.75rem; }
   .qr-n{ font-family:'Space Mono',monospace; font-size:0.68rem; font-weight:700; color:var(--ink-soft); padding-top:2px; }
   .qr-t{ font-size:0.86rem; font-weight:700; line-height:1.3; }
+  .qr-w{ font-weight:500; color:var(--ink-soft); font-size:0.76rem; white-space:nowrap; }
   .qr-live{ font-size:0.72rem; color:var(--ink-soft); margin-top:2px; word-break:break-word; }
   .qr-mt{ display:flex; align-items:center; gap:0.5rem; margin-top:0.4rem; flex-wrap:wrap; }
   .qr-seg{ display:flex; gap:3px; }
@@ -880,6 +881,13 @@
     if(q.type==='numeric-tiered') return q.points.closest;
     return typeof q.points==='number' ? q.points : maxPtsOf(q);
   }
+  function ptsLabel(q){
+    if(q.type==='multi3') return [q.points.p1, q.points.p2, q.points.p3].join(' / ') + ' pts';
+    if(q.type==='numeric-tiered') return `${q.points.closest} closest, ${q.points.nextNearest} next`;
+    if(q.yesPoints!=null) return `Yes ${q.yesPoints}, No ${q.noPoints}`;
+    if(q.aPoints!=null) return `${q.optionA} ${q.aPoints}, ${q.optionB} ${q.bPoints}`;
+    return q.points + ' pts';
+  }
   const tagName = t => { const x = teamByTag(t); return x ? x.name : t; };
   const spanC = (c, t, w) => `<span style="color:${c};${w?'font-weight:700;':''}">${t}</span>`;
 
@@ -1105,7 +1113,7 @@
       const lvClass = m.kind==='settled' ? ' settled' : ((m.lv!=null && !m.linked) ? ' l'+m.lv : ' nom');
       const isOpen = qOpenSet.has(q.id);
       out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
-        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-bd">${badge}</div><div class="qr-t">${esc(q.short)}</div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}${hypHtml}</div>${ptCol}</div>
+        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-bd">${badge}</div><div class="qr-t">${esc(q.short)} <span class="qr-w">(${esc(ptsLabel(q))})</span></div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}${hypHtml}</div>${ptCol}</div>
         <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div><div style="overflow-x:auto;"><table><tr><th>Player</th>${m.linked?'<th>Slot team</th>':''}<th>${m.linked?'Picks':'Answer'}</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
         <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
     });
