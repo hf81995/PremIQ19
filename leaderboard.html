@@ -172,6 +172,41 @@
   .v2-summary{ display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.8rem; }
   .v2-summary .v2-box{ background:var(--chalk); flex:1 1 140px; }
   @media(max-width:520px){ .v2-top{ grid-template-columns:50px minmax(0,1fr) 46px; gap:0.35rem; padding:0.65rem 0.45rem 0.4rem; } .v2-bar .s{ font-size:0.5rem; } .v2-bar .t{ font-size:0.66rem; } .v2-nm{ font-size:0.78rem; } }
+
+  /* ===== v2 question rows ===== */
+  .qr{ background:var(--chalk); border-radius:12px; margin-bottom:0.5rem; overflow:hidden; border-left:5px solid #888780; }
+  .qr.l3{ border-left-color:#4C9A2A; } .qr.l2{ border-left-color:#97C459; } .qr.l1{ border-left-color:#EF9F27; } .qr.l0{ border-left-color:#D6453D; }
+  .qr-h{ display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:0.6rem; align-items:start; padding:0.7rem 0.75rem; }
+  .qr-n{ font-family:'Space Mono',monospace; font-size:0.68rem; font-weight:700; color:var(--ink-soft); padding-top:2px; }
+  .qr-t{ font-size:0.86rem; font-weight:700; line-height:1.3; }
+  .qr-live{ font-size:0.72rem; color:var(--ink-soft); margin-top:2px; word-break:break-word; }
+  .qr-mt{ display:flex; align-items:center; gap:0.5rem; margin-top:0.4rem; flex-wrap:wrap; }
+  .qr-seg{ display:flex; gap:3px; }
+  .qr-seg i{ width:15px; height:6px; border-radius:3px; background:var(--chalk-dim); border:1px solid var(--line); }
+  .qr-seg i.f{ border:none; }
+  .qr.l3 .qr-seg i.f{ background:#4C9A2A; } .qr.l2 .qr-seg i.f{ background:#97C459; } .qr.l1 .qr-seg i.f{ background:#EF9F27; } .qr.l0 .qr-seg i.f{ background:#D6453D; }
+  .qr-lb{ font-size:0.66rem; font-weight:700; color:var(--ink-soft); }
+  .qr-fx{ font-size:0.64rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:999px; background:rgba(46,139,87,0.18); color:#1D6B3F; }
+  .qr-pt{ text-align:right; font-family:'Space Mono',monospace; font-weight:800; font-size:1.05rem; color:var(--pitch); white-space:nowrap; }
+  .qr-pt small{ display:block; font-size:0.56rem; font-weight:400; color:var(--ink-soft); }
+  .qr-pt.z{ color:var(--ink-soft); font-weight:400; }
+  .qr-nm{ margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+  .qr-nm .h{ font-size:0.62rem; color:var(--ink-soft); margin-right:2px; font-family:'Space Mono',monospace; }
+  .qr-p{ font-size:0.72rem; padding:0.12rem 0.55rem; border-radius:999px; background:var(--gold); color:#2A2205; font-weight:700; }
+  .qr-p.me{ background:var(--pitch); color:var(--chalk); }
+  .qr-p.x{ background:var(--chalk-dim); color:var(--ink-soft); font-weight:500; }
+  .qr-p.x.me{ outline:2px solid var(--pitch); color:var(--pitch); }
+  .qr-xp{ display:block; width:100%; background:none; border:none; border-top:1px solid var(--line); padding:0.5rem; font-family:'Inter',sans-serif; font-size:0.74rem; font-weight:700; color:var(--pitch); cursor:pointer; }
+  .qr-xp:hover{ background:var(--chalk-dim); }
+  .qr-dt{ display:none; padding:0.7rem 0.75rem; border-top:1px solid var(--line); font-size:0.8rem; line-height:1.5; }
+  .qr.open .qr-dt{ display:block; }
+  .qr-dt .pts-on{ font-size:0.72rem; color:var(--ink-soft); margin-top:0.3rem; }
+  .qr-dt table{ margin-top:0.6rem; }
+  .qr-dt tr.me td{ background:rgba(203,166,51,0.22); font-weight:700; }
+  .qr-dt td, .qr-dt th{ white-space:normal; }
+  .qr-gh{ font-family:'Space Mono',monospace; font-size:0.66rem; text-transform:uppercase; color:#B9C4BB; letter-spacing:0.04em; margin:1.1rem 0.2rem 0.5rem; }
+  .qr-key{ display:flex; gap:0.9rem; flex-wrap:wrap; font-size:0.68rem; color:#B9C4BB; margin:0.2rem 0.2rem 0.6rem; }
+  .qr-key span{ display:flex; align-items:center; gap:5px; } .qr-key i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
 </style>
 </head>
 <body>
@@ -764,8 +799,8 @@
       </select>
       <div id="qSummary"></div>
       <div class="v2-fl" id="qFilters"></div>
-      <div class="v2-grid" id="qGrid"></div>
-      <div class="v2-panel" id="qPanel"></div>
+      <div class="qr-key"><span><i style="background:#4C9A2A"></i>Locked in</span><span><i style="background:#97C459"></i>Likely to hold</span><span><i style="background:#EF9F27"></i>Could flip</span><span><i style="background:#D6453D"></i>Likely to flip</span></div>
+      <div id="qGrid"></div>
     `;
     const sel = document.getElementById('questionsPlayerSelect');
     sel.value = prevVal;
@@ -804,12 +839,25 @@
     return { text, status: scored.points>0 ? 'correct' : 'wrong', points: scored.points };
   }
 
+  const Q_LV = ['Likely to flip','Could flip','Likely to hold','Locked in'];
+  const Q_LV_SENTENCE = ['This is likely to change.','This could still change.','This is likely to hold.'];
+  const qOpenSet = new Set();
+
   function maxPtsOf(q){
     if(typeof q.points==='number') return q.points;
     if(q.points && typeof q.points==='object') return Math.max(...Object.values(q.points));
     if(q.yesPoints!=null) return Math.max(q.yesPoints, q.noPoints);
     if(q.aPoints!=null) return Math.max(q.aPoints, q.bPoints);
     return 0;
+  }
+  // What this player's answer would be worth if it ends up correct.
+  function potentialFor(q, raw){
+    if(raw==null || raw==='') return 0;
+    if(q.type==='yesno') return q.yesPoints!=null ? (raw==='yes' ? q.yesPoints : q.noPoints) : q.points;
+    if(q.type==='twochoice') return q.aPoints!=null ? (raw===q.optionA ? q.aPoints : q.bPoints) : q.points;
+    if(q.type==='multi3') return q.points.p3;
+    if(q.type==='numeric-tiered') return q.points.closest;
+    return typeof q.points==='number' ? q.points : maxPtsOf(q);
   }
 
   function buildQuestionModels(){
@@ -821,35 +869,21 @@
       const per = players.map(pl=>{
         const row = answers.find(a=>a.player_id===pl.id && a.question_id===q.id);
         const r = fmtAnswerForDisplay(q, row, ca, answers);
-        return { pl, text:r.text, status:r.status, points:r.points||0, right:(r.status==='correct' || r.status==='partial') };
+        const right = (r.status==='correct' || r.status==='partial');
+        const pts = r.points||0;
+        const pot = Math.max(pts, potentialFor(q, row ? row.answer : null));
+        return { pl, text:r.text, status:r.status, points:pts, right, pot, gain: Math.max(0, pot-pts) };
       });
       let kind;
       if(ca && ca.void) kind = 'void';
       else if(!ca) kind = 'none';
       else if(ca.open) kind = 'open';
       else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
-      return { q, ca, live, per, kind, right: per.filter(p=>p.right) };
+      let lv = null;
+      if(kind==='settled') lv = 3;
+      else if(kind==='open') lv = (ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1;
+      return { q, ca, live, per, kind, lv, right: per.filter(p=>p.right) };
     });
-  }
-
-  function qPill(m, mine){
-    if(m.kind==='void') return { c:'dn', l:'Void' };
-    if(m.kind==='none') return { c:'dn', l:'Not marked' };
-    if(!mine) return m.kind==='open' ? { c:'op', l:'Still open' } : { c:'dn', l:'Settled' };
-    if(mine.status==='unanswered') return { c:'dn', l:'No answer' };
-    if(m.kind==='open') return mine.right ? { c:'ok', l:'On track' } : { c:'no', l:'Off track' };
-    return mine.right ? { c:'ok', l:'Correct' } : { c:'no', l:'Wrong' };
-  }
-
-  function qAvatars(m, youId){
-    if(m.kind==='void') return '<span class="v2-none">Question voided</span>';
-    if(m.kind==='none') return '<span class="v2-none">Not marked yet</span>';
-    if(!m.right.length) return '<span class="v2-none">Nobody yet</span>';
-    const r = m.right.slice().sort((a,b)=> (a.pl.id===youId?-1:0) - (b.pl.id===youId?-1:0));
-    const max = 4;
-    let h = r.slice(0,max).map(p=>`<div class="v2-a${p.pl.id===youId?' me':''}" title="${esc(p.pl.name)}">${esc(p.pl.name.slice(0,2).toUpperCase())}</div>`).join('');
-    if(r.length>max) h += `<div class="v2-a more">+${r.length-max}</div>`;
-    return `<div class="v2-av">${h}</div>`;
   }
 
   function renderQuestionsPlayerAnswers(){
@@ -859,69 +893,90 @@
     const nPlayers = questionsTabData.players.length;
     const mineOf = m => youId ? m.per.find(p=>p.pl.id===youId) : null;
 
+    // ---- summary
     const sumEl = document.getElementById('qSummary');
     if(youId){
-      const total = computeQuestionsPoints(youId, questionsTabData.answers, questionsTabData.questions);
-      const nRight = models.filter(m=>{ const x=mineOf(m); return x && x.right; }).length;
-      sumEl.innerHTML = `<div class="v2-summary"><div class="v2-box"><div class="k">Your question points</div><div class="v">${total}</div></div><div class="v2-box"><div class="k">Questions scoring for you</div><div class="v">${nRight} of ${QUESTIONS.length}</div></div></div>`;
+      const now = computeQuestionsPoints(youId, questionsTabData.answers, questionsTabData.questions);
+      let safe=0, chg=0, gain=0;
+      models.forEach(m=>{ const x=mineOf(m); if(!x) return;
+        if(m.kind==='settled') safe += x.points;
+        else if(m.kind==='open'){ if(m.lv>=2) safe += x.points; else chg += x.points; gain += x.gain; } });
+      sumEl.innerHTML = `<div class="v2-summary">
+        <div class="v2-box"><div class="k">Points now</div><div class="v">${now}</div></div>
+        <div class="v2-box"><div class="k">Safe or likely to hold</div><div class="v">${safe}</div></div>
+        <div class="v2-box"><div class="k">Could change</div><div class="v">${chg}</div></div>
+        <div class="v2-box"><div class="k">Could still gain</div><div class="v">${gain}</div></div></div>`;
     } else sumEl.innerHTML = '';
 
-    if(!youId && (qFilter==='ok' || qFilter==='no')) qFilter = 'all';
-    const filters = [['all','All'],['open','Still open'],['settled','Settled']];
-    if(youId) filters.splice(1,0,['ok','You are on track'],['no','You are off track']);
+    // ---- filters
+    if(!youId && qFilter==='up') qFilter = 'all';
+    const filters = [['all','All'],['risk','Could change']];
+    if(youId) filters.push(['up','Could still gain']);
+    filters.push(['safe','Locked or likely']);
     document.getElementById('qFilters').innerHTML = filters.map(f=>`<button class="v2-chip${qFilter===f[0]?' on':''}" data-f="${f[0]}">${f[1]}</button>`).join('');
 
-    const tiles = models.filter(m=>{
-      const pill = qPill(m, mineOf(m));
-      if(qFilter==='open') return m.kind==='open';
-      if(qFilter==='settled') return m.kind==='settled';
-      if(qFilter==='ok') return pill.c==='ok';
-      if(qFilter==='no') return pill.c==='no';
+    const keep = m=>{
+      if(qFilter==='risk') return m.kind==='open' && m.lv<=1;
+      if(qFilter==='up'){ const x=mineOf(m); return m.kind==='open' && x && x.gain>0; }
+      if(qFilter==='safe') return m.lv!=null && m.lv>=2;
       return true;
-    }).map(m=>{
-      const q = m.q, mine = mineOf(m), pill = qPill(m, mine);
-      const foot = youId ? `<div class="v2-ft"><span>Your points${m.kind==='open'?' so far':''}</span>${mine && mine.points>0 ? `<b>+${mine.points}</b>` : '<b class="z">0</b>'}</div>` : '';
-      return `<button class="v2-tile${qSel===q.id?' sel':''}" data-q="${q.id}">
-        <div class="v2-tn"><span class="v2-qn">Q${q.id} · up to ${maxPtsOf(q)} pts</span><span class="v2-pill ${pill.c}">${pill.l}</span></div>
-        <div class="v2-tt">${esc(q.short)}</div>
-        <div class="v2-live">${m.live ? esc(m.live) : '&nbsp;'}</div>
-        <div class="v2-rt"><div class="l">Getting it right now (${m.right.length} of ${nPlayers})</div>${qAvatars(m, youId)}</div>
-        ${foot}</button>`;
-    }).join('');
-    document.getElementById('qGrid').innerHTML = tiles || '<div class="v2-none" style="color:#B9C4BB;">Nothing here.</div>';
+    };
 
-    const m = models.find(x=>x.q.id===qSel) || models[0];
-    const q = m.q, mine = mineOf(m), pill = qPill(m, mine);
-    let msg;
-    if(m.kind==='void') msg = 'This question was voided, so nobody scores on it.';
-    else if(m.kind==='none') msg = 'Not marked yet, so no points are on the board for this one.';
-    else if(m.kind==='open') msg = mine
-      ? (mine.status==='unanswered' ? 'You did not answer this one.'
-        : mine.right ? `You are on track. Your answer matches so far and is scoring ${mine.points} pts, but the question is still open.`
-        : 'You are off track right now, but the question is still open, so it can still change.')
-      : `${m.right.length} of ${nPlayers} players are matching so far. The question is still open.`;
-    else msg = mine
-      ? (mine.status==='unanswered' ? 'You did not answer this one.'
-        : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
-      : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
-    const rows = m.per.slice().sort((a,b)=> b.points-a.points || a.pl.name.localeCompare(b.pl.name)).map(p=>{
-      const ptsTxt = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
-      return `<tr class="${p.pl.id===youId?'me':''}"><td class="pname">${esc(p.pl.name)}${p.pl.id===youId?' (you)':''}</td><td class="psub" style="white-space:normal;">${esc(p.text)}</td><td class="num ${p.right?'ptotal':'psub'}">${ptsTxt}</td></tr>`;
-    }).join('');
-    document.getElementById('qPanel').innerHTML = `
-      <h3>Q${q.id}: ${esc(q.short)}</h3>
-      ${typeof q.label==='string' ? `<div class="lbl">${esc(q.label)}</div>` : ''}
-      <div class="v2-boxes">
-        ${mine ? `<div class="v2-box"><div class="k">Your answer</div><div class="v">${esc(mine.text)}</div></div>` : ''}
-        <div class="v2-box"><div class="k">Points on offer</div><div class="v">${esc(q.pointsText||'')}</div></div>
-        ${mine ? `<div class="v2-box"><div class="k">Your points${m.kind==='open'?' so far':''}</div><div class="v">${mine.points>0?'+'+mine.points:'0'}</div></div>` : ''}
-        ${m.live ? `<div class="v2-box"><div class="k">Live update</div><div class="v">${esc(m.live)}</div></div>` : ''}
-      </div>
-      <div class="v2-msg ${mine?pill.c:'dn'}">${msg}</div>
-      <div style="overflow-x:auto;"><table><tr><th>Player</th><th>Answer</th><th class="num">Points${m.kind==='open'?' so far':''}</th></tr>${rows}</table></div>`;
+    // ---- rows grouped by how likely the picture is to change
+    const groups = [[0,'Likely to flip'],[1,'Could flip'],[2,'Likely to hold'],[3,'Locked in'],['none','Not marked yet'],['void','Voided']];
+    let out = '';
+    groups.forEach(g=>{
+      const list = models.filter(m=> (typeof g[0]==='number' ? m.lv===g[0] : m.kind===g[0]) && keep(m));
+      if(!list.length) return;
+      out += `<div class="qr-gh">${g[1]} (${list.length})</div>`;
+      list.forEach(m=>{
+        const q = m.q, mine = mineOf(m);
+        const segs = m.lv!=null ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
+        const meter = m.lv!=null ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
+        const fx = (mine && m.kind==='open' && mine.gain>0) ? `<span class="qr-fx">If it lands: +${mine.gain}</span>` : '';
+        const liveTxt = m.live ? esc(m.live) : (m.kind==='settled' ? 'Settled' : m.kind==='none' ? 'Not marked yet' : m.kind==='void' ? 'Voided, nobody scores' : '&nbsp;');
+        const right = m.right.slice().sort((a,b)=> (a.pl.id===youId?-1:0) - (b.pl.id===youId?-1:0));
+        const wrong = m.per.filter(p=>!p.right);
+        const chips = right.length ? right.map(p=>`<span class="qr-p${p.pl.id===youId?' me':''}">${esc(p.pl.name)}</span>`).join('') : '<span class="qr-p x">Nobody yet</span>';
+        const nameLine = (m.kind==='open'||m.kind==='settled') ? `<div class="qr-nm"><span class="h">${m.kind==='open'?'RIGHT NOW':'SCORED'}</span>${chips}</div>` : '';
+        let ptCol;
+        if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
+        else ptCol = `<div class="qr-pt${m.right.length?'':' z'}">${m.right.length}<small>of ${nPlayers} right${m.kind==='open'?' now':''}</small></div>`;
+
+        let why;
+        if(m.kind==='void') why = 'This question was voided, so nobody scores on it.';
+        else if(m.kind==='none') why = 'Not marked yet, so no points are on the board for this one.';
+        else if(m.kind==='open') why = mine
+          ? (mine.status==='unanswered' ? 'You did not answer this one.'
+            : mine.right ? `You are matching so far and scoring ${mine.points} pts. ${Q_LV_SENTENCE[m.lv]}`
+            : `You are not matching right now. If it lands your way you would score ${mine.pot} pts. ${Q_LV_SENTENCE[m.lv]}`)
+          : `${m.right.length} of ${nPlayers} players are matching so far. ${Q_LV_SENTENCE[m.lv]}`;
+        else why = mine
+          ? (mine.status==='unanswered' ? 'You did not answer this one.' : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
+          : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
+
+        const trs = m.per.slice().sort((a,b)=> b.points-a.points || (a.pl.id===youId?-1:b.pl.id===youId?1:0) || a.pl.name.localeCompare(b.pl.name)).map(p=>{
+          const t = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
+          return `<tr class="${p.pl.id===youId?'me':''}"><td class="pname">${esc(p.pl.name)}${p.pl.id===youId?' (you)':''}</td><td class="psub">${esc(p.text)}</td><td class="num ${p.right?'ptotal':'psub'}">${t}</td></tr>`;
+        }).join('');
+        const wrongLine = (m.kind==='open'||m.kind==='settled') ? `<div class="qr-nm"><span class="h">NOT RIGHT NOW</span>${wrong.length ? wrong.map(p=>`<span class="qr-p x${p.pl.id===youId?' me':''}">${esc(p.pl.name)}</span>`).join('') : '<span class="qr-p x">Nobody</span>'}</div>` : '';
+        const lvClass = m.lv!=null ? ' l'+m.lv : '';
+        const isOpen = qOpenSet.has(q.id);
+        out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
+          <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-t">${esc(q.short)}</div><div class="qr-live">${liveTxt}</div>${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLine}</div>${ptCol}</div>
+          <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div>${wrongLine}<div style="overflow-x:auto;"><table><tr><th>Player</th><th>Answer</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
+          <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
+      });
+    });
+    const grid = document.getElementById('qGrid');
+    grid.innerHTML = out || '<div class="v2-none" style="color:#B9C4BB;">Nothing here.</div>';
 
     document.querySelectorAll('#qFilters .v2-chip').forEach(b=>b.addEventListener('click', ()=>{ qFilter=b.dataset.f; renderQuestionsPlayerAnswers(); }));
-    document.querySelectorAll('#qGrid .v2-tile').forEach(b=>b.addEventListener('click', ()=>{ qSel=+b.dataset.q; renderQuestionsPlayerAnswers(); }));
+    grid.querySelectorAll('.qr-xp').forEach(b=>b.addEventListener('click', ()=>{
+      const row = b.parentNode, id = Number(row.dataset.q), o = row.classList.toggle('open');
+      if(o) qOpenSet.add(id); else qOpenSet.delete(id);
+      b.textContent = o ? 'Hide details' : 'See full details';
+    }));
   }
 
   async function initLeaderboard(){

@@ -707,6 +707,7 @@
         <span style="flex:2; font-size:0.75rem;">${(typeof q.label==='function' ? q.label('[team]') : q.label)}</span>
         ${correctAnswerInputHtml(q)}
         <label style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;"><input type="checkbox" class="q-open" data-id="${q.id}"> Still open — players matching the answer above score now; everyone else shows "Still open" (not wrong) until I untick this</label>
+        <label style="flex-basis:100%; margin-top:0.3rem; font-size:0.75rem;">How likely is the current picture to hold (shown on the leaderboard)? <select class="q-likelihood" data-id="${q.id}" style="font-size:0.75rem;"><option value="">Could flip (default)</option><option value="0">Likely to flip</option><option value="1">Could flip</option><option value="2">Likely to hold</option></select></label>
         <input type="text" class="q-live-update" data-id="${q.id}" placeholder="Live update (optional, shown to players before this is marked)" style="flex-basis:100%; margin-top:0.4rem; font-size:0.75rem;">
       </div>
     `).join('');
@@ -715,6 +716,8 @@
       if(row) fillAnswerInput(questionById(dbQ.id), row, dbQ.correct_answer);
       const openBox = wrap.querySelector(`.q-open[data-id="${dbQ.id}"]`);
       if(openBox) openBox.checked = !!(dbQ.correct_answer && dbQ.correct_answer.open);
+      const likeSel = wrap.querySelector(`.q-likelihood[data-id="${dbQ.id}"]`);
+      if(likeSel && dbQ.correct_answer && dbQ.correct_answer.likelihood != null) likeSel.value = String(dbQ.correct_answer.likelihood);
       const liveInput = wrap.querySelector(`.q-live-update[data-id="${dbQ.id}"]`);
       if(liveInput && dbQ.live_update) liveInput.value = dbQ.live_update;
     });
@@ -730,6 +733,8 @@
         const openBox = row.querySelector('.q-open');
         const isOpen = !!(openBox && openBox.checked);
         if(isOpen && !(correctAnswer && correctAnswer.void)) correctAnswer = { ...(correctAnswer||{}), open:true };
+        const likeSel = row.querySelector('.q-likelihood');
+        if(isOpen && likeSel && likeSel.value !== '' && correctAnswer && !correctAnswer.void) correctAnswer = { ...correctAnswer, likelihood: Number(likeSel.value) };
         const liveInput = document.querySelector(`.q-live-update[data-id="${q.id}"]`);
         const liveUpdate = liveInput ? liveInput.value.trim() : '';
         await supabaseAdmin.from('questions').update({
