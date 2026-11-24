@@ -1009,7 +1009,7 @@
           const cur = x ? x.points : 0;
           now += cur;
           // if the game ended today: swap in the what-if answers set in admin
-          if(m.hyp && m.hyp.kind==='flip' && m.kind==='open'){
+          if(m.hyp && m.hyp.kind==='flip' && m.hyp.fromHyp && m.kind==='open'){
             const it = m.hyp.items.find(i=>i.pl.id===pl.id);
             today += it ? it.pts : 0;
           } else today += cur;
@@ -1028,7 +1028,7 @@
       };
       rank('now'); rank('today'); rank('likely');
       const order = rows.slice().sort((x,y)=> y.likely-x.likely || y.now-x.now || x.pl.name.localeCompare(y.pl.name));
-      const nHyp = models.filter(m=>m.hyp && m.hyp.kind==='flip' && m.kind==='open').length;
+      const nHyp = models.filter(m=>m.hyp && m.hyp.kind==='flip' && m.hyp.fromHyp && m.kind==='open').length;
       const nFlip = models.filter(m=>m.kind==='open' && !m.linked && m.lv===0).length;
       document.getElementById('qStandingsNote').textContent = `${nHyp} what-if, ${nFlip} likely to flip`;
       const flips = models.filter(m=>m.flip).sort((x,y)=>x.lv-y.lv);
@@ -1037,7 +1037,7 @@
       const cell = (v, r, strong) => `<td class="num ${strong?'ptotal':'psub'}">${v}</td>`;
       const body = order.map((r,i)=>`<tr class="${r.pl.id===youId?'slot-pick-correct':''}"><td class="rank">${r.r_likely}</td><td class="pname">${esc(r.pl.name)}${r.pl.id===youId?' (you)':''}</td>${cell(r.now,r.r_now,false)}${cell(r.today,r.r_today,false)}${cell(r.likely,r.r_likely,true)}</tr>`).join('');
       document.getElementById('qStandings').innerHTML = `<div style="overflow-x:auto;"><table><tr><th>#</th><th>Player</th><th class="num">Points now</th><th class="num">If game ended today</th><th class="num">Likely outcome</th></tr>${body}</table></div>
-        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;"><b>Points now</b> is what each player has today, including Q1 and Q2 so far. <b>If game ended today</b> swaps in the what-if answers you've set in admin for open questions. <b>Likely outcome</b> keeps every open question as it is, except Yes/No and two-choice questions marked Likely to flip: on those the points go to the other side instead. Could flip, Likely to hold and settled questions stay as they are. Closest-to questions (quickest goal, 0-0s), Q9, Q16 and Q1/Q2 never flip, so every column only shows points someone already has on them. Nobody gets any of these for real.</div>${flipHtml}`;
+        ${flipHtml}`;
     })();
 
     const sumEl = document.getElementById('qSummary');
