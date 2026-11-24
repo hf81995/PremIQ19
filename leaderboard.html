@@ -105,6 +105,73 @@
     display:inline-block; font-family:'Space Mono',monospace; font-size:0.62rem; font-weight:700;
     background:var(--pitch); color:var(--chalk); padding:0.12rem 0.35rem; border-radius:5px; margin-right:0.4rem;
   }
+
+  /* ===== v2 layout: slots rows + question tiles ===== */
+  .v2-sechead{ font-family:'Space Mono',monospace; font-size:0.66rem; text-transform:uppercase; color:#B9C4BB; letter-spacing:0.04em; margin:1.2rem 0.2rem 0.6rem; }
+  .v2-card{ background:var(--chalk); border-radius:14px; margin-bottom:0.7rem; overflow:hidden; box-shadow:0 14px 30px -20px rgba(0,0,0,0.5); }
+  .v2-top{ display:grid; grid-template-columns:68px minmax(0,1fr) 58px; gap:0.6rem; align-items:center; padding:0.75rem 0.7rem 0.5rem; }
+  .v2-nm{ font-weight:700; font-size:0.9rem; word-break:break-word; }
+  .v2-nm small{ display:block; font-weight:500; font-size:0.68rem; color:var(--ink-soft); font-family:'Space Mono',monospace; }
+  .v2-bars{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+  .v2-bar{ border-radius:7px; background:var(--chalk-dim); border:1px solid var(--line); text-align:center; padding:5px 1px 4px; }
+  .v2-bar .s{ font-size:0.54rem; color:var(--ink-soft); line-height:1.1; min-height:1.3rem; display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; }
+  .v2-bar .t{ font-size:0.72rem; font-weight:800; margin-top:2px; }
+  .v2-bar.gold{ background:var(--gold); border-color:#8E7220; }
+  .v2-bar.gold .s, .v2-bar.gold .t{ color:#2A2205; }
+  .v2-sc{ text-align:right; font-family:'Space Mono',monospace; font-weight:800; font-size:1rem; color:var(--pitch); }
+  .v2-sc small{ display:block; font-size:0.58rem; color:var(--ink-soft); font-weight:400; }
+  .v2-xp{ display:block; width:100%; background:none; border:none; border-top:1px solid var(--line); padding:0.55rem; font-family:'Inter',sans-serif; font-size:0.78rem; font-weight:700; color:var(--pitch); cursor:pointer; }
+  .v2-xp:hover{ background:var(--chalk-dim); }
+  .v2-dt{ display:none; padding:0 0.7rem 0.7rem; overflow-x:auto; }
+  .v2-card.open .v2-dt{ display:block; }
+  .v2-dt table{ font-size:0.7rem; }
+  .v2-dt th, .v2-dt td{ padding:0.45rem 0.3rem; white-space:normal; }
+  .v2-dt .tag{ display:inline-block; font-size:0.62rem; padding:0.1rem 0.45rem; border-radius:999px; margin-left:0.35rem; font-weight:700; }
+  .v2-dt .tag.y{ background:rgba(203,166,51,0.3); color:#5C4A0C; }
+  .v2-dt .tag.n{ background:var(--chalk-dim); color:var(--ink-soft); }
+  .v2-note{ font-size:0.66rem; color:var(--ink-soft); line-height:1.5; margin-top:0.5rem; white-space:normal; }
+  .v2-fl{ display:flex; gap:0.45rem; flex-wrap:wrap; margin:0.2rem 0 0.8rem; }
+  .v2-chip{ font-family:'Inter',sans-serif; font-size:0.74rem; padding:0.35rem 0.8rem; border-radius:999px; border:1px solid rgba(255,255,255,0.3); background:none; color:#B9C4BB; cursor:pointer; }
+  .v2-chip.on{ background:var(--chalk); color:var(--pitch-dark); border-color:var(--chalk); font-weight:700; }
+  .v2-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0.55rem; }
+  .v2-tile{ background:var(--chalk); border:2px solid transparent; border-radius:14px; padding:0.75rem; text-align:left; cursor:pointer; font-family:'Inter',sans-serif; color:var(--ink); display:block; width:100%; }
+  .v2-tile.sel{ border-color:var(--gold); }
+  .v2-tn{ display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; gap:0.4rem; }
+  .v2-qn{ font-family:'Space Mono',monospace; font-size:0.66rem; color:var(--ink-soft); font-weight:700; }
+  .v2-pill{ font-size:0.62rem; font-weight:700; padding:0.15rem 0.55rem; border-radius:999px; white-space:nowrap; }
+  .v2-pill.ok{ background:rgba(46,139,87,0.18); color:#1D6B3F; }
+  .v2-pill.no{ background:rgba(163,38,56,0.14); color:#8A1F30; }
+  .v2-pill.op{ background:rgba(203,166,51,0.28); color:#5C4A0C; }
+  .v2-pill.dn{ background:var(--chalk-dim); color:var(--ink-soft); }
+  .v2-tt{ font-size:0.84rem; font-weight:700; line-height:1.3; min-height:2.2rem; }
+  .v2-live{ font-size:0.7rem; color:var(--ink-soft); margin:0.3rem 0 0.5rem; line-height:1.35; word-break:break-word; }
+  .v2-rt{ border-top:1px solid var(--line); padding-top:0.5rem; }
+  .v2-rt .l{ font-size:0.6rem; color:var(--ink-soft); font-family:'Space Mono',monospace; margin-bottom:0.35rem; }
+  .v2-av{ display:flex; align-items:center; flex-wrap:wrap; }
+  .v2-a{ width:24px; height:24px; border-radius:50%; background:var(--gold); color:#2A2205; font-size:0.56rem; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid var(--chalk); margin-left:-6px; }
+  .v2-a:first-child{ margin-left:0; }
+  .v2-a.me{ background:var(--pitch); color:var(--chalk); }
+  .v2-a.more{ background:var(--chalk-dim); color:var(--ink-soft); }
+  .v2-none{ font-size:0.7rem; color:var(--ink-soft); }
+  .v2-ft{ display:flex; justify-content:space-between; align-items:baseline; margin-top:0.55rem; padding-top:0.45rem; border-top:1px solid var(--line); font-size:0.64rem; color:var(--ink-soft); }
+  .v2-ft b{ font-family:'Space Mono',monospace; font-size:0.95rem; color:var(--pitch); }
+  .v2-ft b.z{ color:var(--ink-soft); font-weight:400; }
+  .v2-panel{ background:var(--chalk); border-radius:14px; padding:0.9rem; margin-top:0.8rem; }
+  .v2-panel h3{ margin:0 0 0.2rem; font-size:0.95rem; }
+  .v2-panel .lbl{ font-size:0.74rem; color:var(--ink-soft); line-height:1.45; margin-bottom:0.2rem; }
+  .v2-boxes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:0.5rem; margin:0.7rem 0; }
+  .v2-box{ background:var(--chalk-dim); border-radius:9px; padding:0.5rem 0.65rem; }
+  .v2-box .k{ font-size:0.6rem; color:var(--ink-soft); font-family:'Space Mono',monospace; }
+  .v2-box .v{ font-size:0.82rem; font-weight:700; margin-top:0.1rem; word-break:break-word; }
+  .v2-msg{ font-size:0.8rem; line-height:1.5; padding:0.55rem 0.7rem; border-radius:9px; margin-bottom:0.4rem; }
+  .v2-msg.ok{ background:rgba(46,139,87,0.14); }
+  .v2-msg.no{ background:rgba(163,38,56,0.1); }
+  .v2-msg.op, .v2-msg.dn{ background:var(--chalk-dim); }
+  .v2-panel table{ margin-top:0.6rem; }
+  .v2-panel tr.me td{ background:rgba(203,166,51,0.22); font-weight:700; }
+  .v2-summary{ display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.8rem; }
+  .v2-summary .v2-box{ background:var(--chalk); flex:1 1 140px; }
+  @media(max-width:520px){ .v2-top{ grid-template-columns:50px minmax(0,1fr) 46px; gap:0.35rem; padding:0.65rem 0.45rem 0.4rem; } .v2-bar .s{ font-size:0.5rem; } .v2-bar .t{ font-size:0.66rem; } .v2-nm{ font-size:0.78rem; } }
 </style>
 </head>
 <body>
@@ -332,6 +399,8 @@
     const playerOptions = slotsTabData.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
     panel.innerHTML = `
+      <div id="slotsGlance"></div>
+      <div class="v2-sechead">Full table and pick-by-pick view</div>
       <select class="player-select" id="slotsPlayerSelect">
         <option value="">Select Player Name</option>
         ${playerOptions}
@@ -356,6 +425,7 @@
 
     document.getElementById('slotsPlayerSelect').addEventListener('change', renderSlotsUnifiedTable);
     renderSlotsUnifiedTable();
+    renderSlotsGlance();
 
     document.getElementById('matchResultsToggleBtn').addEventListener('click', ()=>{
       const board = document.getElementById('matchResultsBoard');
@@ -401,6 +471,53 @@
         ${rows || '<tr><td colspan="5" class="psub" style="text-align:center; padding:1rem;">No fixtures entered for this matchweek.</td></tr>'}
       </table>
     `;
+  }
+
+  const SLOT_SHORT = {'1st':'1st','2nd':'2nd','3-6':'3rd to 6th','7-12':'7th to 12th','13-18':'13th to 18th','19':'19th','20':'20th'};
+  function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function ordinal(n){ const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+  function r2(x){ return Math.round(x*100)/100; }
+
+  function renderSlotsGlance(){
+    const el = document.getElementById('slotsGlance');
+    if(!el || !slotsTabData) return;
+    const { players, picks, teamStats, rankedTable } = slotsTabData;
+    if(!players.length){ el.innerHTML = ''; return; }
+    const cards = players.map(pl=>{
+      const mine = picks.filter(p=>p.player_id===pl.id);
+      const rows = SLOTS.map(slot=>{
+        const pick = mine.find(p=>p.slot===slot.id);
+        if(!pick) return { slot, pick:null, res:null, on:false };
+        const stats = statsFor(teamStats, pick.team_tag);
+        const pos = currentPositionFor(rankedTable, pick.team_tag);
+        const res = pickScore(pick, stats, pos);
+        const on = res.status==='correct' || res.status==='provisional-correct';
+        return { slot, pick, stats, pos, res, on };
+      });
+      const total = r2(rows.reduce((a,x)=>a+(x.res?x.res.points:0),0));
+      return { pl, rows, total, ok: rows.filter(x=>x.on).length };
+    }).sort((a,b)=> b.total-a.total || a.pl.name.localeCompare(b.pl.name));
+
+    el.innerHTML = '<div class="v2-sechead">Everyone\'s slots. Gold means the pick is in its zone right now</div>' + cards.map(c=>{
+      const bars = c.rows.map(x=>`<div class="v2-bar${x.on?' gold':''}"><div class="s">${SLOT_SHORT[x.slot.id]||x.slot.label}</div><div class="t">${x.pick?esc(x.pick.team_tag):'—'}</div></div>`).join('');
+      const body = c.rows.map(x=>{
+        if(!x.pick) return `<tr><td class="pname">${SLOT_SHORT[x.slot.id]}</td><td class="psub" colspan="6">No pick</td></tr>`;
+        const t = teamByTag(x.pick.team_tag);
+        const w = x.stats ? x.stats.wins : 0, gf = x.stats ? x.stats.goals_for : 0;
+        const tag = x.on ? '<span class="tag y">in zone</span>' : `<span class="tag n">${x.pos?'now '+ordinal(x.pos):'no data'}</span>`;
+        const pts = x.res ? r2(x.res.points) : 0;
+        const ptsTxt = x.res && x.res.status==='wrong' ? pts+' (flat)' : pts;
+        return `<tr><td class="pname">${SLOT_SHORT[x.slot.id]}</td><td>${esc(t?t.name:x.pick.team_tag)}${tag}</td><td class="num psub">${w}W, ${gf}G</td><td class="num psub">${w*3+gf*2}</td><td class="psub">x${x.slot.mult}</td><td class="num ptotal">${ptsTxt}</td></tr>`;
+      }).join('');
+      return `<div class="v2-card"><div class="v2-top"><div class="v2-nm">${esc(c.pl.name)}<small>${c.ok}/7</small></div><div class="v2-bars">${bars}</div><div class="v2-sc">${c.total}<small>pts</small></div></div>
+        <div class="v2-dt"><table><tr><th>Slot</th><th>Pick</th><th class="num">Wins, goals</th><th class="num">Base</th><th>Mult</th><th class="num">Points</th></tr>${body}</table>
+        <div class="v2-note">Base is wins x 3 plus goals x 2. A pick in its zone scores base x multiplier. A pick outside its zone scores 0 for now, and a flat 50 if it is still wrong when the season ends.</div></div>
+        <button class="v2-xp" data-lbl="open">See full details</button></div>`;
+    }).join('');
+    el.querySelectorAll('.v2-xp').forEach(b=>b.addEventListener('click', ()=>{
+      const card = b.parentNode, o = card.classList.toggle('open');
+      b.textContent = o ? 'Hide details' : 'See full details';
+    }));
   }
 
   function renderSlotsUnifiedTable(){
@@ -625,6 +742,8 @@
   // ============================================================
   let questionsTabData = null;
 
+  let qSel = 1, qFilter = 'all';
+
   async function renderQuestionsTab(){
     const panel = document.getElementById('questionsPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
@@ -634,18 +753,24 @@
       sb.from('questions').select('*'),
     ]);
     questionsTabData = { players:players||[], answers:answers||[], questions:questions||[] };
+    const prev = document.getElementById('questionsPlayerSelect');
+    const prevVal = prev ? prev.value : '';
 
-    const playerOptions = questionsTabData.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    const playerOptions = questionsTabData.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
     panel.innerHTML = `
       <select class="player-select" id="questionsPlayerSelect">
-        <option value="">Select Player Name</option>
+        <option value="">Select your name to see your points</option>
         ${playerOptions}
       </select>
-      <div class="board" id="questionsAnswersBoard" style="display:none;">
-        <div id="questionsAnswersList"></div>
-      </div>
+      <div id="qSummary"></div>
+      <div class="v2-fl" id="qFilters"></div>
+      <div class="v2-grid" id="qGrid"></div>
+      <div class="v2-panel" id="qPanel"></div>
     `;
-    document.getElementById('questionsPlayerSelect').addEventListener('change', renderQuestionsPlayerAnswers);
+    const sel = document.getElementById('questionsPlayerSelect');
+    sel.value = prevVal;
+    sel.addEventListener('change', renderQuestionsPlayerAnswers);
+    renderQuestionsPlayerAnswers();
   }
 
   function fmtAnswerForDisplay(q, row, correctAnswer, allAnswersRaw){
@@ -679,36 +804,124 @@
     return { text, status: scored.points>0 ? 'correct' : 'wrong', points: scored.points };
   }
 
-  function renderQuestionsPlayerAnswers(){
-    const playerId = document.getElementById('questionsPlayerSelect').value;
-    const board = document.getElementById('questionsAnswersBoard');
-    if(!playerId){ board.style.display='none'; return; }
-    const { answers, questions } = questionsTabData;
+  function maxPtsOf(q){
+    if(typeof q.points==='number') return q.points;
+    if(q.points && typeof q.points==='object') return Math.max(...Object.values(q.points));
+    if(q.yesPoints!=null) return Math.max(q.yesPoints, q.noPoints);
+    if(q.aPoints!=null) return Math.max(q.aPoints, q.bPoints);
+    return 0;
+  }
 
-    const rows = QUESTIONS.map(q => {
-      const row = answers.find(a=>a.player_id===playerId && a.question_id===q.id);
+  function buildQuestionModels(){
+    const { players, answers, questions } = questionsTabData;
+    return QUESTIONS.map(q=>{
       const dbQ = questions.find(x=>x.id===q.id);
-      const correctAnswer = dbQ ? dbQ.correct_answer : null;
-      const liveUpdate = dbQ ? dbQ.live_update : null;
-      const { text, status, points, open } = fmtAnswerForDisplay(q, row, correctAnswer, answers);
-      const statusLabel = status==='correct' ? `✅ Correct (${points}pt${points===1?'':'s'})`
-        : status==='wrong' ? '❌ Wrong (0pts)'
-        : status==='partial' ? `✅ ${points}pt${points===1?'':'s'} so far (still open)`
-        : status==='unanswered' ? '—'
-        : open ? '⏳ Still open'
-        : '⏳ Not marked yet';
-      const rowClass = (status==='correct' || status==='partial') ? 'qa-correct' : status==='wrong' ? 'qa-wrong' : '';
-      return `<tr class="${rowClass}">
-        <td class="pname">Q${q.id}: ${q.short}</td>
-        <td class="psub">${text}</td>
-        <td class="num">${statusLabel}</td>
-        <td class="qa-points">${q.pointsText || ''}</td>
-        <td class="psub">${liveUpdate ? liveUpdate : '—'}</td>
-      </tr>`;
-    }).join('');
+      const ca = dbQ ? dbQ.correct_answer : null;
+      const live = dbQ ? dbQ.live_update : null;
+      const per = players.map(pl=>{
+        const row = answers.find(a=>a.player_id===pl.id && a.question_id===q.id);
+        const r = fmtAnswerForDisplay(q, row, ca, answers);
+        return { pl, text:r.text, status:r.status, points:r.points||0, right:(r.status==='correct' || r.status==='partial') };
+      });
+      let kind;
+      if(ca && ca.void) kind = 'void';
+      else if(!ca) kind = 'none';
+      else if(ca.open) kind = 'open';
+      else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
+      return { q, ca, live, per, kind, right: per.filter(p=>p.right) };
+    });
+  }
 
-    document.getElementById('questionsAnswersList').innerHTML = `<table><tr><th>Question</th><th>Their Answer</th><th class="num">Status</th><th>Points On Offer</th><th>Live Update</th></tr>${rows}</table>`;
-    board.style.display = 'block';
+  function qPill(m, mine){
+    if(m.kind==='void') return { c:'dn', l:'Void' };
+    if(m.kind==='none') return { c:'dn', l:'Not marked' };
+    if(!mine) return m.kind==='open' ? { c:'op', l:'Still open' } : { c:'dn', l:'Settled' };
+    if(mine.status==='unanswered') return { c:'dn', l:'No answer' };
+    if(m.kind==='open') return mine.right ? { c:'ok', l:'On track' } : { c:'no', l:'Off track' };
+    return mine.right ? { c:'ok', l:'Correct' } : { c:'no', l:'Wrong' };
+  }
+
+  function qAvatars(m, youId){
+    if(m.kind==='void') return '<span class="v2-none">Question voided</span>';
+    if(m.kind==='none') return '<span class="v2-none">Not marked yet</span>';
+    if(!m.right.length) return '<span class="v2-none">Nobody yet</span>';
+    const r = m.right.slice().sort((a,b)=> (a.pl.id===youId?-1:0) - (b.pl.id===youId?-1:0));
+    const max = 4;
+    let h = r.slice(0,max).map(p=>`<div class="v2-a${p.pl.id===youId?' me':''}" title="${esc(p.pl.name)}">${esc(p.pl.name.slice(0,2).toUpperCase())}</div>`).join('');
+    if(r.length>max) h += `<div class="v2-a more">+${r.length-max}</div>`;
+    return `<div class="v2-av">${h}</div>`;
+  }
+
+  function renderQuestionsPlayerAnswers(){
+    if(!questionsTabData) return;
+    const youId = document.getElementById('questionsPlayerSelect').value;
+    const models = buildQuestionModels();
+    const nPlayers = questionsTabData.players.length;
+    const mineOf = m => youId ? m.per.find(p=>p.pl.id===youId) : null;
+
+    const sumEl = document.getElementById('qSummary');
+    if(youId){
+      const total = computeQuestionsPoints(youId, questionsTabData.answers, questionsTabData.questions);
+      const nRight = models.filter(m=>{ const x=mineOf(m); return x && x.right; }).length;
+      sumEl.innerHTML = `<div class="v2-summary"><div class="v2-box"><div class="k">Your question points</div><div class="v">${total}</div></div><div class="v2-box"><div class="k">Questions scoring for you</div><div class="v">${nRight} of ${QUESTIONS.length}</div></div></div>`;
+    } else sumEl.innerHTML = '';
+
+    if(!youId && (qFilter==='ok' || qFilter==='no')) qFilter = 'all';
+    const filters = [['all','All'],['open','Still open'],['settled','Settled']];
+    if(youId) filters.splice(1,0,['ok','You are on track'],['no','You are off track']);
+    document.getElementById('qFilters').innerHTML = filters.map(f=>`<button class="v2-chip${qFilter===f[0]?' on':''}" data-f="${f[0]}">${f[1]}</button>`).join('');
+
+    const tiles = models.filter(m=>{
+      const pill = qPill(m, mineOf(m));
+      if(qFilter==='open') return m.kind==='open';
+      if(qFilter==='settled') return m.kind==='settled';
+      if(qFilter==='ok') return pill.c==='ok';
+      if(qFilter==='no') return pill.c==='no';
+      return true;
+    }).map(m=>{
+      const q = m.q, mine = mineOf(m), pill = qPill(m, mine);
+      const foot = youId ? `<div class="v2-ft"><span>Your points${m.kind==='open'?' so far':''}</span>${mine && mine.points>0 ? `<b>+${mine.points}</b>` : '<b class="z">0</b>'}</div>` : '';
+      return `<button class="v2-tile${qSel===q.id?' sel':''}" data-q="${q.id}">
+        <div class="v2-tn"><span class="v2-qn">Q${q.id} · up to ${maxPtsOf(q)} pts</span><span class="v2-pill ${pill.c}">${pill.l}</span></div>
+        <div class="v2-tt">${esc(q.short)}</div>
+        <div class="v2-live">${m.live ? esc(m.live) : '&nbsp;'}</div>
+        <div class="v2-rt"><div class="l">Getting it right now (${m.right.length} of ${nPlayers})</div>${qAvatars(m, youId)}</div>
+        ${foot}</button>`;
+    }).join('');
+    document.getElementById('qGrid').innerHTML = tiles || '<div class="v2-none" style="color:#B9C4BB;">Nothing here.</div>';
+
+    const m = models.find(x=>x.q.id===qSel) || models[0];
+    const q = m.q, mine = mineOf(m), pill = qPill(m, mine);
+    let msg;
+    if(m.kind==='void') msg = 'This question was voided, so nobody scores on it.';
+    else if(m.kind==='none') msg = 'Not marked yet, so no points are on the board for this one.';
+    else if(m.kind==='open') msg = mine
+      ? (mine.status==='unanswered' ? 'You did not answer this one.'
+        : mine.right ? `You are on track. Your answer matches so far and is scoring ${mine.points} pts, but the question is still open.`
+        : 'You are off track right now, but the question is still open, so it can still change.')
+      : `${m.right.length} of ${nPlayers} players are matching so far. The question is still open.`;
+    else msg = mine
+      ? (mine.status==='unanswered' ? 'You did not answer this one.'
+        : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
+      : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
+    const rows = m.per.slice().sort((a,b)=> b.points-a.points || a.pl.name.localeCompare(b.pl.name)).map(p=>{
+      const ptsTxt = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
+      return `<tr class="${p.pl.id===youId?'me':''}"><td class="pname">${esc(p.pl.name)}${p.pl.id===youId?' (you)':''}</td><td class="psub" style="white-space:normal;">${esc(p.text)}</td><td class="num ${p.right?'ptotal':'psub'}">${ptsTxt}</td></tr>`;
+    }).join('');
+    document.getElementById('qPanel').innerHTML = `
+      <h3>Q${q.id}: ${esc(q.short)}</h3>
+      ${typeof q.label==='string' ? `<div class="lbl">${esc(q.label)}</div>` : ''}
+      <div class="v2-boxes">
+        ${mine ? `<div class="v2-box"><div class="k">Your answer</div><div class="v">${esc(mine.text)}</div></div>` : ''}
+        <div class="v2-box"><div class="k">Points on offer</div><div class="v">${esc(q.pointsText||'')}</div></div>
+        ${mine ? `<div class="v2-box"><div class="k">Your points${m.kind==='open'?' so far':''}</div><div class="v">${mine.points>0?'+'+mine.points:'0'}</div></div>` : ''}
+        ${m.live ? `<div class="v2-box"><div class="k">Live update</div><div class="v">${esc(m.live)}</div></div>` : ''}
+      </div>
+      <div class="v2-msg ${mine?pill.c:'dn'}">${msg}</div>
+      <div style="overflow-x:auto;"><table><tr><th>Player</th><th>Answer</th><th class="num">Points${m.kind==='open'?' so far':''}</th></tr>${rows}</table></div>`;
+
+    document.querySelectorAll('#qFilters .v2-chip').forEach(b=>b.addEventListener('click', ()=>{ qFilter=b.dataset.f; renderQuestionsPlayerAnswers(); }));
+    document.querySelectorAll('#qGrid .v2-tile').forEach(b=>b.addEventListener('click', ()=>{ qSel=+b.dataset.q; renderQuestionsPlayerAnswers(); }));
   }
 
   async function initLeaderboard(){
