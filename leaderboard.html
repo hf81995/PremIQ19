@@ -201,6 +201,16 @@
   .qr-sl{ font-size:0.74rem; font-weight:700; color:var(--pitch); margin-top:3px; }
   .qr-yp{ font-size:0.72rem; color:var(--ink); margin-top:4px; line-height:1.6; }
   .qr.nom{ border-left-color:var(--line); }
+  .qr.settled{ background:#E3EEE4; border-left-color:var(--pitch); }
+  .qr-bd{ margin-bottom:0.3rem; }
+  .qr-badge{ display:inline-block; font-family:'Space Mono',monospace; font-size:0.6rem; font-weight:700; letter-spacing:0.05em; padding:0.15rem 0.55rem; border-radius:5px; }
+  .qr-badge.settled{ background:var(--pitch); color:var(--chalk); }
+  .qr-badge.open{ background:rgba(203,166,51,0.3); color:#5C4A0C; }
+  .qr-badge.none, .qr-badge.void{ background:var(--chalk-dim); color:var(--ink-soft); }
+  .qr-p.hyp{ background:none; border:1px dashed var(--ink-soft); color:var(--ink); font-weight:600; }
+  .qr-p.hyp.me{ border-style:solid; border-color:var(--pitch); background:rgba(15,61,44,0.08); }
+  .qr-hyp{ border-top:1px dashed var(--line); padding-top:0.45rem; }
+  .qr-hyp .h{ color:var(--pitch); font-weight:700; }
   .qr-xp{ display:block; width:100%; background:none; border:none; border-top:1px solid var(--line); padding:0.5rem; font-family:'Inter',sans-serif; font-size:0.74rem; font-weight:700; color:var(--pitch); cursor:pointer; }
   .qr-xp:hover{ background:var(--chalk-dim); }
   .qr-dt{ display:none; padding:0.7rem 0.75rem; border-top:1px solid var(--line); font-size:0.8rem; line-height:1.5; }
@@ -915,7 +925,7 @@
           ansHtml = esc(r.text);
         }
         const pot = Math.max(pts, potentialFor(q, row ? row.answer : null));
-        return { pl, text:r.text, ansHtml, status, points:pts, right, pot, gain: Math.max(0, pot-pts), team: linked ? slotTeams[pl.id] : null };
+        return { pl, text:r.text, ansHtml, status, points:pts, right, pot, gain: Math.max(0, pot-pts), team: linked ? slotTeams[pl.id] : null, raw: row ? row.answer : null };
       });
       let kind;
       if(ca && ca.void) kind = 'void';
@@ -923,6 +933,26 @@
       else if(!ca) kind = 'none';
       else if(ca.open) kind = 'open';
       else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
+      let hyp = null;
+      if(kind==='open' && !linked && ca){
+        if((q.type==='numeric-tiered' || q.type==='numeric-single') && ca.actualValue!=null){
+          const target = Number(ca.actualValue);
+          const ans = per.filter(p=>p.raw!=null && p.raw!=='' && !isNaN(Number(p.raw))).map(p=>({ p, diff:Math.abs(Number(p.raw)-target) }));
+          const diffs = [...new Set(ans.map(a=>a.diff))].sort((a,b)=>a-b);
+          const nRanks = q.type==='numeric-tiered' ? 2 : 1;
+          const items = [];
+          diffs.slice(0,nRanks).forEach((d,i)=>{
+            const pts = q.type==='numeric-tiered' ? (i===0 ? q.points.closest : q.points.nextNearest) : q.points;
+            ans.filter(a=>a.diff===d).forEach(a=>items.push({ pl:a.p.pl, rank:i+1, pts, diff:d }));
+          });
+          hyp = { kind:'rank', target, unit:q.unit||'', items, others: ans.length-items.length };
+        } else if((q.type==='yesno' || q.type==='twochoice') && ca.value!=null){
+          const cur = ca.value; let other, pts, label;
+          if(q.type==='yesno'){ other = cur==='yes' ? 'no' : 'yes'; label = other==='yes' ? 'YES' : 'NO'; pts = q.yesPoints!=null ? (other==='yes' ? q.yesPoints : q.noPoints) : q.points; }
+          else { other = cur===q.optionA ? q.optionB : q.optionA; label = String(other).toUpperCase(); pts = q.aPoints!=null ? (other===q.optionA ? q.aPoints : q.bPoints) : q.points; }
+          hyp = { kind:'flip', label, items: per.filter(p=>p.raw===other).map(p=>({ pl:p.pl, pts })) };
+        }
+      }
       let lv = null;
       if(kind==='settled') lv = 3;
       else if(kind==='open') lv = linked ? 3 : ((ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1);
@@ -934,7 +964,7 @@
         slotLine = teams.length===1 ? `Slot ${nice} team everyone picked: ${tagName(teams[0])}`
           : teams.length>1 ? `Slot ${nice} teams differ by player: ${teams.map(tagName).join(', ')}` : null;
       }
-      return { q, ca, live, per, kind, lv, linked, slotLine, right: per.filter(p=>p.right) };
+      return { q, ca, live, per, kind, lv, linked, slotLine, hyp, right: per.filter(p=>p.right) };
     });
   }
 
@@ -975,7 +1005,7 @@
     let out = '';
     models.filter(keep).forEach(m=>{
       const q = m.q, mine = mineOf(m);
-      const showMeter = m.lv!=null && !m.linked;
+      const showMeter = m.lv!=null && !m.linked && m.kind==='open';
       const segs = showMeter ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
       const meter = showMeter ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
       const fx = (mine && m.kind==='open' && mine.gain>0) ? `<span class="qr-fx">If it lands: +${mine.gain}</span>` : '';
@@ -990,6 +1020,18 @@
       const badChips = notScoring.length ? notScoring.map(p=>`<span class="qr-p ${badCls}${p.pl.id===youId?' me':''}">${chipTxt(p)}</span>`).join('') : '<span class="qr-p x">Nobody</span>';
       const nameLines = (m.kind==='open'||m.kind==='settled')
         ? `<div class="qr-nm"><span class="h">${m.kind==='open'?'SCORING NOW':'SCORED'}</span>${goodChips}</div><div class="qr-nm"><span class="h">${m.kind==='open'?'NOT SCORING YET':'DID NOT SCORE'}</span>${badChips}</div>` : '';
+      let hypHtml = '';
+      if(m.hyp){
+        const me = id => id===youId ? ' me' : '';
+        if(m.hyp.kind==='rank'){
+          const ch = m.hyp.items.map(i=>`<span class="qr-p hyp${me(i.pl.id)}">${ordinal(i.rank)} ${esc(i.pl.name)} (${i.diff===0?'spot on':i.diff+' away'}) +${i.pts}</span>`).join('') || '<span class="qr-p x">No guesses</span>';
+          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: CLOSEST TO ${esc(String(m.hyp.target))} ${esc(m.hyp.unit.toUpperCase())} IF IT ENDED NOW</span>${ch}${m.hyp.others>0?`<span class="v2-none">+${m.hyp.others} further away</span>`:''}</div>`;
+        } else {
+          const ch = m.hyp.items.length ? m.hyp.items.map(i=>`<span class="qr-p hyp${me(i.pl.id)}">${esc(i.pl.name)} +${i.pts}</span>`).join('') : '<span class="qr-p x">Nobody</span>';
+          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: WHO SCORES IF IT FLIPS TO ${esc(m.hyp.label)}</span>${ch}</div>`;
+        }
+      }
+      const badge = m.kind==='settled' ? '<span class="qr-badge settled">✓ SETTLED</span>' : m.kind==='open' ? '<span class="qr-badge open">STILL OPEN</span>' : m.kind==='void' ? '<span class="qr-badge void">VOID</span>' : '<span class="qr-badge none">NOT MARKED YET</span>';
       let ptCol;
       if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
       else ptCol = `<div class="qr-pt${m.right.length?'':' z'}">${m.right.length}<small>of ${nPlayers} scoring${m.kind==='open'?' now':''}</small></div>`;
@@ -1014,10 +1056,10 @@
       }).join('');
       const slotHtml = m.slotLine ? `<div class="qr-sl">${esc(m.slotLine)}</div>` : '';
       const yourPicks = (m.linked && mine) ? `<div class="qr-yp"><b>Your picks:</b> ${mine.ansHtml}</div>` : '';
-      const lvClass = (m.lv!=null && !m.linked) ? ' l'+m.lv : ' nom';
+      const lvClass = m.kind==='settled' ? ' settled' : ((m.lv!=null && !m.linked) ? ' l'+m.lv : ' nom');
       const isOpen = qOpenSet.has(q.id);
       out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
-        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-t">${esc(q.short)}</div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}</div>${ptCol}</div>
+        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-bd">${badge}</div><div class="qr-t">${esc(q.short)}</div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}${hypHtml}</div>${ptCol}</div>
         <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div><div style="overflow-x:auto;"><table><tr><th>Player</th>${m.linked?'<th>Slot team</th>':''}<th>${m.linked?'Picks':'Answer'}</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
         <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
     });
