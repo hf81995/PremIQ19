@@ -949,8 +949,8 @@
       else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
       let hyp = null;
       if(kind==='open' && !linked && ca){
-        if((q.type==='numeric-tiered' || q.type==='numeric-single') && (ca.hypothetical!=null || ca.actualValue!=null)){
-          const target = Number(ca.hypothetical!=null ? ca.hypothetical : ca.actualValue);
+        if((q.type==='numeric-tiered' || q.type==='numeric-single') && ca.actualValue!=null){
+          const target = Number(ca.actualValue);
           const ans = per.filter(p=>p.raw!=null && p.raw!=='' && !isNaN(Number(p.raw))).map(p=>({ p, diff:Math.abs(Number(p.raw)-target) }));
           const diffs = [...new Set(ans.map(a=>a.diff))].sort((a,b)=>a-b);
           const nRanks = q.type==='numeric-tiered' ? 2 : 1;
@@ -980,7 +980,7 @@
       }
       let lv = null;
       if(kind==='settled') lv = 3;
-      else if(kind==='open') lv = linked ? 3 : ((ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1);
+      else if(kind==='open') lv = (linked || !(q.type==='yesno' || q.type==='twochoice')) ? 3 : ((ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1);
       let slotLine = null;
       if(linked){
         const teams = [...new Set(Object.values(slotTeams).filter(Boolean))];
@@ -1009,14 +1009,14 @@
           const cur = x ? x.points : 0;
           now += cur;
           // if the game ended today: swap in the what-if answers set in admin
-          if(m.hyp && m.kind==='open'){
+          if(m.hyp && m.hyp.kind==='flip' && m.kind==='open'){
             const it = m.hyp.items.find(i=>i.pl.id===pl.id);
             today += it ? it.pts : 0;
           } else today += cur;
           // likely outcome: only "Likely to flip" open questions change; everything else stays as it is
           if(m.kind==='open' && !m.linked && m.lv===0){
             if(m.flip){ const g = m.flip.gain.find(i=>i.pl.id===pl.id); likely += g ? g.pts : 0; }
-            else if(m.hyp){ const it = m.hyp.items.find(i=>i.pl.id===pl.id); likely += it ? it.pts : 0; }
+            else if(m.hyp && m.hyp.kind==='flip'){ const it = m.hyp.items.find(i=>i.pl.id===pl.id); likely += it ? it.pts : 0; }
             else likely += cur;
           } else likely += cur;
         });
@@ -1028,7 +1028,7 @@
       };
       rank('now'); rank('today'); rank('likely');
       const order = rows.slice().sort((x,y)=> y.likely-x.likely || y.now-x.now || x.pl.name.localeCompare(y.pl.name));
-      const nHyp = models.filter(m=>m.hyp && m.kind==='open').length;
+      const nHyp = models.filter(m=>m.hyp && m.hyp.kind==='flip' && m.kind==='open').length;
       const nFlip = models.filter(m=>m.kind==='open' && !m.linked && m.lv===0).length;
       document.getElementById('qStandingsNote').textContent = `${nHyp} what-if, ${nFlip} likely to flip`;
       const flips = models.filter(m=>m.flip).sort((x,y)=>x.lv-y.lv);
@@ -1037,7 +1037,7 @@
       const cell = (v, r, strong) => `<td class="num ${strong?'ptotal':'psub'}">${v}</td>`;
       const body = order.map((r,i)=>`<tr class="${r.pl.id===youId?'slot-pick-correct':''}"><td class="rank">${r.r_likely}</td><td class="pname">${esc(r.pl.name)}${r.pl.id===youId?' (you)':''}</td>${cell(r.now,r.r_now,false)}${cell(r.today,r.r_today,false)}${cell(r.likely,r.r_likely,true)}</tr>`).join('');
       document.getElementById('qStandings').innerHTML = `<div style="overflow-x:auto;"><table><tr><th>#</th><th>Player</th><th class="num">Points now</th><th class="num">If game ended today</th><th class="num">Likely outcome</th></tr>${body}</table></div>
-        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;"><b>Points now</b> is what each player has today, including Q1 and Q2 so far. <b>If game ended today</b> swaps in the what-if answers you've set in admin for open questions. <b>Likely outcome</b> keeps every open question as it is, except ones marked Likely to flip: on those the points go to the other side instead (for Yes/No and two-choice questions), or to the what-if ranking for numeric ones. Could flip, Likely to hold and settled questions stay as they are. Nobody gets any of these for real.</div>${flipHtml}`;
+        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;"><b>Points now</b> is what each player has today, including Q1 and Q2 so far. <b>If game ended today</b> swaps in the what-if answers you've set in admin for open questions. <b>Likely outcome</b> keeps every open question as it is, except Yes/No and two-choice questions marked Likely to flip: on those the points go to the other side instead. Could flip, Likely to hold and settled questions stay as they are. Closest-to questions (quickest goal, 0-0s), Q9, Q16 and Q1/Q2 never flip, so every column only shows points someone already has on them. Nobody gets any of these for real.</div>${flipHtml}`;
     })();
 
     const sumEl = document.getElementById('qSummary');
@@ -1067,7 +1067,7 @@
     let out = '';
     models.filter(keep).forEach(m=>{
       const q = m.q, mine = mineOf(m);
-      const showMeter = m.lv!=null && !m.linked && m.kind==='open';
+      const showMeter = m.lv!=null && !m.linked && m.kind==='open' && (m.q.type==='yesno' || m.q.type==='twochoice');
       const segs = showMeter ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
       const meter = showMeter ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
       const fx = '';
@@ -1086,14 +1086,15 @@
       if(m.hyp){
         const me = id => id===youId ? ' me' : '';
         if(m.hyp.kind==='rank'){
-          const ch = m.hyp.items.map(i=>`<span class="qr-p hyp${me(i.pl.id)}">${ordinal(i.rank)} ${esc(i.pl.name)} (${i.diff===0?'spot on':i.diff+' away'}) +${i.pts}</span>`).join('') || '<span class="qr-p x">No guesses</span>';
-          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: CLOSEST TO ${esc(String(m.hyp.target))} ${esc(m.hyp.unit.toUpperCase())} IF IT ENDED NOW</span>${ch}${m.hyp.others>0?`<span class="v2-none">+${m.hyp.others} further away</span>`:''}</div>`;
+          const ch = m.hyp.items.map(i=>`<span class="qr-p${me(i.pl.id)}">${ordinal(i.rank)} ${esc(i.pl.name)} (${i.diff===0?'spot on':i.diff+' away'}) +${i.pts}</span>`).join('') || '<span class="qr-p x">No guesses</span>';
+          hypHtml = `<div class="qr-nm qr-hyp"><span class="h">CLOSEST TO ${esc(String(m.hyp.target))} ${esc(m.hyp.unit.toUpperCase())} SO FAR</span>${ch}${m.hyp.others>0?`<span class="v2-none">+${m.hyp.others} further away</span>`:''}</div>`;
         } else {
           const ch = m.hyp.items.length ? m.hyp.items.map(i=>`<span class="qr-p hyp${me(i.pl.id)}">${esc(i.pl.name)} +${i.pts}</span>`).join('') : '<span class="qr-p x">Nobody</span>';
           hypHtml = `<div class="qr-nm qr-hyp"><span class="h">HYPOTHETICAL: WHO SCORES IF IT ${m.hyp.fromHyp?'ENDS':'FLIPS TO'} ${esc(m.hyp.label)}</span>${ch}</div>`;
         }
       }
       const badge = m.kind==='settled' ? '<span class="qr-badge settled">✓ SETTLED</span>' : m.kind==='open' ? '<span class="qr-badge open">STILL OPEN</span>' : m.kind==='void' ? '<span class="qr-badge void">VOID</span>' : '<span class="qr-badge none">NOT MARKED YET</span>';
+      const closestTag = (q.type==='numeric-tiered' || q.type==='numeric-single') ? ' <span class="qr-badge none">CLOSEST TO WINS</span>' : '';
       let ptCol;
       if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
       else ptCol = '<div></div>';
@@ -1118,10 +1119,10 @@
       }).join('');
       const slotHtml = m.slotLine ? `<div class="qr-sl">${esc(m.slotLine)}</div>` : '';
       const yourPicks = (m.linked && mine) ? `<div class="qr-yp"><b>Your picks:</b> ${mine.ansHtml}</div>` : '';
-      const lvClass = m.kind==='settled' ? ' settled' : ((m.lv!=null && !m.linked) ? ' l'+m.lv : ' nom');
+      const lvClass = m.kind==='settled' ? ' settled' : ((m.lv!=null && !m.linked && (m.q.type==='yesno' || m.q.type==='twochoice')) ? ' l'+m.lv : ' nom');
       const isOpen = qOpenSet.has(q.id);
       out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
-        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-bd">${badge}</div><div class="qr-t">${esc(q.short)} <span class="qr-w">(${esc(ptsLabel(q))})</span></div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}${hypHtml}</div>${ptCol}</div>
+        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-bd">${badge}${closestTag}</div><div class="qr-t">${esc(q.short)} <span class="qr-w">(${esc(ptsLabel(q))})</span></div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}${hypHtml}</div>${ptCol}</div>
         <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div><div style="overflow-x:auto;"><table><tr><th>Player</th>${m.linked?'<th>Slot team</th>':''}<th>${m.linked?'Picks':'Answer'}</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
         <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
     });
