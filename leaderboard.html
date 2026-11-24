@@ -1026,27 +1026,24 @@
 
     const sumEl = document.getElementById('qSummary');
     if(youId){
-      let now=0, safe=0, chg=0, gain=0;
+      let now=0, safe=0, chg=0;
       models.forEach(m=>{ const x=mineOf(m); if(!x) return;
         now += x.points;
         if(m.kind==='settled') safe += x.points;
-        else if(m.kind==='open'){ if(m.lv>=2) safe += x.points; else chg += x.points; gain += x.gain; } });
+        else if(m.kind==='open'){ if(m.lv>=2) safe += x.points; else chg += x.points; } });
       sumEl.innerHTML = `<div class="v2-summary">
         <div class="v2-box"><div class="k">Points now</div><div class="v">${now}</div></div>
         <div class="v2-box"><div class="k">Safe or likely to hold</div><div class="v">${safe}</div></div>
-        <div class="v2-box"><div class="k">Could change</div><div class="v">${chg}</div></div>
-        <div class="v2-box"><div class="k">Could still gain</div><div class="v">${gain}</div></div></div>`;
+        <div class="v2-box"><div class="k">Could change</div><div class="v">${chg}</div></div></div>`;
     } else sumEl.innerHTML = '';
 
-    if(!youId && qFilter==='up') qFilter = 'all';
+    if(qFilter==='up') qFilter = 'all';
     const filters = [['all','All'],['risk','Could change']];
-    if(youId) filters.push(['up','Could still gain']);
     filters.push(['safe','Locked or likely']);
     document.getElementById('qFilters').innerHTML = filters.map(f=>`<button class="v2-chip${qFilter===f[0]?' on':''}" data-f="${f[0]}">${f[1]}</button>`).join('');
 
     const keep = m=>{
       if(qFilter==='risk') return m.kind==='open' && m.lv<=1;
-      if(qFilter==='up'){ const x=mineOf(m); return m.kind==='open' && x && x.gain>0; }
       if(qFilter==='safe') return m.lv!=null && m.lv>=2;
       return true;
     };
@@ -1057,7 +1054,7 @@
       const showMeter = m.lv!=null && !m.linked && m.kind==='open';
       const segs = showMeter ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
       const meter = showMeter ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
-      const fx = (mine && m.kind==='open' && mine.gain>0) ? `<span class="qr-fx">If it lands: +${mine.gain}</span>` : '';
+      const fx = '';
       const liveTxt = m.live ? esc(m.live) : (m.kind==='settled' ? 'Settled' : m.kind==='none' ? 'Not marked yet' : m.kind==='void' ? 'Voided, nobody scores' : '');
       const showPts = typeof q.points==='object' || q.yesPoints!=null || q.aPoints!=null;
       const byPts = (a,b)=> b.points-a.points || a.pl.name.localeCompare(b.pl.name);
@@ -1083,7 +1080,7 @@
       const badge = m.kind==='settled' ? '<span class="qr-badge settled">✓ SETTLED</span>' : m.kind==='open' ? '<span class="qr-badge open">STILL OPEN</span>' : m.kind==='void' ? '<span class="qr-badge void">VOID</span>' : '<span class="qr-badge none">NOT MARKED YET</span>';
       let ptCol;
       if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
-      else ptCol = `<div class="qr-pt${m.right.length?'':' z'}">${m.right.length}<small>of ${nPlayers} scoring${m.kind==='open'?' now':''}</small></div>`;
+      else ptCol = '<div></div>';
 
       let why;
       if(m.kind==='void') why = 'This question was voided, so nobody scores on it.';
@@ -1092,11 +1089,11 @@
         ? (mine.status==='unanswered' ? 'You did not answer this one.'
           : m.linked ? (mine.right ? `You have ${mine.points} pts so far. Points can only go up as more games are played.` : 'No points yet. Points can only go up as more games are played.')
           : mine.right ? `You are matching so far and scoring ${mine.points} pts. ${Q_LV_SENTENCE[m.lv]}`
-          : `You are not matching right now. If it lands your way you would score ${mine.pot} pts. ${Q_LV_SENTENCE[m.lv]}`)
-        : (m.linked ? `${m.right.length} of ${nPlayers} players have points so far. Points can only go up.` : `${m.right.length} of ${nPlayers} players are matching so far. ${Q_LV_SENTENCE[m.lv]}`);
+          : `You are not matching right now. ${Q_LV_SENTENCE[m.lv]}`)
+        : (m.linked ? 'Points can only go up as more games are played.' : Q_LV_SENTENCE[m.lv]);
       else why = mine
         ? (mine.status==='unanswered' ? 'You did not answer this one.' : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
-        : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
+        : 'Settled.';
 
       const trs = m.per.slice().sort((a,b)=> b.points-a.points || (a.pl.id===youId?-1:b.pl.id===youId?1:0) || a.pl.name.localeCompare(b.pl.name)).map(p=>{
         const t = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
