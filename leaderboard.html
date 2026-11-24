@@ -818,6 +818,11 @@
       <div class="v2-fl" id="qFilters"></div>
       <div class="qr-key"><span><i style="background:#4C9A2A"></i>Locked in</span><span><i style="background:#97C459"></i>Likely to hold</span><span><i style="background:#EF9F27"></i>Could flip</span><span><i style="background:#D6453D"></i>Likely to flip</span></div>
       <div id="qGrid"></div>
+      <details class="month-collapse" id="qStandingsWrap" open style="margin:1rem 0 0;">
+        <summary><span><b>Summary: question standings and what could flip</b></span><span class="recap-summary-status" id="qStandingsNote"></span></summary>
+        <div class="month-collapse-body" id="qStandings" style="padding:0;"></div>
+      </details>
+
     `;
     const sel = document.getElementById('questionsPlayerSelect');
     sel.value = prevVal;
@@ -957,6 +962,13 @@
           hyp = { kind:'flip', label, fromHyp, items: per.filter(p=>p.raw===other).map(p=>({ pl:p.pl, pts })) };
         }
       }
+      let flip = null;
+      if(kind==='open' && !linked && ca && ca.value!=null && (q.type==='yesno' || q.type==='twochoice')){
+        let other, pts, label;
+        if(q.type==='yesno'){ other = ca.value==='yes' ? 'no' : 'yes'; label = other==='yes' ? 'Yes' : 'No'; pts = q.yesPoints!=null ? (other==='yes' ? q.yesPoints : q.noPoints) : q.points; }
+        else { other = ca.value===q.optionA ? q.optionB : q.optionA; label = String(other); pts = q.aPoints!=null ? (other===q.optionA ? q.aPoints : q.bPoints) : q.points; }
+        flip = { label, gain: per.filter(p=>p.raw===other).map(p=>({ pl:p.pl, pts })), drop: per.filter(p=>p.right).map(p=>p.pl) };
+      }
       let lv = null;
       if(kind==='settled') lv = 3;
       else if(kind==='open') lv = linked ? 3 : ((ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1);
@@ -968,7 +980,7 @@
         slotLine = teams.length===1 ? `Slot ${nice} team everyone picked: ${tagName(teams[0])}`
           : teams.length>1 ? `Slot ${nice} teams differ by player: ${teams.map(tagName).join(', ')}` : null;
       }
-      return { q, ca, live, per, kind, lv, linked, slotLine, hyp, right: per.filter(p=>p.right) };
+      return { q, ca, live, per, kind, lv, linked, slotLine, hyp, flip, right: per.filter(p=>p.right) };
     });
   }
 
@@ -978,6 +990,39 @@
     const models = buildQuestionModels();
     const nPlayers = questionsTabData.players.length;
     const mineOf = m => youId ? m.per.find(p=>p.pl.id===youId) : null;
+
+    // ---- question standings: points now v hypothetical
+    (function(){
+      const rows = questionsTabData.players.map(pl=>{
+        let now = 0, proj = 0;
+        models.forEach(m=>{
+          const x = m.per.find(p=>p.pl.id===pl.id);
+          const cur = x ? x.points : 0;
+          now += cur;
+          if(m.hyp && m.kind==='open'){
+            const it = m.hyp.items.find(i=>i.pl.id===pl.id);
+            proj += it ? it.pts : 0;
+          } else proj += cur;
+        });
+        return { pl, now, proj };
+      });
+      const nowOrder = rows.slice().sort((a,b)=> b.now-a.now || a.pl.name.localeCompare(b.pl.name));
+      nowOrder.forEach((r,i)=>{ r.nowRank = (i>0 && nowOrder[i-1].now===r.now) ? nowOrder[i-1].nowRank : i+1; });
+      const projOrder = rows.slice().sort((a,b)=> b.proj-a.proj || b.now-a.now || a.pl.name.localeCompare(b.pl.name));
+      projOrder.forEach((r,i)=>{ r.projRank = (i>0 && projOrder[i-1].proj===r.proj) ? projOrder[i-1].projRank : i+1; });
+      const nHyp = models.filter(m=>m.hyp && m.kind==='open').length;
+      document.getElementById('qStandingsNote').textContent = nHyp ? `${nHyp} hypothetical question${nHyp===1?'':'s'} included` : 'no hypotheticals set yet';
+      const flips = models.filter(m=>m.flip).sort((a,b)=>a.lv-b.lv);
+      const nm = (list, y) => list.length ? list.map(x=>{ const pl = x.pl||x; return `<span class="qr-p${pl.id===youId?' me':''}">${esc(pl.name)}${x.pts?' +'+x.pts:''}</span>`; }).join('') : '<span class="qr-p x">Nobody</span>';
+      const flipHtml = flips.length ? `<div style="padding:0 0.9rem 0.9rem;"><div class="qr-gh" style="color:var(--ink-soft);margin:0.2rem 0 0.4rem;">WHAT COULD FLIP</div>${flips.map(m=>`<div style="border-top:1px solid var(--line); padding:0.55rem 0;"><div style="font-size:0.8rem; font-weight:700;">Q${m.q.id}: ${esc(m.q.short)} <span class="qr-lb">(${Q_LV[m.lv]})</span></div><div class="qr-nm"><span class="h">IF IT FLIPS TO ${esc(m.flip.label.toUpperCase())}, THESE GAIN</span>${nm(m.flip.gain)}</div><div class="qr-nm"><span class="h">THESE DROP OUT</span>${nm(m.flip.drop)}</div></div>`).join('')}</div>` : '';
+      const body = projOrder.map(r=>{
+        const mv = r.nowRank - r.projRank;
+        const mvTxt = mv>0 ? `<span style="color:#1D6B3F;">▲ ${mv}</span>` : mv<0 ? `<span style="color:#8A1F30;">▼ ${-mv}</span>` : '<span class="psub">–</span>';
+        return `<tr class="${r.pl.id===youId?'slot-pick-correct':''}"><td class="rank">${r.projRank}</td><td class="pname">${esc(r.pl.name)}${r.pl.id===youId?' (you)':''}</td><td class="num psub">${r.now}</td><td class="num ptotal">${r.proj}</td><td class="num">${mvTxt}</td><td class="num psub">${r.nowRank}</td></tr>`;
+      }).join('');
+      document.getElementById('qStandings').innerHTML = `<div style="overflow-x:auto;"><table><tr><th>#</th><th>Player</th><th class="num">Points now</th><th class="num">Hypothetical</th><th class="num">Move</th><th class="num">Now rank</th></tr>${body}</table></div>
+        <div class="v2-note" style="padding:0.5rem 0.9rem 0.8rem;">Points now are what each player has today, including Q1 and Q2 so far. Hypothetical swaps in the what-if answers you've set in admin for open questions. Settled questions and open ones without a hypothetical stay at their current points. Nobody gets the hypothetical points for real.</div>${flipHtml}`;
+    })();
 
     const sumEl = document.getElementById('qSummary');
     if(youId){
