@@ -196,6 +196,11 @@
   .qr-p.me{ background:var(--pitch); color:var(--chalk); }
   .qr-p.x{ background:var(--chalk-dim); color:var(--ink-soft); font-weight:500; }
   .qr-p.x.me{ outline:2px solid var(--pitch); color:var(--pitch); }
+  .qr-p.bad{ background:rgba(163,38,56,0.14); color:#8A1F30; font-weight:600; }
+  .qr-p.bad.me{ outline:2px solid #8A1F30; }
+  .qr-sl{ font-size:0.74rem; font-weight:700; color:var(--pitch); margin-top:3px; }
+  .qr-yp{ font-size:0.72rem; color:var(--ink); margin-top:4px; line-height:1.6; }
+  .qr.nom{ border-left-color:var(--line); }
   .qr-xp{ display:block; width:100%; background:none; border:none; border-top:1px solid var(--line); padding:0.5rem; font-family:'Inter',sans-serif; font-size:0.74rem; font-weight:700; color:var(--pitch); cursor:pointer; }
   .qr-xp:hover{ background:var(--chalk-dim); }
   .qr-dt{ display:none; padding:0.7rem 0.75rem; border-top:1px solid var(--line); font-size:0.8rem; line-height:1.5; }
@@ -782,12 +787,14 @@
   async function renderQuestionsTab(){
     const panel = document.getElementById('questionsPanel');
     if(!sb){ panel.innerHTML = '<div class="board"><div class="empty">Preview mode — connect Supabase in config.js to see this.</div></div>'; return; }
-    const [{data:players},{data:answers},{data:questions}] = await Promise.all([
+    const [{data:players},{data:answers},{data:questions},{data:qPicks},{data:qResults}] = await Promise.all([
       sb.from('players').select('*'),
       sb.from('answers').select('*'),
       sb.from('questions').select('*'),
+      sb.from('picks').select('*'),
+      sb.from('match_results').select('*'),
     ]);
-    questionsTabData = { players:players||[], answers:answers||[], questions:questions||[] };
+    questionsTabData = { players:players||[], answers:answers||[], questions:questions||[], picks:qPicks||[], matchResults:qResults||[] };
     const prev = document.getElementById('questionsPlayerSelect');
     const prevVal = prev ? prev.value : '';
 
@@ -850,7 +857,6 @@
     if(q.aPoints!=null) return Math.max(q.aPoints, q.bPoints);
     return 0;
   }
-  // What this player's answer would be worth if it ends up correct.
   function potentialFor(q, raw){
     if(raw==null || raw==='') return 0;
     if(q.type==='yesno') return q.yesPoints!=null ? (raw==='yes' ? q.yesPoints : q.noPoints) : q.points;
@@ -859,30 +865,76 @@
     if(q.type==='numeric-tiered') return q.points.closest;
     return typeof q.points==='number' ? q.points : maxPtsOf(q);
   }
+  const tagName = t => { const x = teamByTag(t); return x ? x.name : t; };
+  const spanC = (c, t, w) => `<span style="color:${c};${w?'font-weight:700;':''}">${t}</span>`;
+
+  // Match result for team v opp from the team's point of view, or null if not played.
+  function qResultFor(team, opp){
+    const m = (questionsTabData.matchResults||[]).find(x=> (x.home_tag===team && x.away_tag===opp) || (x.home_tag===opp && x.away_tag===team));
+    if(!m || m.home_score==null || m.away_score==null) return null;
+    return m.home_tag===team ? { gf:m.home_score, ga:m.away_score } : { gf:m.away_score, ga:m.home_score };
+  }
 
   function buildQuestionModels(){
-    const { players, answers, questions } = questionsTabData;
+    const { players, answers, questions, picks } = questionsTabData;
     return QUESTIONS.map(q=>{
       const dbQ = questions.find(x=>x.id===q.id);
       const ca = dbQ ? dbQ.correct_answer : null;
       const live = dbQ ? dbQ.live_update : null;
+      const linked = !!q.slotLink;
+      const need = q.type==='multi3' ? 2 : 1;
+      const slotTeams = {};
       const per = players.map(pl=>{
         const row = answers.find(a=>a.player_id===pl.id && a.question_id===q.id);
-        const r = fmtAnswerForDisplay(q, row, ca, answers);
-        const right = (r.status==='correct' || r.status==='partial');
-        const pts = r.points||0;
+        let r, ansHtml = null, pts, right, status;
+        if(linked){
+          const pk = picks.find(x=>x.player_id===pl.id && x.slot===q.slotLink);
+          const team = pk ? pk.team_tag : null;
+          slotTeams[pl.id] = team;
+          const raw = (row && Array.isArray(row.answer)) ? row.answer : [];
+          const officialOpps = (ca && Array.isArray(ca.opponents)) ? ca.opponents : null;
+          const opps = (team && FIXTURES[team]) ? FIXTURES[team].map(x=>x[0]) : [];
+          const auto = opps.filter(o=>{ const res=qResultFor(team,o); return res && (res.gf-res.ga)>=need; });
+          const beatenList = officialOpps || auto;
+          const eff = (ca && ca.void) ? ca : (officialOpps ? ca : { opponents:auto, open:true });
+          const sc = scoreAnswer(q, raw, eff, null);
+          pts = sc.points||0; right = pts>0;
+          status = !row ? 'unanswered' : (right ? 'partial' : 'pending');
+          const parts = raw.map(o=>{
+            const res = team ? qResultFor(team,o) : null;
+            const score = res ? ` ${res.gf}-${res.ga}` : '';
+            if(beatenList.includes(o) || (res && (res.gf-res.ga)>=need)) return spanC('#1D6B3F', `${o}${score} ✓`, true);
+            if(res) return spanC('#8A1F30', `${o}${score} ✗`);
+            return spanC('var(--ink-soft)', `${o} (not yet played)`);
+          });
+          ansHtml = parts.length ? parts.join(', ') : '—';
+          r = { text: raw.join(', ') || '—' };
+        } else {
+          r = fmtAnswerForDisplay(q, row, ca, answers);
+          status = r.status; pts = r.points||0; right = (status==='correct' || status==='partial');
+          ansHtml = esc(r.text);
+        }
         const pot = Math.max(pts, potentialFor(q, row ? row.answer : null));
-        return { pl, text:r.text, status:r.status, points:pts, right, pot, gain: Math.max(0, pot-pts) };
+        return { pl, text:r.text, ansHtml, status, points:pts, right, pot, gain: Math.max(0, pot-pts), team: linked ? slotTeams[pl.id] : null };
       });
       let kind;
       if(ca && ca.void) kind = 'void';
+      else if(linked) kind = (ca && Array.isArray(ca.opponents) && !ca.open) ? 'settled' : 'open';
       else if(!ca) kind = 'none';
       else if(ca.open) kind = 'open';
       else kind = per.some(p=>p.status==='pending') ? 'open' : 'settled';
       let lv = null;
       if(kind==='settled') lv = 3;
-      else if(kind==='open') lv = (ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1;
-      return { q, ca, live, per, kind, lv, right: per.filter(p=>p.right) };
+      else if(kind==='open') lv = linked ? 3 : ((ca && ca.likelihood!=null) ? Math.max(0, Math.min(2, Number(ca.likelihood))) : 1);
+      let slotLine = null;
+      if(linked){
+        const teams = [...new Set(Object.values(slotTeams).filter(Boolean))];
+        const lbl = (SLOTS.find(x=>x.id===q.slotLink)||{}).label || q.slotLink;
+        const nice = lbl.toLowerCase().replace('1st','1st').replace(/^(\d+)(st|nd|rd|th)$/,'$1$2');
+        slotLine = teams.length===1 ? `Slot ${nice} team everyone picked: ${tagName(teams[0])}`
+          : teams.length>1 ? `Slot ${nice} teams differ by player: ${teams.map(tagName).join(', ')}` : null;
+      }
+      return { q, ca, live, per, kind, lv, linked, slotLine, right: per.filter(p=>p.right) };
     });
   }
 
@@ -893,12 +945,11 @@
     const nPlayers = questionsTabData.players.length;
     const mineOf = m => youId ? m.per.find(p=>p.pl.id===youId) : null;
 
-    // ---- summary
     const sumEl = document.getElementById('qSummary');
     if(youId){
-      const now = computeQuestionsPoints(youId, questionsTabData.answers, questionsTabData.questions);
-      let safe=0, chg=0, gain=0;
+      let now=0, safe=0, chg=0, gain=0;
       models.forEach(m=>{ const x=mineOf(m); if(!x) return;
+        now += x.points;
         if(m.kind==='settled') safe += x.points;
         else if(m.kind==='open'){ if(m.lv>=2) safe += x.points; else chg += x.points; gain += x.gain; } });
       sumEl.innerHTML = `<div class="v2-summary">
@@ -908,7 +959,6 @@
         <div class="v2-box"><div class="k">Could still gain</div><div class="v">${gain}</div></div></div>`;
     } else sumEl.innerHTML = '';
 
-    // ---- filters
     if(!youId && qFilter==='up') qFilter = 'all';
     const filters = [['all','All'],['risk','Could change']];
     if(youId) filters.push(['up','Could still gain']);
@@ -922,51 +972,54 @@
       return true;
     };
 
-    // ---- rows grouped by how likely the picture is to change
-    const groups = [[0,'Likely to flip'],[1,'Could flip'],[2,'Likely to hold'],[3,'Locked in'],['none','Not marked yet'],['void','Voided']];
     let out = '';
-    groups.forEach(g=>{
-      const list = models.filter(m=> (typeof g[0]==='number' ? m.lv===g[0] : m.kind===g[0]) && keep(m));
-      if(!list.length) return;
-      out += `<div class="qr-gh">${g[1]} (${list.length})</div>`;
-      list.forEach(m=>{
-        const q = m.q, mine = mineOf(m);
-        const segs = m.lv!=null ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
-        const meter = m.lv!=null ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
-        const fx = (mine && m.kind==='open' && mine.gain>0) ? `<span class="qr-fx">If it lands: +${mine.gain}</span>` : '';
-        const liveTxt = m.live ? esc(m.live) : (m.kind==='settled' ? 'Settled' : m.kind==='none' ? 'Not marked yet' : m.kind==='void' ? 'Voided, nobody scores' : '&nbsp;');
-        const right = m.right.slice().sort((a,b)=> (a.pl.id===youId?-1:0) - (b.pl.id===youId?-1:0));
-        const wrong = m.per.filter(p=>!p.right);
-        const chips = right.length ? right.map(p=>`<span class="qr-p${p.pl.id===youId?' me':''}">${esc(p.pl.name)}</span>`).join('') : '<span class="qr-p x">Nobody yet</span>';
-        const nameLine = (m.kind==='open'||m.kind==='settled') ? `<div class="qr-nm"><span class="h">${m.kind==='open'?'RIGHT NOW':'SCORED'}</span>${chips}</div>` : '';
-        let ptCol;
-        if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
-        else ptCol = `<div class="qr-pt${m.right.length?'':' z'}">${m.right.length}<small>of ${nPlayers} right${m.kind==='open'?' now':''}</small></div>`;
+    models.filter(keep).forEach(m=>{
+      const q = m.q, mine = mineOf(m);
+      const showMeter = m.lv!=null && !m.linked;
+      const segs = showMeter ? [0,1,2,3].map(i=>`<i class="${i<=m.lv?'f':''}"></i>`).join('') : '';
+      const meter = showMeter ? `<span class="qr-seg">${segs}</span><span class="qr-lb">${Q_LV[m.lv]}</span>` : '';
+      const fx = (mine && m.kind==='open' && mine.gain>0) ? `<span class="qr-fx">If it lands: +${mine.gain}</span>` : '';
+      const liveTxt = m.live ? esc(m.live) : (m.kind==='settled' ? 'Settled' : m.kind==='none' ? 'Not marked yet' : m.kind==='void' ? 'Voided, nobody scores' : '');
+      const showPts = typeof q.points==='object' || q.yesPoints!=null || q.aPoints!=null;
+      const byPts = (a,b)=> b.points-a.points || a.pl.name.localeCompare(b.pl.name);
+      const scoring = m.per.filter(p=>p.right).sort((a,b)=> (a.pl.id===youId?-1:b.pl.id===youId?1:0) || byPts(a,b));
+      const notScoring = m.per.filter(p=>!p.right).sort((a,b)=> (a.pl.id===youId?-1:b.pl.id===youId?1:0) || a.pl.name.localeCompare(b.pl.name));
+      const chipTxt = p => esc(p.pl.name) + ((showPts || m.linked) ? ` ${p.points}` : '');
+      const goodChips = scoring.length ? scoring.map(p=>`<span class="qr-p${p.pl.id===youId?' me':''}">${chipTxt(p)}</span>`).join('') : '<span class="qr-p x">Nobody yet</span>';
+      const badCls = m.kind==='settled' ? 'bad' : 'x';
+      const badChips = notScoring.length ? notScoring.map(p=>`<span class="qr-p ${badCls}${p.pl.id===youId?' me':''}">${chipTxt(p)}</span>`).join('') : '<span class="qr-p x">Nobody</span>';
+      const nameLines = (m.kind==='open'||m.kind==='settled')
+        ? `<div class="qr-nm"><span class="h">${m.kind==='open'?'SCORING NOW':'SCORED'}</span>${goodChips}</div><div class="qr-nm"><span class="h">${m.kind==='open'?'NOT SCORING YET':'DID NOT SCORE'}</span>${badChips}</div>` : '';
+      let ptCol;
+      if(youId && mine) ptCol = `<div class="qr-pt${mine.points?'':' z'}">${mine.points?'+'+mine.points:'0'}<small>${m.kind==='open' ? 'now, of '+mine.pot : m.kind==='settled' ? 'final' : ''}</small></div>`;
+      else ptCol = `<div class="qr-pt${m.right.length?'':' z'}">${m.right.length}<small>of ${nPlayers} scoring${m.kind==='open'?' now':''}</small></div>`;
 
-        let why;
-        if(m.kind==='void') why = 'This question was voided, so nobody scores on it.';
-        else if(m.kind==='none') why = 'Not marked yet, so no points are on the board for this one.';
-        else if(m.kind==='open') why = mine
-          ? (mine.status==='unanswered' ? 'You did not answer this one.'
-            : mine.right ? `You are matching so far and scoring ${mine.points} pts. ${Q_LV_SENTENCE[m.lv]}`
-            : `You are not matching right now. If it lands your way you would score ${mine.pot} pts. ${Q_LV_SENTENCE[m.lv]}`)
-          : `${m.right.length} of ${nPlayers} players are matching so far. ${Q_LV_SENTENCE[m.lv]}`;
-        else why = mine
-          ? (mine.status==='unanswered' ? 'You did not answer this one.' : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
-          : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
+      let why;
+      if(m.kind==='void') why = 'This question was voided, so nobody scores on it.';
+      else if(m.kind==='none') why = 'Not marked yet, so no points are on the board for this one.';
+      else if(m.kind==='open') why = mine
+        ? (mine.status==='unanswered' ? 'You did not answer this one.'
+          : m.linked ? (mine.right ? `You have ${mine.points} pts so far. Points can only go up as more games are played.` : 'No points yet. Points can only go up as more games are played.')
+          : mine.right ? `You are matching so far and scoring ${mine.points} pts. ${Q_LV_SENTENCE[m.lv]}`
+          : `You are not matching right now. If it lands your way you would score ${mine.pot} pts. ${Q_LV_SENTENCE[m.lv]}`)
+        : (m.linked ? `${m.right.length} of ${nPlayers} players have points so far. Points can only go up.` : `${m.right.length} of ${nPlayers} players are matching so far. ${Q_LV_SENTENCE[m.lv]}`);
+      else why = mine
+        ? (mine.status==='unanswered' ? 'You did not answer this one.' : mine.right ? `Settled. You scored ${mine.points} pts.` : 'Settled. Your answer did not score.')
+        : `Settled. ${m.right.length} of ${nPlayers} players scored.`;
 
-        const trs = m.per.slice().sort((a,b)=> b.points-a.points || (a.pl.id===youId?-1:b.pl.id===youId?1:0) || a.pl.name.localeCompare(b.pl.name)).map(p=>{
-          const t = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
-          return `<tr class="${p.pl.id===youId?'me':''}"><td class="pname">${esc(p.pl.name)}${p.pl.id===youId?' (you)':''}</td><td class="psub">${esc(p.text)}</td><td class="num ${p.right?'ptotal':'psub'}">${t}</td></tr>`;
-        }).join('');
-        const wrongLine = (m.kind==='open'||m.kind==='settled') ? `<div class="qr-nm"><span class="h">NOT RIGHT NOW</span>${wrong.length ? wrong.map(p=>`<span class="qr-p x${p.pl.id===youId?' me':''}">${esc(p.pl.name)}</span>`).join('') : '<span class="qr-p x">Nobody</span>'}</div>` : '';
-        const lvClass = m.lv!=null ? ' l'+m.lv : '';
-        const isOpen = qOpenSet.has(q.id);
-        out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
-          <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-t">${esc(q.short)}</div><div class="qr-live">${liveTxt}</div>${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLine}</div>${ptCol}</div>
-          <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div>${wrongLine}<div style="overflow-x:auto;"><table><tr><th>Player</th><th>Answer</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
-          <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
-      });
+      const trs = m.per.slice().sort((a,b)=> b.points-a.points || (a.pl.id===youId?-1:b.pl.id===youId?1:0) || a.pl.name.localeCompare(b.pl.name)).map(p=>{
+        const t = p.status==='unanswered' ? '—' : p.right ? '+'+p.points : (m.kind==='open' ? '0 so far' : '0');
+        const teamCell = m.linked ? `<td class="psub">${esc(p.team?tagName(p.team):'—')}</td>` : '';
+        return `<tr class="${p.pl.id===youId?'me':''}"><td class="pname">${esc(p.pl.name)}${p.pl.id===youId?' (you)':''}</td>${teamCell}<td class="psub" style="white-space:normal;">${p.ansHtml}</td><td class="num ${p.right?'ptotal':'psub'}">${t}</td></tr>`;
+      }).join('');
+      const slotHtml = m.slotLine ? `<div class="qr-sl">${esc(m.slotLine)}</div>` : '';
+      const yourPicks = (m.linked && mine) ? `<div class="qr-yp"><b>Your picks:</b> ${mine.ansHtml}</div>` : '';
+      const lvClass = (m.lv!=null && !m.linked) ? ' l'+m.lv : ' nom';
+      const isOpen = qOpenSet.has(q.id);
+      out += `<div class="qr${lvClass}${isOpen?' open':''}" data-q="${q.id}">
+        <div class="qr-h"><span class="qr-n">Q${q.id}</span><div><div class="qr-t">${esc(q.short)}</div>${slotHtml}${liveTxt?`<div class="qr-live">${liveTxt}</div>`:''}${yourPicks}${(meter||fx)?`<div class="qr-mt">${meter}${fx}</div>`:''}${nameLines}</div>${ptCol}</div>
+        <div class="qr-dt"><div>${why}</div><div class="pts-on">Points on offer: ${esc(q.pointsText||'')}</div><div style="overflow-x:auto;"><table><tr><th>Player</th>${m.linked?'<th>Slot team</th>':''}<th>${m.linked?'Picks':'Answer'}</th><th class="num">Points${m.kind==='open'?' now':''}</th></tr>${trs}</table></div></div>
+        <button class="qr-xp">${isOpen?'Hide details':'See full details'}</button></div>`;
     });
     const grid = document.getElementById('qGrid');
     grid.innerHTML = out || '<div class="v2-none" style="color:#B9C4BB;">Nothing here.</div>';
